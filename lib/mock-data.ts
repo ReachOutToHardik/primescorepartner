@@ -1,0 +1,156 @@
+import { Referral, RedemptionRecord } from './store';
+
+export const MOCK_REFERRALS: Referral[] = [
+  {
+    id: 'REF-2024-001',
+    partnerId: 'demo',
+    customerName: 'Rajesh Kumar',
+    customerPhone: '9876543210',
+    customerEmail: 'rajesh.kumar@email.com',
+    city: 'Mumbai',
+    service: 'Credit Rectification',
+    notes: 'Customer has 3 errors on CIBIL report',
+    status: 'completed',
+    createdAt: '2024-11-15T09:00:00Z',
+    updatedAt: '2024-11-28T14:00:00Z',
+    pointsEarned: 500,
+    statusHistory: [
+      { status: 'submitted', date: '2024-11-15T09:00:00Z', note: 'Referral submitted by partner' },
+      { status: 'received', date: '2024-11-15T11:30:00Z', note: 'Received and assigned to advisor' },
+      { status: 'enrolled', date: '2024-11-17T10:00:00Z', note: 'Customer enrolled in rectification plan' },
+      { status: 'in_progress', date: '2024-11-20T09:00:00Z', note: 'Dispute filed with bureaus' },
+      { status: 'completed', date: '2024-11-28T14:00:00Z', note: 'Credit score improved by 87 points' },
+    ],
+  },
+  {
+    id: 'REF-2024-002',
+    partnerId: 'demo',
+    customerName: 'Priya Sharma',
+    customerPhone: '9123456789',
+    customerEmail: 'priya.sharma@email.com',
+    city: 'Delhi',
+    service: 'Bureau Report',
+    notes: 'Wants all 4 bureau reports',
+    status: 'in_progress',
+    createdAt: '2024-12-01T10:00:00Z',
+    updatedAt: '2024-12-05T12:00:00Z',
+    pointsEarned: 0,
+    statusHistory: [
+      { status: 'submitted', date: '2024-12-01T10:00:00Z', note: 'Referral submitted by partner' },
+      { status: 'received', date: '2024-12-01T14:00:00Z', note: 'Received and assigned' },
+      { status: 'enrolled', date: '2024-12-03T09:00:00Z', note: 'Customer onboarded' },
+      { status: 'in_progress', date: '2024-12-05T12:00:00Z', note: 'Reports being compiled' },
+    ],
+  },
+  {
+    id: 'REF-2024-003',
+    partnerId: 'demo',
+    customerName: 'Amit Patel',
+    customerPhone: '9988776655',
+    customerEmail: 'amit.patel@email.com',
+    city: 'Ahmedabad',
+    service: 'Loan Advisory',
+    notes: 'Home loan rejection, needs credit improvement',
+    status: 'enrolled',
+    createdAt: '2024-12-05T08:00:00Z',
+    updatedAt: '2024-12-07T10:00:00Z',
+    pointsEarned: 0,
+    statusHistory: [
+      { status: 'submitted', date: '2024-12-05T08:00:00Z', note: 'Submitted' },
+      { status: 'received', date: '2024-12-05T10:00:00Z', note: 'Received' },
+      { status: 'enrolled', date: '2024-12-07T10:00:00Z', note: 'Customer enrolled' },
+    ],
+  },
+  {
+    id: 'REF-2024-004',
+    partnerId: 'demo',
+    customerName: 'Sunita Verma',
+    customerPhone: '8877665544',
+    customerEmail: 'sunita.v@email.com',
+    city: 'Pune',
+    service: 'Credit Rectification',
+    notes: 'Wrong defaults showing on report',
+    status: 'submitted',
+    createdAt: '2024-12-09T15:00:00Z',
+    updatedAt: '2024-12-09T15:00:00Z',
+    pointsEarned: 0,
+    statusHistory: [
+      { status: 'submitted', date: '2024-12-09T15:00:00Z', note: 'Referral submitted by partner' },
+    ],
+  },
+  {
+    id: 'REF-2024-005',
+    partnerId: 'demo',
+    customerName: 'Vikram Singh',
+    customerPhone: '7766554433',
+    customerEmail: 'vikram.s@email.com',
+    city: 'Jaipur',
+    service: 'Bureau Report',
+    notes: '',
+    status: 'completed',
+    createdAt: '2024-11-20T11:00:00Z',
+    updatedAt: '2024-12-01T09:00:00Z',
+    pointsEarned: 500,
+    statusHistory: [
+      { status: 'submitted', date: '2024-11-20T11:00:00Z', note: 'Submitted' },
+      { status: 'received', date: '2024-11-20T14:00:00Z', note: 'Received' },
+      { status: 'enrolled', date: '2024-11-22T09:00:00Z', note: 'Enrolled' },
+      { status: 'in_progress', date: '2024-11-25T10:00:00Z', note: 'In progress' },
+      { status: 'completed', date: '2024-12-01T09:00:00Z', note: 'Completed successfully' },
+    ],
+  },
+];
+
+export const MOCK_REDEMPTIONS: RedemptionRecord[] = [
+  {
+    id: 'RDM-001',
+    brand: 'Amazon Pay',
+    denomination: 500,
+    points: 5000,
+    redeemedAt: '2024-11-30T12:00:00Z',
+    voucherCode: 'AMZN-XXXX-YYYY-ZZZZ',
+  },
+];
+
+export const MOCK_PARTNER = {
+  id: 'demo',
+  name: 'Arjun Mehta',
+  email: 'arjun.mehta@example.com',
+  phone: '9876543210',
+  profession: 'CA',
+  city: 'Mumbai',
+  state: 'Maharashtra',
+  pan: 'ABCDE1234F',
+  status: 'kyc_approved' as const,
+  joinedAt: '2024-10-01T00:00:00Z',
+};
+
+export const GIFT_CARDS = [
+  { id: 'amazon', brand: 'Amazon Pay', logo: '🛒', color: '#FF9900', denominations: [100, 250, 500, 1000] },
+  { id: 'flipkart', brand: 'Flipkart', logo: '🛍️', color: '#2874F0', denominations: [100, 250, 500, 1000] },
+  { id: 'swiggy', brand: 'Swiggy', logo: '🍔', color: '#FC8019', denominations: [100, 250, 500] },
+  { id: 'phonepay', brand: 'PhonePe', logo: '📱', color: '#5F259F', denominations: [100, 250, 500, 1000] },
+  { id: 'myntra', brand: 'Myntra', logo: '👗', color: '#FF3F6C', denominations: [250, 500, 1000] },
+  { id: 'irctc', brand: 'IRCTC', logo: '🚂', color: '#003580', denominations: [500, 1000] },
+];
+
+export const PROFESSION_OPTIONS = [
+  'Direct Selling Agent (DSA)',
+  'Chartered Accountant (CA)',
+  'Company Secretary (CS)',
+  'Loan Consultant',
+  'Financial Advisor',
+  'Insurance Agent',
+  'Real Estate Agent',
+  'Business Consultant',
+  'Other',
+];
+
+export const SERVICE_OPTIONS = [
+  'Bureau Report (All 4 Bureaus)',
+  'Multi-Bureau Report',
+  'Credit Rectification',
+  'Loan Advisory',
+  'Credit Score Improvement',
+  'Dispute Resolution',
+];
