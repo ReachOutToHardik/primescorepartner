@@ -159,7 +159,9 @@ export default function Sidebar({
           {!isCollapsed ? 'Navigation' : '•••'}
         </div>
 
-        {navItems.map((item) => {
+        {navItems
+          .filter((item) => item.href !== '/team' || partner?.role === 'team_leader')
+          .map((item) => {
           const isActive =
             pathname === item.href ||
             (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'));

@@ -172,6 +172,45 @@ export const MOCK_TEAM_MEMBERS: TeamMember[] = [
     ],
     redemptionsLog: [],
   },
+  {
+    id: 'TM-004',
+    name: 'Vikram Shah',
+    email: 'vikram.shah@example.com',
+    phone: '9844556677',
+    profession: 'Chartered Accountant (CA)',
+    city: 'Ahmedabad',
+    status: 'kyc_approved',
+    joinedAt: '2024-11-20T08:00:00Z',
+    casesCount: 12,
+    totalMemberPoints: 6000,
+    overridePointsEarned: 600,
+    referralsLog: [
+      { id: 'REF-VS-401', customerName: 'Jayesh Patel', service: 'Credit Rectification', status: 'completed', createdAt: '2024-11-22T09:00:00Z', pointsEarned: 500, overrideEarned: 50 },
+      { id: 'REF-VS-402', customerName: 'Megha Shah', service: 'Loan Advisory', status: 'completed', createdAt: '2024-11-29T14:00:00Z', pointsEarned: 500, overrideEarned: 50 },
+    ],
+    redemptionsLog: [
+      { id: 'RDM-VS-701', brand: 'Amazon Pay', denomination: 2000, redeemedAt: '2024-12-02T10:00:00Z', voucherCode: 'AMZN-VS20-1122' },
+    ],
+  },
+  {
+    id: 'TM-005',
+    name: 'Ananya Sharma',
+    email: 'ananya.s@example.com',
+    phone: '9855667788',
+    profession: 'Company Secretary (CS)',
+    city: 'Bengaluru',
+    status: 'kyc_approved',
+    joinedAt: '2024-12-02T11:45:00Z',
+    casesCount: 4,
+    totalMemberPoints: 2000,
+    overridePointsEarned: 200,
+    referralsLog: [
+      { id: 'REF-AS-501', customerName: 'Karthik Raja', service: 'Bureau Report (All 4 Bureaus)', status: 'completed', createdAt: '2024-12-03T16:20:00Z', pointsEarned: 500, overrideEarned: 50 },
+    ],
+    redemptionsLog: [
+      { id: 'RDM-AS-801', brand: 'Myntra', denomination: 1000, redeemedAt: '2024-12-05T09:30:00Z', voucherCode: 'MYNT-AS10-3344' },
+    ],
+  },
 ];
 
 export const MOCK_PARTNER = {

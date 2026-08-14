@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePartnerStore } from '@/lib/store';
 import { PROFESSION_OPTIONS } from '@/lib/mock-data';
 import { Card } from '@/components/ui/Card';
@@ -25,6 +26,7 @@ import {
 } from '@phosphor-icons/react';
 
 export default function TeamPage() {
+  const router = useRouter();
   const { partner, teamMembers, onboardTeamMember } = usePartnerStore();
 
   const [copiedLink, setCopiedLink] = useState(false);
@@ -248,12 +250,12 @@ export default function TeamPage() {
               {teamMembers.map((m) => (
                 <tr
                   key={m.id}
-                  onClick={() => setSelectedMember(m)}
-                  className="hover:bg-slate-50/90 cursor-pointer transition-colors"
+                  onClick={() => router.push(`/team/${m.id}`)}
+                  className="hover:bg-slate-50/90 cursor-pointer transition-colors group"
                 >
                   <td className="py-3.5 px-4">
                     <div>
-                      <span className="font-bold text-slate-900 block group-hover:text-[#1B2A72]">{m.name}</span>
+                      <span className="font-bold text-slate-900 group-hover:text-[#1B2A72] transition-colors block">{m.name}</span>
                       <span className="text-[11px] text-slate-400 font-mono-num">{m.email}</span>
                     </div>
                   </td>
@@ -278,168 +280,9 @@ export default function TeamPage() {
         </div>
       </Card>
 
-      {/* 5. Clickable Detailed Team Member Activity Modal */}
-      {selectedMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-          <Card variant="elevated" className="max-w-2xl w-full p-6 sm:p-8 space-y-6 rounded-2xl bg-white relative max-h-[90vh] overflow-y-auto shadow-2xl">
-            {/* Header */}
-            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono-num font-bold uppercase tracking-widest text-[#1B2A72] bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
-                    Team Advisor Dashboard
-                  </span>
-                  <span className="text-[10px] font-mono-num font-bold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    {selectedMember.status.replace('_', ' ')}
-                  </span>
-                </div>
-                <h3 className="font-display font-extrabold text-2xl text-slate-900 mt-1.5">{selectedMember.name}</h3>
-                <p className="text-xs text-slate-500 font-medium">{selectedMember.profession} &bull; {selectedMember.city}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedMember(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-sm transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Quick Contact & Performance Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                <span className="text-slate-400 font-bold uppercase text-[10px] block font-mono-num">Joined On</span>
-                <span className="font-semibold text-slate-800 font-mono-num">{new Date(selectedMember.joinedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-              <div className="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100">
-                <span className="text-slate-500 font-bold uppercase text-[10px] block font-mono-num">Total Referrals</span>
-                <span className="font-mono-num font-extrabold text-slate-900 text-base">{selectedMember.casesCount} Cases</span>
-              </div>
-              <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-100">
-                <span className="text-amber-800 font-bold uppercase text-[10px] block font-mono-num">Member Balance</span>
-                <span className="font-mono-num font-extrabold text-amber-700 text-base">{selectedMember.totalMemberPoints.toLocaleString()} Pts</span>
-              </div>
-              <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200">
-                <span className="text-emerald-800 font-bold uppercase text-[10px] block font-mono-num">Your 10% Cut</span>
-                <span className="font-mono-num font-extrabold text-[#1B2A72] text-base">+{selectedMember.overridePointsEarned.toLocaleString()} Pts</span>
-              </div>
-            </div>
-
-            {/* Section 1: Member's Customer Referrals Breakdown */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
-                  <ClipboardText size={18} className="text-[#1B2A72]" weight="bold" />
-                  <span>Submitted Referrals Activity</span>
-                </h4>
-                <span className="text-xs text-slate-400 font-mono-num font-semibold">
-                  {selectedMember.referralsLog?.length || 0} Records
-                </span>
-              </div>
-
-              {selectedMember.referralsLog && selectedMember.referralsLog.length > 0 ? (
-                <div className="border border-slate-200/80 rounded-xl overflow-hidden text-xs">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 font-mono-num border-b border-slate-200">
-                        <th className="py-2.5 px-3">Case ID</th>
-                        <th className="py-2.5 px-3">Customer Name</th>
-                        <th className="py-2.5 px-3">Requested Service</th>
-                        <th className="py-2.5 px-3">Status</th>
-                        <th className="py-2.5 px-3 text-right">Your 10% Cut</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium">
-                      {selectedMember.referralsLog.map((ref) => (
-                        <tr key={ref.id} className="hover:bg-slate-50/70">
-                          <td className="py-2.5 px-3 font-mono-num font-bold text-slate-700">{ref.id}</td>
-                          <td className="py-2.5 px-3 font-bold text-slate-900">{ref.customerName}</td>
-                          <td className="py-2.5 px-3 text-slate-600">{ref.service}</td>
-                          <td className="py-2.5 px-3">
-                            <span className={`px-2 py-0.5 text-[10px] font-bold uppercase font-mono-num rounded-full ${
-                              ref.status === 'completed'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-amber-50 text-amber-700 border border-amber-200'
-                            }`}>
-                              {ref.status}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono-num font-bold text-[#1B2A72]">
-                            +{ref.overrideEarned} Pts
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-400 font-medium border border-dashed border-slate-200">
-                  No active customer referrals logged yet.
-                </div>
-              )}
-            </div>
-
-            {/* Section 2: Member's Gift Voucher Redemptions History */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
-                  <Gift size={18} className="text-amber-500" weight="bold" />
-                  <span>Redeemed Gift Cards & Vouchers</span>
-                </h4>
-                <span className="text-xs text-slate-400 font-mono-num font-semibold">
-                  {selectedMember.redemptionsLog?.length || 0} Vouchers
-                </span>
-              </div>
-
-              {selectedMember.redemptionsLog && selectedMember.redemptionsLog.length > 0 ? (
-                <div className="border border-slate-200/80 rounded-xl overflow-hidden text-xs">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 font-mono-num border-b border-slate-200">
-                        <th className="py-2.5 px-3">Voucher Brand</th>
-                        <th className="py-2.5 px-3">Denomination</th>
-                        <th className="py-2.5 px-3">Redeemed Date</th>
-                        <th className="py-2.5 px-3 text-right">Voucher Code</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium">
-                      {selectedMember.redemptionsLog.map((rdm) => (
-                        <tr key={rdm.id} className="hover:bg-slate-50/70">
-                          <td className="py-2.5 px-3 font-bold text-slate-900">{rdm.brand}</td>
-                          <td className="py-2.5 px-3 font-mono-num font-bold text-slate-800">₹{rdm.denomination}</td>
-                          <td className="py-2.5 px-3 text-slate-500 font-mono-num">
-                            {new Date(rdm.redeemedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono-num font-bold text-slate-700">
-                            {rdm.voucherCode}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-400 font-medium border border-dashed border-slate-200">
-                  No gift card redemptions logged yet.
-                </div>
-              )}
-            </div>
-
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
-              <Button
-                onClick={() => setSelectedMember(null)}
-                className="bg-[#1B2A72] hover:bg-[#0F1A4E] text-white px-5 py-2.5 text-xs font-bold rounded-xl shadow-xs"
-              >
-                Done / Close Activity
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* 6. Modal: Directly Onboard New Team Member */}
+      {/* 5. Modal: Directly Onboard New Team Member */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 animate-fade-in">
           <Card variant="elevated" className="max-w-md w-full p-6 sm:p-8 space-y-6 rounded-2xl bg-white relative">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
