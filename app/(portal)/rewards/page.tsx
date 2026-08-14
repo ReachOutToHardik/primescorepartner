@@ -131,28 +131,23 @@ export default function RewardsPage() {
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
               currentTier === 'Silver' ? 'bg-white border-[#1B2A72] ring-2 ring-[#1B2A72]/20 shadow-md' : 'bg-slate-50/80 border-slate-200/80'
             }`}>
-              {/* Decorative Top Banner with SVG Pattern */}
-              <div className="h-14 bg-gradient-to-r from-[#1B2A72] via-[#253390] to-[#0F1A4E] relative p-3 flex items-center justify-between overflow-hidden">
-                {/* SVG Geometric Background Pattern */}
-                <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="silverGrid" width="16" height="16" patternUnits="userSpaceOnUse">
-                      <circle cx="2" cy="2" r="1" fill="#FFFFFF" />
-                      <path d="M0 8h16M8 0v16" stroke="#FFFFFF" strokeWidth="0.5" strokeDasharray="2 2" />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#silverGrid)" />
-                </svg>
+              {/* Big Wave Banner (Tier 1) */}
+              <div className="h-28 relative p-4 flex items-start justify-between overflow-hidden">
+                <img
+                  src="/tier1-wave.svg"
+                  alt="Silver Wave Banner"
+                  className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+                />
 
                 <div className="relative z-10 flex items-center gap-2">
-                  <span className="text-xs font-display font-bold uppercase tracking-wider text-slate-100">Silver Partner</span>
+                  <span className="text-sm font-display font-bold uppercase tracking-wider text-white drop-shadow-sm">Silver Partner</span>
                   <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
                     <Check size={12} weight="bold" />
                   </span>
                 </div>
 
                 {currentTier === 'Silver' && (
-                  <span className="relative z-10 px-2.5 py-0.5 bg-amber-400 text-amber-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-xs tracking-wider">
+                  <span className="relative z-10 px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
                     ACTIVE
                   </span>
                 )}
@@ -181,26 +176,18 @@ export default function RewardsPage() {
                 ? 'bg-emerald-50/40 border-emerald-300'
                 : 'bg-slate-50/70 border-slate-200/90'
             }`}>
-              {/* Decorative Top Banner with SVG Pattern */}
-              <div className={`h-14 relative p-3 flex items-center justify-between overflow-hidden ${
-                totalPoints >= 5000
-                  ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600'
-                  : 'bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900'
-              }`}>
-                {/* SVG Geometric Waves Pattern */}
-                <svg className="absolute inset-0 w-full h-full opacity-25 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="goldWaves" width="24" height="24" patternUnits="userSpaceOnUse">
-                      <path d="M0 12 Q 6 6, 12 12 T 24 12" fill="none" stroke="#FFFFFF" strokeWidth="1" />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#goldWaves)" />
-                </svg>
+              {/* Big Wave Banner (Tier 2) */}
+              <div className="h-28 relative p-4 flex items-start justify-between overflow-hidden">
+                <img
+                  src="/tier2-wave.svg"
+                  alt="Gold Wave Banner"
+                  className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+                />
 
                 <div className="relative z-10 flex items-center gap-2">
-                  <span className="text-xs font-display font-bold uppercase tracking-wider text-white flex items-center gap-1">
+                  <span className="text-sm font-display font-bold uppercase tracking-wider text-white flex items-center gap-1 drop-shadow-sm">
                     <span>Gold Partner</span>
-                    <Sparkle size={14} className="text-amber-300" weight="fill" />
+                    <Sparkle size={15} className="text-amber-300" weight="fill" />
                   </span>
 
                   {totalPoints >= 5000 ? (
@@ -211,11 +198,11 @@ export default function RewardsPage() {
                 </div>
 
                 {currentTier === 'Gold' ? (
-                  <span className="relative z-10 px-2.5 py-0.5 bg-amber-400 text-amber-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-xs tracking-wider">
+                  <span className="relative z-10 px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
                     ACTIVE
                   </span>
                 ) : totalPoints < 5000 ? (
-                  <span className="relative z-10 px-2.5 py-0.5 bg-black/40 text-slate-200 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1 border border-white/20">
+                  <span className="relative z-10 px-3 py-1 bg-black/60 text-slate-200 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
                     <LockKey size={12} weight="fill" />
                     <span>LOCKED</span>
                   </span>
@@ -245,26 +232,18 @@ export default function RewardsPage() {
                 ? 'bg-emerald-50/40 border-emerald-300'
                 : 'bg-slate-50/70 border-slate-200/90'
             }`}>
-              {/* Decorative Top Banner with SVG Pattern */}
-              <div className={`h-14 relative p-3 flex items-center justify-between overflow-hidden ${
-                totalPoints >= 20000
-                  ? 'bg-gradient-to-r from-purple-700 via-rose-700 to-indigo-900'
-                  : 'bg-gradient-to-r from-slate-800 via-slate-900 to-black'
-              }`}>
-                {/* SVG Hexagon Diamonds Pattern */}
-                <svg className="absolute inset-0 w-full h-full opacity-25 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="platDiamonds" width="20" height="20" patternUnits="userSpaceOnUse">
-                      <polygon points="10,0 20,10 10,20 0,10" fill="none" stroke="#FFFFFF" strokeWidth="0.8" />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#platDiamonds)" />
-                </svg>
+              {/* Big Wave Banner (Tier 3) */}
+              <div className="h-28 relative p-4 flex items-start justify-between overflow-hidden">
+                <img
+                  src="/tier3-wave.svg"
+                  alt="Platinum Wave Banner"
+                  className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+                />
 
                 <div className="relative z-10 flex items-center gap-2">
-                  <span className="text-xs font-display font-bold uppercase tracking-wider text-white flex items-center gap-1">
+                  <span className="text-sm font-display font-bold uppercase tracking-wider text-white flex items-center gap-1 drop-shadow-sm">
                     <span>Platinum VIP</span>
-                    <Sparkle size={14} className="text-purple-300" weight="fill" />
+                    <Sparkle size={15} className="text-purple-300" weight="fill" />
                   </span>
 
                   {totalPoints >= 20000 ? (
@@ -275,11 +254,11 @@ export default function RewardsPage() {
                 </div>
 
                 {currentTier === 'Platinum' ? (
-                  <span className="relative z-10 px-2.5 py-0.5 bg-purple-400 text-purple-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-xs tracking-wider">
+                  <span className="relative z-10 px-3 py-1 bg-purple-400 text-purple-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
                     ACTIVE
                   </span>
                 ) : totalPoints < 20000 ? (
-                  <span className="relative z-10 px-2.5 py-0.5 bg-black/40 text-slate-200 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1 border border-white/20">
+                  <span className="relative z-10 px-3 py-1 bg-black/60 text-slate-200 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
                     <LockKey size={12} weight="fill" />
                     <span>LOCKED</span>
                   </span>
