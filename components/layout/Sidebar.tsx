@@ -21,6 +21,7 @@ import {
 } from '@phosphor-icons/react';
 import { usePartnerStore } from '@/lib/store';
 import { getStatusColor, getStatusLabel } from '@/lib/utils';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -131,12 +132,12 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* CTA Button Header Section - Solid Red, Crisp Edges */}
+      {/* CTA Button Header Section - Modern Red Button */}
       <div className="p-3">
         <Link
           href="/refer"
           onClick={onClose}
-          className={`flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xs bg-[#E63329] hover:bg-[#C9251C] text-white font-display font-bold text-xs uppercase tracking-wider transition-colors ${
+          className={`flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-lg bg-[#E63329] hover:bg-[#C9251C] text-white font-display font-bold text-xs uppercase tracking-wider shadow-sm transition-all hover:shadow-md ${
             isCollapsed ? 'px-0' : ''
           }`}
           title="Refer Customer"
@@ -147,8 +148,8 @@ export default function Sidebar({
       </div>
 
       {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
-        <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-3 pt-2 pb-1.5 font-mono-num">
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin">
+        <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-3 pt-2 pb-1 font-mono-num">
           {!isCollapsed ? 'Navigation' : '•••'}
         </div>
 
@@ -163,16 +164,16 @@ export default function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xs transition-colors relative ${
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group relative ${
                 isActive
-                  ? 'bg-[#1B2A72] text-white font-bold border-l-2 border-[#E63329]'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
+                  ? 'bg-[#1B2A72] text-white font-bold shadow-md border-l-4 border-[#E63329]'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'
               } ${isCollapsed ? 'justify-center px-0' : ''}`}
               title={isCollapsed ? item.name : undefined}
             >
               <Icon
                 weight={isActive ? 'fill' : 'bold'}
-                className={`w-4 h-4 flex-shrink-0 ${
+                className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
                   isActive ? 'text-white' : 'text-slate-400'
                 }`}
               />
@@ -180,7 +181,6 @@ export default function Sidebar({
               {!isCollapsed && (
                 <span className="text-xs truncate tracking-wide">{item.name}</span>
               )}
-
             </Link>
           );
         })}
@@ -189,20 +189,18 @@ export default function Sidebar({
       {/* Partner Status & Footer Card */}
       <div className="p-3 border-t border-white/10 space-y-2 bg-[#091136]">
         {!isCollapsed ? (
-          <div className="p-3 rounded-xs bg-[#121E5C] border border-white/10 space-y-2">
+          <div className="p-3 rounded-xl bg-[#121E5C] border border-white/10 space-y-2.5 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Partner KYC</span>
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-xs bg-[#0F1A4E] border border-white/10 text-[10px] font-semibold text-slate-200">
+              <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#0F1A4E] border border-white/10 text-[10px] font-semibold text-slate-200">
                 {getKycIcon()}
                 <span className="capitalize">{statusLabel}</span>
               </div>
             </div>
 
             {partner && (
-              <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                <div className="w-7 h-7 rounded-xs bg-[#1B2A72] border border-white/20 flex items-center justify-center text-xs font-bold text-white font-mono-num">
-                  {partner.name.substring(0, 2).toUpperCase()}
-                </div>
+              <div className="flex items-center gap-2.5 pt-2 border-t border-white/10">
+                <Avatar name={partner.name} size="sm" status="kyc_approved" />
                 <div className="overflow-hidden leading-tight flex-1">
                   <div className="text-xs font-bold text-white truncate font-display">{partner.name}</div>
                   <div className="text-[10px] text-slate-300 truncate font-mono-num">{partner.profession || 'Partner'}</div>
@@ -212,7 +210,7 @@ export default function Sidebar({
           </div>
         ) : (
           <div className="flex justify-center" title={`KYC Status: ${statusLabel}`}>
-            <div className="w-7 h-7 rounded-xs bg-[#121E5C] flex items-center justify-center border border-white/10">
+            <div className="w-8 h-8 rounded-full bg-[#121E5C] flex items-center justify-center border border-white/10 shadow-sm">
               {getKycIcon()}
             </div>
           </div>
@@ -223,7 +221,7 @@ export default function Sidebar({
             logout();
             window.location.href = '/login';
           }}
-          className={`flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xs text-xs text-slate-400 hover:text-[#E63329] hover:bg-white/5 transition-colors ${
+          className={`flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg text-xs text-slate-400 hover:text-[#E63329] hover:bg-white/10 transition-colors ${
             isCollapsed ? 'px-0' : ''
           }`}
           title="Log Out"

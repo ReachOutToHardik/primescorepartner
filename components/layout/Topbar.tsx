@@ -20,6 +20,7 @@ import {
 } from '@phosphor-icons/react';
 import { usePartnerStore } from '@/lib/store';
 import { getTierInfo } from '@/lib/utils';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface TopbarProps {
   onMenuClick?: () => void;
@@ -250,23 +251,21 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-full bg-slate-50 border border-slate-200/80 hover:bg-slate-100 hover:border-slate-300 transition-all shadow-2xs"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-700 text-white flex items-center justify-center font-bold text-sm shadow-sm font-display">
-              {partner?.name ? partner.name.substring(0, 2).toUpperCase() : 'PA'}
-            </div>
+            <Avatar name={partner?.name || 'Arjun Mehta'} size="sm" status="kyc_approved" />
 
             <div className="hidden md:flex flex-col text-left leading-tight">
               <span className="text-xs font-bold text-slate-900 truncate max-w-[120px]">
                 {partner?.name || 'Arjun Mehta'}
               </span>
-              <span className="text-[10px] font-medium text-amber-600 flex items-center gap-1 font-mono-num">
-                <Sparkle weight="fill" className="w-2.5 h-2.5" />
+              <span className="text-[10px] font-semibold text-amber-600 flex items-center gap-1 font-mono-num">
+                <Sparkle weight="fill" className="w-2.5 h-2.5 text-amber-500" />
                 {tierInfo.tier} Partner
               </span>
             </div>
 
-            <CaretDown className="w-4 h-4 text-slate-400 hidden sm:block" />
+            <CaretDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
           </button>
 
           {/* Profile Dropdown Menu */}

@@ -8,6 +8,8 @@ import Topbar from '@/components/layout/Topbar';
 import { usePartnerStore } from '@/lib/store';
 import { MOCK_PARTNER, MOCK_REFERRALS, MOCK_REDEMPTIONS } from '@/lib/mock-data';
 
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
+
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -80,12 +82,15 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <Topbar onMenuClick={() => setMobileSidebarOpen(true)} />
 
         {/* Page Children Container */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 max-w-7xl w-full mx-auto">
           <div className="w-full animate-fade-in">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Sticky Bottom Navigation Bar */}
+      <MobileBottomNav />
     </div>
   );
 }

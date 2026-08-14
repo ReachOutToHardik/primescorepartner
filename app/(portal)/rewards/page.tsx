@@ -14,6 +14,7 @@ import {
   Clock,
   ListChecks,
 } from '@phosphor-icons/react';
+import { Card } from '@/components/ui/Card';
 
 export default function RewardsPage() {
   const { totalPoints, referrals, redemptions, getTier } = usePartnerStore();
@@ -165,15 +166,16 @@ export default function RewardsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* SILVER TIER CARD */}
-          <div
-            className={`bg-white border rounded-xs shadow-xs overflow-hidden flex flex-col justify-between relative transition-all ${
+          <Card
+            variant={currentTier === 'Silver' ? 'elevated' : 'default'}
+            className={`overflow-hidden flex flex-col justify-between relative transition-all ${
               currentTier === 'Silver'
-                ? 'border-[#1B2A72] ring-2 ring-[#1B2A72]/20'
-                : 'border-[var(--border)]'
+                ? 'ring-2 ring-[#1B2A72]'
+                : ''
             }`}
           >
             {/* SVG Banner */}
-            <div className="bg-[#1B2A72] p-5 text-white relative overflow-hidden">
+            <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] p-5 text-white relative overflow-hidden">
               <svg
                 className="absolute right-0 top-0 bottom-0 opacity-15 w-36 h-full pointer-events-none"
                 viewBox="0 0 100 100"
@@ -189,7 +191,7 @@ export default function RewardsPage() {
                     Tier 01
                   </span>
                   {currentTier === 'Silver' && (
-                    <span className="px-2 py-0.5 bg-[#3DAA4B] text-white font-mono-num text-[10px] font-bold uppercase rounded-xs">
+                    <span className="px-2.5 py-0.5 bg-[#3DAA4B] text-white font-mono-num text-[10px] font-bold uppercase rounded-full shadow-2xs">
                       Active Tier
                     </span>
                   )}
@@ -224,7 +226,7 @@ export default function RewardsPage() {
                 Requirement: Default tier upon KYC approval
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* GOLD TIER CARD */}
           <div

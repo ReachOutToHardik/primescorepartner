@@ -223,8 +223,42 @@ export default function ReferralsPage() {
         </div>
       </div>
 
-      {/* Referrals Main Table */}
-      <div className="bg-white border border-[var(--border)] rounded-xs shadow-xs overflow-hidden">
+      {/* Referrals Mobile Card View (Visible on Mobile) */}
+      <div className="md:hidden space-y-3">
+        {filteredReferrals.length === 0 ? (
+          <div className="bg-white border border-[var(--border)] p-6 rounded-xs text-center text-xs text-[var(--ink-muted)]">
+            No referrals match your search query or filter selection.
+          </div>
+        ) : (
+          filteredReferrals.map((ref) => (
+            <div
+              key={ref.id}
+              onClick={() => setSelectedReferral(ref)}
+              className="bg-white border border-[var(--border)] p-4 rounded-xs shadow-xs space-y-3 active:bg-[var(--surface-2)] transition-colors cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono-num font-bold text-xs text-[#1B2A72]">{ref.id}</span>
+                {getStatusBadge(ref.status)}
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-[var(--ink)]">{ref.customerName}</h4>
+                <p className="text-xs font-mono-num text-[var(--ink-muted)]">{ref.customerPhone} &bull; {ref.city}</p>
+              </div>
+
+              <div className="flex items-center justify-between text-xs pt-2 border-t border-[var(--border)]">
+                <span className="font-medium text-[var(--ink-2)] truncate max-w-[180px]">{ref.service}</span>
+                <span className="font-mono-num font-bold text-[#3DAA4B]">
+                  {ref.pointsEarned > 0 ? `+${ref.pointsEarned} Pts` : '0 Pts'}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Referrals Desktop Main Table (Hidden on Mobile) */}
+      <div className="hidden md:block bg-white border border-[var(--border)] rounded-xs shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>

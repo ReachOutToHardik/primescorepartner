@@ -16,6 +16,8 @@ import {
   ShoppingBag,
   ArrowRight,
 } from '@phosphor-icons/react';
+import { Card } from '@/components/ui/Card';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 export default function RedeemPage() {
   const { totalPoints, redemptions, addRedemption } = usePartnerStore();
@@ -98,10 +100,10 @@ export default function RedeemPage() {
         </div>
 
         {/* Available Points Pill */}
-        <div className="bg-[#1B2A72] text-white px-4 py-2 rounded-xs border border-white/10 shrink-0 flex items-center gap-3">
+        <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white px-5 py-2.5 rounded-full border border-white/10 shrink-0 flex items-center gap-3 shadow-md">
           <Coins size={22} className="text-[#F5C518]" weight="fill" />
           <div>
-            <div className="text-[10px] text-slate-300 font-semibold uppercase tracking-wider">
+            <div className="text-[10px] text-slate-300 font-bold uppercase tracking-wider font-mono-num">
               Points Available
             </div>
             <div className="font-mono-num font-bold text-base text-white leading-none">
@@ -112,23 +114,23 @@ export default function RedeemPage() {
       </div>
 
       {/* Tabs: Catalog vs History */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] pb-1">
+      <div className="flex items-center gap-2 border-b border-slate-200/80 pb-2">
         <button
           onClick={() => setActiveTab('catalog')}
-          className={`px-4 py-2 font-display font-semibold text-xs rounded-xs transition-colors ${
+          className={`px-4 py-2 font-display font-bold text-xs rounded-full transition-all ${
             activeTab === 'catalog'
-              ? 'bg-[#1B2A72] text-white shadow-xs'
-              : 'text-[var(--ink-2)] hover:bg-[var(--surface-2)]'
+              ? 'bg-[#1B2A72] text-white shadow-md'
+              : 'text-slate-600 hover:bg-slate-100 font-semibold'
           }`}
         >
           Gift Card Catalog
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-4 py-2 font-display font-semibold text-xs rounded-xs transition-colors ${
+          className={`px-4 py-2 font-display font-bold text-xs rounded-full transition-all ${
             activeTab === 'history'
-              ? 'bg-[#1B2A72] text-white shadow-xs'
-              : 'text-[var(--ink-2)] hover:bg-[var(--surface-2)]'
+              ? 'bg-[#1B2A72] text-white shadow-md'
+              : 'text-slate-600 hover:bg-slate-100 font-semibold'
           }`}
         >
           My Voucher History ({redemptions.length})
@@ -140,32 +142,33 @@ export default function RedeemPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {GIFT_CARDS.map((card) => {
             return (
-              <div
+              <Card
                 key={card.id}
-                className="bg-white border border-[var(--border)] rounded-xs p-6 shadow-xs flex flex-col justify-between space-y-4 hover:border-[#1B2A72] transition-colors"
+                variant="elevated"
+                className="p-6 flex flex-col justify-between space-y-4 hover:border-[#1B2A72] transition-all"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-xs bg-[var(--surface)] flex items-center justify-center text-2xl border border-[var(--border)]">
-                      {card.logo}
+                    <div className="h-11 px-3 py-1.5 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200/80 shadow-2xs">
+                      <BrandLogo id={card.id} brand={card.brand} className="h-7 w-auto" />
                     </div>
-                    <span className="text-[10px] font-mono-num uppercase font-semibold text-[var(--ink-subtle)]">
+                    <span className="text-[10px] font-mono-num uppercase font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                       Instant Delivery
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="font-display font-bold text-lg text-[var(--ink)]">
+                    <h3 className="font-display font-bold text-lg text-slate-900">
                       {card.brand} E-Gift Card
                     </h3>
-                    <p className="text-xs text-[var(--ink-muted)]">
+                    <p className="text-xs text-slate-500 font-medium">
                       Valid for all online & app purchases across India.
                     </p>
                   </div>
 
                   {/* Denomination Buttons Grid */}
-                  <div className="space-y-1.5 pt-2">
-                    <span className="text-[10px] uppercase font-semibold text-[var(--ink-subtle)] block">
+                  <div className="space-y-2 pt-2">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono-num">
                       Select Value (₹1 = 10 Pts)
                     </span>
                     <div className="grid grid-cols-2 gap-2">
@@ -178,10 +181,10 @@ export default function RedeemPage() {
                             key={denom}
                             onClick={() => handleOpenRedeemModal(card, denom)}
                             disabled={!canAfford}
-                            className={`p-2 rounded-xs text-xs font-mono-num font-bold transition-all text-center border ${
+                            className={`p-2.5 rounded-xl text-xs font-mono-num font-bold transition-all text-center border ${
                               canAfford
-                                ? 'border-[var(--border)] bg-[var(--surface)] hover:bg-[#1B2A72] hover:text-white hover:border-[#1B2A72] text-[var(--ink)]'
-                                : 'border-[var(--border)] bg-gray-100 text-gray-400 cursor-not-allowed'
+                                ? 'border-slate-200 bg-slate-50 hover:bg-[#1B2A72] hover:text-white hover:border-[#1B2A72] text-slate-900 shadow-2xs'
+                                : 'border-slate-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
                             }`}
                           >
                             <div>₹{denom}</div>
@@ -195,11 +198,11 @@ export default function RedeemPage() {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between text-[11px] text-[var(--ink-muted)]">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
                   <span>0% Convenience Fee</span>
-                  <span className="text-[#3DAA4B] font-semibold">&bull; Stock Available</span>
+                  <span className="text-emerald-600 font-bold">&bull; Stock Available</span>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
@@ -268,10 +271,12 @@ export default function RedeemPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{selectedBrand.logo}</span>
-                <h3 className="font-display font-bold text-lg text-[var(--ink)]">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200/80">
+                  <BrandLogo id={selectedBrand.id} brand={selectedBrand.brand} className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-bold text-lg text-slate-900">
                   Redeem {selectedBrand.brand} Voucher
                 </h3>
               </div>

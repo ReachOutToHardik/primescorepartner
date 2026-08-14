@@ -17,6 +17,7 @@ import {
   ShareNetwork,
   Lightning,
 } from '@phosphor-icons/react';
+import { Card } from '@/components/ui/Card';
 
 // Recharts components
 import {
@@ -129,17 +130,17 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       {/* Welcome Banner Header */}
-      <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-xs border border-white/10 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white text-xs font-semibold rounded-xs border border-white/15">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white text-xs font-semibold rounded-full border border-white/15">
             <Sparkle size={14} className="text-[#F5C518]" weight="fill" />
-            <span>Welcome back, {partner?.name || 'Arjun Mehta'}!</span>
+            <span>Welcome back, {partner?.name || 'Arjun Mehta'}</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Partner Growth & Referral Dashboard
+            Partner Referral Dashboard
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Track your submitted client referrals, monitor stage progress, and convert completed cases into cashable PrimePoints rewards.
+            Monitor client referral status, track case updates, and view your earned PrimePoints balance.
           </p>
         </div>
 
@@ -147,116 +148,116 @@ export default function DashboardPage() {
         <div className="relative z-10 shrink-0">
           <Link
             href="/refer"
-            className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-semibold text-sm rounded-xs transition-colors inline-flex items-center gap-2 shadow-xs"
+            className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
           >
             <UserPlus size={18} weight="bold" />
-            <span>Submit New Referral</span>
+            <span>Submit Referral</span>
           </Link>
         </div>
       </div>
 
-      {/* Metric Stats Rail (Count-Up Feel) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Metric Stats Rail (Modern Card Primitives) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Total Referrals */}
-        <div className="bg-white border border-[var(--border)] p-5 rounded-xs shadow-xs space-y-2 relative overflow-hidden">
+        <Card variant="elevated" className="p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-semibold text-[var(--ink-muted)] tracking-wider">
+            <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">
               Total Referrals
             </span>
-            <div className="w-9 h-9 rounded-xs bg-[#1B2A72]/10 text-[#1B2A72] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-[#1B2A72] flex items-center justify-center shadow-2xs">
               <Users size={20} weight="bold" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono-num font-bold text-3xl text-[var(--ink)]">
+            <span className="font-mono-num font-bold text-3xl text-slate-900">
               {totalCount}
             </span>
-            <span className="text-xs text-[#3DAA4B] font-semibold flex items-center gap-0.5">
+            <span className="text-xs text-emerald-600 font-bold flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
               <TrendUp size={14} /> +15%
             </span>
           </div>
-          <p className="text-[11px] text-[var(--ink-subtle)]">Cumulative submitted client leads</p>
-        </div>
+          <p className="text-xs text-slate-500 font-medium">Cumulative submitted client leads</p>
+        </Card>
 
         {/* Approved & Completed */}
-        <div className="bg-white border border-[var(--border)] p-5 rounded-xs shadow-xs space-y-2 relative overflow-hidden">
+        <Card variant="elevated" className="p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-semibold text-[var(--ink-muted)] tracking-wider">
+            <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">
               Completed & Paid
             </span>
-            <div className="w-9 h-9 rounded-xs bg-[#3DAA4B]/10 text-[#3DAA4B] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs">
               <CheckCircle size={20} weight="fill" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono-num font-bold text-3xl text-[var(--ink)]">
+            <span className="font-mono-num font-bold text-3xl text-slate-900">
               {completedCount}
             </span>
-            <span className="text-xs text-[#3DAA4B] font-semibold">
-              ({Math.round((completedCount / (totalCount || 1)) * 100)}% Success)
+            <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              {Math.round((completedCount / (totalCount || 1)) * 100)}% Success
             </span>
           </div>
-          <p className="text-[11px] text-[var(--ink-subtle)]">Successfully resolved & rewarded</p>
-        </div>
+          <p className="text-xs text-slate-500 font-medium">Successfully resolved & rewarded</p>
+        </Card>
 
         {/* Pending In Progress */}
-        <div className="bg-white border border-[var(--border)] p-5 rounded-xs shadow-xs space-y-2 relative overflow-hidden">
+        <Card variant="elevated" className="p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-semibold text-[var(--ink-muted)] tracking-wider">
+            <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">
               Active Pending
             </span>
-            <div className="w-9 h-9 rounded-xs bg-[#F5C518]/20 text-[#1A1917] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-2xs">
               <Clock size={20} weight="bold" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono-num font-bold text-3xl text-[var(--ink)]">
+            <span className="font-mono-num font-bold text-3xl text-slate-900">
               {pendingCount}
             </span>
-            <span className="text-xs text-[var(--ink-muted)] font-semibold">In Pipeline</span>
+            <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-semibold border border-amber-200">In Pipeline</span>
           </div>
-          <p className="text-[11px] text-[var(--ink-subtle)]">Under active bureau processing</p>
-        </div>
+          <p className="text-xs text-slate-500 font-medium">Under active bureau processing</p>
+        </Card>
 
         {/* Total Reward Points */}
-        <div className="bg-white border border-[var(--border)] p-5 rounded-xs shadow-xs space-y-2 relative overflow-hidden">
+        <Card variant="elevated" className="p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-semibold text-[var(--ink-muted)] tracking-wider">
+            <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">
               PrimePoints Balance
             </span>
-            <div className="w-9 h-9 rounded-xs bg-[#F5C518]/20 text-[#1A1917] flex items-center justify-center">
-              <Coins size={20} weight="fill" className="text-[#F5C518]" />
+            <div className="w-10 h-10 rounded-xl bg-amber-100/60 text-amber-600 flex items-center justify-center shadow-2xs">
+              <Coins size={20} weight="fill" className="text-amber-500" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="font-mono-num font-bold text-3xl text-[#1B2A72]">
               {totalPoints.toLocaleString()}
             </span>
-            <span className="text-xs font-mono-num text-[var(--ink-muted)] font-semibold">
+            <span className="text-xs font-mono-num text-slate-500 font-bold">
               (&asymp; ₹{totalPoints / 10})
             </span>
           </div>
-          <p className="text-[11px] text-[var(--ink-subtle)]">Redeemable for Instant Gift Cards</p>
-        </div>
+          <p className="text-xs text-slate-500 font-medium">Redeemable for Instant Gift Cards</p>
+        </Card>
       </div>
 
       {/* Middle Section: Chart + PrimePoints Tier Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Referral Trend Chart (8 cols) */}
-        <div className="lg:col-span-8 bg-white border border-[var(--border)] p-6 rounded-xs shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
+        <Card variant="elevated" className="lg:col-span-8 p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-lg font-bold text-[var(--ink)]">
+              <h2 className="font-display text-lg font-bold text-slate-900">
                 Referral & Earnings Trend
               </h2>
-              <p className="text-xs text-[var(--ink-muted)]">
+              <p className="text-xs text-slate-500 font-medium">
                 Monthly volume of client referrals and accumulated reward points.
               </p>
             </div>
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as any)}
-              className="text-xs font-semibold px-2.5 py-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-xs text-[var(--ink)] focus:border-[#1B2A72] cursor-pointer"
+              className="text-xs font-semibold px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer shadow-2xs"
             >
               <option value="15d">Last 15 Days</option>
               <option value="30d">Last 30 Days</option>
@@ -281,11 +282,12 @@ export default function DashboardPage() {
                   contentStyle={{
                     backgroundColor: '#0F1A4E',
                     borderColor: 'rgba(255,255,255,0.2)',
-                    borderRadius: '4px',
+                    borderRadius: '12px',
                     color: '#FFFFFF',
                     fontSize: '12px',
                     fontFamily: 'DM Sans',
                     padding: '8px 12px',
+                    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
                   }}
                   itemStyle={{
                     color: '#F5C518',
@@ -310,12 +312,12 @@ export default function DashboardPage() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </Card>
 
         {/* Right 4 cols: PrimePoints Tier Status & Quick Referral Action */}
         <div className="lg:col-span-4 space-y-6">
           {/* Reward Card & Tier Status */}
-          <div className="bg-[#1B2A72] text-white p-6 rounded-xs border border-white/10 shadow-xs space-y-4 relative overflow-hidden">
+          <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 rounded-2xl border border-white/10 shadow-xl space-y-4 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase font-semibold tracking-wider text-slate-300">
                 Partner Tier Status
@@ -385,20 +387,20 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Referrals Mini-Table */}
-      <div className="bg-white border border-[var(--border)] rounded-xs shadow-xs p-6 space-y-4">
+      <Card variant="elevated" className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-lg font-bold text-[var(--ink)]">
+            <h2 className="font-display text-lg font-bold text-slate-900">
               Recent Referrals Pipeline
             </h2>
-            <p className="text-xs text-[var(--ink-muted)]">
+            <p className="text-xs text-slate-500 font-medium">
               Latest client submissions and active bureau progress.
             </p>
           </div>
 
           <Link
             href="/referrals"
-            className="text-xs text-[#1B2A72] font-bold hover:underline flex items-center gap-1"
+            className="text-xs text-[#1B2A72] font-bold hover:underline flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100/80 transition-all hover:bg-indigo-100"
           >
             <span>View All Referrals</span>
             <CaretRight size={14} weight="bold" />
@@ -443,7 +445,7 @@ export default function DashboardPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
