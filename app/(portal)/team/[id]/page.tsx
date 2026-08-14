@@ -81,10 +81,10 @@ export default function TeamMemberDetailPage() {
 
           <div className="flex items-center gap-3 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-6">
             <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 font-mono-num block">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
                 Total Overriding Cut (10%)
               </span>
-              <p className="font-mono-num font-extrabold text-2xl text-[#1B2A72] mt-0.5">
+              <p className="font-display font-extrabold text-2xl text-[#1B2A72] mt-0.5">
                 +{member.overridePointsEarned.toLocaleString()} Pts
               </p>
             </div>
@@ -94,23 +94,23 @@ export default function TeamMemberDetailPage() {
         {/* Contact Info Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100 text-xs font-medium text-slate-700">
           <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-            <Envelope size={16} className="text-slate-400" />
-            <span className="font-mono-num text-slate-800 font-semibold truncate">{member.email}</span>
+            <Envelope size={16} className="text-slate-400 shrink-0" />
+            <span className="text-slate-800 font-semibold truncate">{member.email}</span>
           </div>
 
           <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-            <Phone size={16} className="text-slate-400" />
-            <span className="font-mono-num text-slate-800 font-semibold">{member.phone}</span>
+            <Phone size={16} className="text-slate-400 shrink-0" />
+            <span className="text-slate-800 font-semibold">{member.phone}</span>
           </div>
 
           <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-            <MapPin size={16} className="text-slate-400" />
+            <MapPin size={16} className="text-slate-400 shrink-0" />
             <span className="text-slate-800 font-semibold">{member.city}</span>
           </div>
 
           <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-            <Clock size={16} className="text-slate-400" />
-            <span className="font-mono-num text-slate-800 font-semibold">
+            <Clock size={16} className="text-slate-400 shrink-0" />
+            <span className="text-slate-800 font-semibold">
               Joined {new Date(member.joinedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
@@ -120,10 +120,10 @@ export default function TeamMemberDetailPage() {
       {/* 3. Performance Metrics Rail */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <Card variant="elevated" className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-          <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num block">
+          <span className="text-xs uppercase font-bold tracking-wider text-slate-400 block">
             Submitted Referrals Count
           </span>
-          <p className="font-mono-num font-extrabold text-3xl text-slate-900 mt-2">
+          <p className="font-display font-extrabold text-3xl text-slate-900 mt-2">
             {member.casesCount} Cases
           </p>
           <span className="text-xs text-slate-500 font-medium block mt-1">
@@ -132,10 +132,10 @@ export default function TeamMemberDetailPage() {
         </Card>
 
         <Card variant="elevated" className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-          <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num block">
+          <span className="text-xs uppercase font-bold tracking-wider text-slate-400 block">
             Member Point Balance
           </span>
-          <p className="font-mono-num font-extrabold text-3xl text-amber-600 mt-2">
+          <p className="font-display font-extrabold text-3xl text-amber-600 mt-2">
             {member.totalMemberPoints.toLocaleString()} Pts
           </p>
           <span className="text-xs text-slate-500 font-medium block mt-1">
@@ -144,10 +144,10 @@ export default function TeamMemberDetailPage() {
         </Card>
 
         <Card variant="elevated" className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-          <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num block">
+          <span className="text-xs uppercase font-bold tracking-wider text-slate-400 block">
             Your Passive 10% Cut
           </span>
-          <p className="font-mono-num font-extrabold text-3xl text-[#1B2A72] mt-2">
+          <p className="font-display font-extrabold text-3xl text-[#1B2A72] mt-2">
             +{member.overridePointsEarned.toLocaleString()} Pts
           </p>
           <span className="text-xs text-slate-500 font-medium block mt-1">

@@ -109,9 +109,9 @@ export default function TeamPage() {
 
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold px-5 py-3 rounded-xl flex items-center gap-2 shrink-0 shadow-sm transition-all"
+          className="bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold px-4 py-2.5 rounded-xl inline-flex flex-row items-center justify-center gap-2 shrink-0 shadow-sm transition-all whitespace-nowrap text-xs"
         >
-          <UserPlus size={18} weight="bold" />
+          <UserPlus size={16} weight="bold" className="shrink-0" />
           <span>Onboard New Team Member</span>
         </Button>
       </div>
