@@ -97,17 +97,21 @@ export default function Sidebar({
       <div className="p-4 flex items-center justify-between border-b border-white/10 min-h-[68px]">
         <Link href="/dashboard" className="flex items-center gap-3 overflow-hidden py-1">
           {isCollapsed ? (
-            <img
-              src="/logo.png"
-              alt="PrimeScore Logo"
-              className="w-9 h-9 object-contain shrink-0"
-            />
+            <div className="p-1.5 rounded-lg bg-white shrink-0 shadow-sm flex items-center justify-center">
+              <img
+                src="/logo.png"
+                alt="PrimeScore Logo"
+                className="w-7 h-7 object-contain"
+              />
+            </div>
           ) : (
-            <img
-              src="/logo.png"
-              alt="PrimeScore Partner Network"
-              className="h-9 object-contain max-w-[170px]"
-            />
+            <div className="px-2.5 py-1 rounded-lg bg-white shadow-sm flex items-center justify-center">
+              <img
+                src="/logo.png"
+                alt="PrimeScore Partner Network"
+                className="h-7 object-contain max-w-[150px]"
+              />
+            </div>
           )}
         </Link>
 
