@@ -18,6 +18,7 @@ import {
 } from '@phosphor-icons/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Card } from '@/components/ui/Card';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -332,22 +333,13 @@ export default function ReferPage() {
             </div>
 
             {/* Requested Service Dropdown */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Requested Credit Service *
-              </label>
-              <select
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#1B2A72] focus:ring-2 focus:ring-indigo-100 text-slate-900 cursor-pointer transition-all"
-              >
-                {SERVICE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CustomSelect
+              label="Requested Credit Service *"
+              options={SERVICE_OPTIONS}
+              value={service}
+              onChange={(val) => setService(val)}
+              placeholder="Select service..."
+            />
 
             {/* Notes */}
             <div>

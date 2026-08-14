@@ -20,6 +20,7 @@ import {
   Cardholder,
 } from '@phosphor-icons/react';
 import { LogoLight } from '@/components/ui/LogoLight';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -236,22 +237,13 @@ export default function RegisterPage() {
                 {errors.phone && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.phone}</p>}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Primary Profession Category *
-                </label>
-                <select
-                  value={profession}
-                  onChange={(e) => setProfession(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-medium"
-                >
-                  {PROFESSION_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomSelect
+                label="Primary Profession Category *"
+                options={PROFESSION_OPTIONS}
+                value={profession}
+                onChange={(val) => setProfession(val)}
+                placeholder="Select profession..."
+              />
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
