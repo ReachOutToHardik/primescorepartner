@@ -18,6 +18,7 @@ import {
   Lightning,
 } from '@phosphor-icons/react';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 import {
   Chart as ChartJS,
@@ -458,26 +459,40 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {referrals.slice(0, 5).map((ref) => (
-                <tr key={ref.id} className="hover:bg-[var(--surface)] transition-colors">
-                  <td className="p-3 font-mono-num font-semibold text-[var(--ink)]">{ref.id}</td>
-                  <td className="p-3 font-semibold text-[var(--ink)]">
-                    {ref.customerName}
-                    <span className="block text-[10px] text-[var(--ink-subtle)] font-mono-num">
-                      {ref.customerPhone}
-                    </span>
-                  </td>
-                  <td className="p-3 text-[var(--ink-2)]">{ref.city}</td>
-                  <td className="p-3 font-medium text-[#1B2A72]">{ref.service}</td>
-                  <td className="p-3">{getStatusBadge(ref.status)}</td>
-                  <td className="p-3 font-mono-num text-[var(--ink-muted)]">
-                    {new Date(ref.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="p-3 text-right font-mono-num font-bold text-[#3DAA4B]">
-                    {ref.pointsEarned > 0 ? `+${ref.pointsEarned} Pts` : '—'}
+              {referrals.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-4">
+                    <EmptyState
+                      title="No Referrals Yet"
+                      description="You haven't submitted any client referral leads yet. Submit your first referral to earn points."
+                      actionText="Submit Referral"
+                      actionHref="/refer"
+                      icon="user"
+                    />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                referrals.slice(0, 5).map((ref) => (
+                  <tr key={ref.id} className="hover:bg-[var(--surface)] transition-colors">
+                    <td className="p-3 font-mono-num font-semibold text-[var(--ink)]">{ref.id}</td>
+                    <td className="p-3 font-semibold text-[var(--ink)]">
+                      {ref.customerName}
+                      <span className="block text-[10px] text-[var(--ink-subtle)] font-mono-num">
+                        {ref.customerPhone}
+                      </span>
+                    </td>
+                    <td className="p-3 text-[var(--ink-2)]">{ref.city}</td>
+                    <td className="p-3 font-medium text-[#1B2A72]">{ref.service}</td>
+                    <td className="p-3">{getStatusBadge(ref.status)}</td>
+                    <td className="p-3 font-mono-num text-[var(--ink-muted)]">
+                      {new Date(ref.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 text-right font-mono-num font-bold text-[#3DAA4B]">
+                      {ref.pointsEarned > 0 ? `+${ref.pointsEarned} Pts` : '—'}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

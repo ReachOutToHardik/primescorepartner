@@ -17,12 +17,15 @@ import {
   Users,
 } from '@phosphor-icons/react';
 
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+
 export default function LoginPage() {
   const router = useRouter();
   const { loginDemo } = usePartnerStore();
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleStandardSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,15 +33,20 @@ export default function LoginPage() {
       setError('Please enter your email/phone and password');
       return;
     }
-    // Perform standard login simulation
+    setIsNavigating(true);
     loginDemo();
     router.push('/dashboard');
   };
 
   const handleDemoSignIn = () => {
+    setIsNavigating(true);
     loginDemo();
     router.push('/dashboard');
   };
+
+  if (isNavigating) {
+    return <LoadingSpinner message="Opening Primescore Partner Dashboard..." />;
+  }
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[var(--surface)] text-[var(--ink)]">

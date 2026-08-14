@@ -20,6 +20,7 @@ import {
   ArrowRight,
 } from '@phosphor-icons/react';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function ReferralsPage() {
   const { referrals, updateReferralStatus } = usePartnerStore();
@@ -227,8 +228,14 @@ export default function ReferralsPage() {
       {/* Referrals Mobile Card View (Visible on Mobile) */}
       <div className="md:hidden space-y-3">
         {filteredReferrals.length === 0 ? (
-          <Card variant="default" className="p-6 text-center text-xs text-slate-500 font-medium">
-            No referrals match your search query or filter selection.
+          <Card variant="default" className="p-2">
+            <EmptyState
+              title={searchQuery || statusFilter !== 'all' ? 'No Matching Referrals' : 'No Client Referrals Yet'}
+              description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your search keywords or status filter options.' : 'Start submitting client referral leads to earn 500 PrimePoints per completed case.'}
+              actionText="Submit New Referral"
+              actionHref="/refer"
+              icon={searchQuery ? 'search' : 'user'}
+            />
           </Card>
         ) : (
           filteredReferrals.map((ref) => (
@@ -278,8 +285,14 @@ export default function ReferralsPage() {
             <tbody className="divide-y divide-slate-100">
               {filteredReferrals.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-500 font-medium">
-                    No referrals match your search query or filter selection.
+                  <td colSpan={8} className="p-4">
+                    <EmptyState
+                      title={searchQuery || statusFilter !== 'all' ? 'No Matching Referrals' : 'No Client Referrals Yet'}
+                      description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your search keywords or status filter options.' : 'Start submitting client referral leads to earn 500 PrimePoints per completed case.'}
+                      actionText="Submit New Referral"
+                      actionHref="/refer"
+                      icon={searchQuery ? 'search' : 'user'}
+                    />
                   </td>
                 </tr>
               ) : (
