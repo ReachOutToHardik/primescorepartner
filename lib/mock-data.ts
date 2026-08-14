@@ -125,6 +125,15 @@ export const MOCK_TEAM_MEMBERS: TeamMember[] = [
     casesCount: 8,
     totalMemberPoints: 4000,
     overridePointsEarned: 400,
+    referralsLog: [
+      { id: 'REF-RJ-101', customerName: 'Manish Malhotra', service: 'Credit Rectification', status: 'completed', createdAt: '2024-11-12T10:00:00Z', pointsEarned: 500, overrideEarned: 50 },
+      { id: 'REF-RJ-102', customerName: 'Kavita Roy', service: 'Bureau Report (All 4 Bureaus)', status: 'completed', createdAt: '2024-11-18T14:30:00Z', pointsEarned: 500, overrideEarned: 50 },
+      { id: 'REF-RJ-103', customerName: 'Vikrant Deshmukh', service: 'Loan Advisory', status: 'in_progress', createdAt: '2024-12-02T09:15:00Z', pointsEarned: 0, overrideEarned: 0 },
+    ],
+    redemptionsLog: [
+      { id: 'RDM-RJ-501', brand: 'Amazon Pay', denomination: 1000, redeemedAt: '2024-11-25T16:00:00Z', voucherCode: 'AMZN-RJ10-9988' },
+      { id: 'RDM-RJ-502', brand: 'Swiggy', denomination: 500, redeemedAt: '2024-12-01T11:20:00Z', voucherCode: 'SWIG-RJ05-4422' },
+    ],
   },
   {
     id: 'TM-002',
@@ -138,6 +147,13 @@ export const MOCK_TEAM_MEMBERS: TeamMember[] = [
     casesCount: 5,
     totalMemberPoints: 2500,
     overridePointsEarned: 250,
+    referralsLog: [
+      { id: 'REF-SK-201', customerName: 'Anil Kulkarni', service: 'Credit Score Improvement', status: 'completed', createdAt: '2024-11-15T11:00:00Z', pointsEarned: 500, overrideEarned: 50 },
+      { id: 'REF-SK-202', customerName: 'Pooja Hegde', service: 'Dispute Resolution', status: 'enrolled', createdAt: '2024-12-04T15:00:00Z', pointsEarned: 0, overrideEarned: 0 },
+    ],
+    redemptionsLog: [
+      { id: 'RDM-SK-601', brand: 'Flipkart', denomination: 500, redeemedAt: '2024-11-28T10:15:00Z', voucherCode: 'FLIP-SK05-7711' },
+    ],
   },
   {
     id: 'TM-003',
@@ -151,6 +167,10 @@ export const MOCK_TEAM_MEMBERS: TeamMember[] = [
     casesCount: 2,
     totalMemberPoints: 1000,
     overridePointsEarned: 100,
+    referralsLog: [
+      { id: 'REF-RG-301', customerName: 'Siddharth Saxena', service: 'Multi-Bureau Report', status: 'completed', createdAt: '2024-12-03T12:00:00Z', pointsEarned: 500, overrideEarned: 50 },
+    ],
+    redemptionsLog: [],
   },
 ];
 

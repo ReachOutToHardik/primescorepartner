@@ -7,6 +7,24 @@ export type PartnerStatus = 'pending_kyc' | 'kyc_submitted' | 'kyc_approved' | '
 export type ReferralStatus = 'submitted' | 'received' | 'enrolled' | 'in_progress' | 'completed' | 'rejected';
 export type Tier = 'Silver' | 'Gold' | 'Platinum';
 
+export interface TeamMemberReferral {
+  id: string;
+  customerName: string;
+  service: string;
+  status: ReferralStatus;
+  createdAt: string;
+  pointsEarned: number;
+  overrideEarned: number;
+}
+
+export interface TeamMemberRedemption {
+  id: string;
+  brand: string;
+  denomination: number;
+  redeemedAt: string;
+  voucherCode: string;
+}
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -19,6 +37,8 @@ export interface TeamMember {
   casesCount: number;
   totalMemberPoints: number;
   overridePointsEarned: number; // 10% cut earned by TL from this member
+  referralsLog?: TeamMemberReferral[];
+  redemptionsLog?: TeamMemberRedemption[];
 }
 
 export interface Partner {
