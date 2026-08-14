@@ -164,16 +164,19 @@ export default function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group relative ${
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition-all duration-200 group relative ${
                 isActive
-                  ? 'bg-[#1B2A72] text-white font-bold shadow-md border-l-4 border-[#E63329]'
-                  : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'
+                  ? 'bg-[#1B2A72] text-white font-bold border border-white/10 shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
               } ${isCollapsed ? 'justify-center px-0' : ''}`}
               title={isCollapsed ? item.name : undefined}
             >
+              {isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E63329] shrink-0" />
+              )}
               <Icon
                 weight={isActive ? 'fill' : 'bold'}
-                className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                   isActive ? 'text-white' : 'text-slate-400'
                 }`}
               />
@@ -189,7 +192,11 @@ export default function Sidebar({
       {/* Partner Status & Footer Card */}
       <div className="p-3 border-t border-white/10 space-y-2 bg-[#091136]">
         {!isCollapsed ? (
-          <div className="p-3 rounded-xl bg-[#121E5C] border border-white/10 space-y-2.5 shadow-sm">
+          <Link
+            href="/kyc"
+            onClick={onClose}
+            className="block p-3 rounded-xl bg-[#121E5C] hover:bg-[#1A2870] border border-white/10 space-y-2.5 shadow-sm transition-all group"
+          >
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Partner KYC</span>
               <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#0F1A4E] border border-white/10 text-[10px] font-semibold text-slate-200">
@@ -202,18 +209,26 @@ export default function Sidebar({
               <div className="flex items-center gap-2.5 pt-2 border-t border-white/10">
                 <Avatar name={partner.name} size="sm" status="kyc_approved" />
                 <div className="overflow-hidden leading-tight flex-1">
-                  <div className="text-xs font-bold text-white truncate font-display">{partner.name}</div>
+                  <div className="text-xs font-bold text-white truncate font-display group-hover:text-indigo-200 transition-colors flex items-center justify-between">
+                    <span>{partner.name}</span>
+                    <CaretRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                   <div className="text-[10px] text-slate-300 truncate font-mono-num">{partner.profession || 'Partner'}</div>
                 </div>
               </div>
             )}
-          </div>
+          </Link>
         ) : (
-          <div className="flex justify-center" title={`KYC Status: ${statusLabel}`}>
-            <div className="w-8 h-8 rounded-full bg-[#121E5C] flex items-center justify-center border border-white/10 shadow-sm">
+          <Link
+            href="/kyc"
+            onClick={onClose}
+            className="flex justify-center"
+            title={`View Profile (${statusLabel})`}
+          >
+            <div className="w-8 h-8 rounded-full bg-[#121E5C] hover:bg-[#1A2870] flex items-center justify-center border border-white/10 shadow-sm transition-colors">
               {getKycIcon()}
             </div>
-          </div>
+          </Link>
         )}
 
         <button

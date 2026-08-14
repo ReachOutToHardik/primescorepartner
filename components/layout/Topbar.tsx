@@ -153,7 +153,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         {/* PrimePoints Coin Balance Widget */}
         <Link
           href="/rewards"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xs bg-[#FEF9E7] border border-[#F5C518]/60 hover:bg-[#FDF3CE] transition-colors text-xs text-[#0F1A4E] font-bold"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FEF9E7] border border-[#F5C518]/60 hover:bg-[#FDF3CE] transition-all text-xs text-[#0F1A4E] font-bold shadow-2xs"
           title="View PrimePoints Rewards"
         >
           <Coins size={18} weight="fill" className="text-[#F5C518] shrink-0" />
@@ -163,7 +163,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         {/* Quick Referral Button */}
         <Link
           href="/refer"
-          className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xs bg-[#1B2A72] hover:bg-[#0F1A4E] text-white text-xs font-bold shadow-xs transition-colors"
+          className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1B2A72] hover:bg-[#0F1A4E] text-white text-xs font-bold shadow-sm hover:shadow-md transition-all"
         >
           <UserPlus weight="bold" className="w-4 h-4" />
           <span>New Referral</span>
