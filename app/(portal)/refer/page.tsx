@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { usePartnerStore, Referral } from '@/lib/store';
 import { SERVICE_OPTIONS } from '@/lib/mock-data';
 import {
@@ -13,12 +13,17 @@ import {
   Envelope,
   MapPin,
   FileText,
+  DownloadSimple,
+  CaretDown,
 } from '@phosphor-icons/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Card } from '@/components/ui/Card';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function ReferPage() {
   const { partner, addReferral } = usePartnerStore();
+  const qrCardRef = useRef<HTMLDivElement>(null);
 
   // Referral Form State
   const [customerName, setCustomerName] = useState('');
@@ -30,6 +35,8 @@ export default function ReferPage() {
 
   // UI state
   const [copiedLink, setCopiedLink] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -41,6 +48,119 @@ export default function ReferPage() {
     navigator.clipboard.writeText(referralUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleDownloadQR = async (format: 'png' | 'jpg' | 'pdf') => {
+    setDownloadOpen(false);
+    setIsExporting(true);
+
+    try {
+      const qrSvg = qrCardRef.current?.querySelector('svg');
+      if (!qrSvg) throw new Error('QR SVG element not found');
+
+      // Convert SVG element to serialized string
+      const svgData = new XMLSerializer().serializeToString(qrSvg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const URL = window.URL || window.webkitURL || window;
+      const blobURL = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = (e) => reject(e);
+        img.src = blobURL;
+      });
+
+      // Load logo image for center overlay
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'anonymous';
+
+      await new Promise<void>((resolve) => {
+        logoImg.onload = () => resolve();
+        logoImg.onerror = () => resolve(); // Proceed even if logo fails
+        logoImg.src = '/qr-logo.png';
+      });
+
+      // Render high-res 1000x1160 canvas badge
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const size = 1000;
+      const padding = 80;
+      canvas.width = size;
+      canvas.height = size + 160;
+
+      if (ctx) {
+        // White rounded background card
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.roundRect(0, 0, canvas.width, canvas.height, 40);
+        ctx.fill();
+
+        // Border ring
+        ctx.strokeStyle = '#F5C518';
+        ctx.lineWidth = 12;
+        ctx.stroke();
+
+        // Draw QR SVG Image
+        ctx.drawImage(img, padding, padding, size - padding * 2, size - padding * 2);
+
+        // Draw Centered Logo Image Overlay
+        if (logoImg.complete && logoImg.width > 0) {
+          const logoSize = 180;
+          const logoX = (canvas.width - logoSize) / 2;
+          const logoY = padding + (size - padding * 2 - logoSize) / 2;
+
+          // White background cutout circle for logo center
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, padding + (size - padding * 2) / 2, logoSize / 2 + 10, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+        }
+
+        // Partner footer text
+        ctx.fillStyle = '#0F1A4E';
+        ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`PRIMESCORE PARTNER • ${referralCode}`, size / 2, size + 80);
+      }
+
+      const filename = `primescore-qr-${referralCode.toLowerCase()}`;
+
+      if (format === 'png') {
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `${filename}.png`;
+        link.click();
+      } else if (format === 'jpg') {
+        const image = canvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `${filename}.jpg`;
+        link.click();
+      } else if (format === 'pdf') {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+        });
+        const imgWidth = 140;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', (210 - imgWidth) / 2, 40, imgWidth, imgHeight);
+        pdf.save(`${filename}.pdf`);
+      }
+
+      URL.revokeObjectURL(blobURL);
+    } catch (err) {
+      console.error('Failed to export QR code:', err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -260,12 +380,56 @@ export default function ReferPage() {
         <div className="lg:col-span-5 space-y-6">
           {/* Instant Link Card */}
           <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 rounded-2xl border border-white/10 shadow-xl space-y-5">
-            <div className="flex items-center gap-2.5">
-              <ShareNetwork size={24} className="text-[#F5C518]" weight="bold" />
-              <h3 className="font-display font-bold text-lg text-white">
-                Instant Client Link Generator
-              </h3>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <ShareNetwork size={24} className="text-[#F5C518]" weight="bold" />
+                <h3 className="font-display font-bold text-lg text-white">
+                  Client Link & QR
+                </h3>
+              </div>
+
+              {/* Header Download Dropdown Button */}
+              <div className="relative inline-block text-left">
+                <button
+                  type="button"
+                  onClick={() => setDownloadOpen(!downloadOpen)}
+                  disabled={isExporting}
+                  className="px-3.5 py-1.5 bg-[#F5C518] hover:bg-[#e0b210] text-[#0F1A4E] font-display font-bold text-xs rounded-full transition-all flex items-center gap-1.5 shadow-md disabled:opacity-50"
+                >
+                  <DownloadSimple size={14} weight="bold" />
+                  <span>{isExporting ? 'Exporting...' : 'Download QR'}</span>
+                  <CaretDown size={12} weight="bold" className={`transition-transform ${downloadOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {downloadOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 py-2 divide-y divide-slate-100 animate-fade-in text-left">
+                    <button
+                      onClick={() => handleDownloadQR('png')}
+                      className="w-full px-4 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 flex items-center justify-between transition-colors"
+                    >
+                      <span>PNG Image</span>
+                      <span className="text-[10px] text-slate-400 font-mono-num">.png</span>
+                    </button>
+                    <button
+                      onClick={() => handleDownloadQR('jpg')}
+                      className="w-full px-4 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 flex items-center justify-between transition-colors"
+                    >
+                      <span>JPG Image</span>
+                      <span className="text-[10px] text-slate-400 font-mono-num">.jpg</span>
+                    </button>
+                    <button
+                      onClick={() => handleDownloadQR('pdf')}
+                      className="w-full px-4 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 flex items-center justify-between transition-colors"
+                    >
+                      <span>PDF Document</span>
+                      <span className="text-[10px] text-indigo-600 font-mono-num font-bold">.pdf</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+
             <p className="text-xs text-slate-300 leading-relaxed">
               Share this link directly on WhatsApp or Email. Clients can register themselves, automatically tagging you as their referral partner.
             </p>
@@ -293,12 +457,16 @@ export default function ReferPage() {
             </div>
 
             {/* QR Code Visual Preview Component with Logo embedded in center */}
-            <div className="pt-4 border-t border-white/10 space-y-3 text-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
+            <div className="pt-4 border-t border-white/10 space-y-4 text-center flex flex-col items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-300 block font-mono-num">
                 Client Scan QR Code
               </span>
 
-              <div className="inline-block p-4 bg-white rounded-2xl border-2 border-[#F5C518] shadow-lg">
+              {/* Printable / Downloadable QR Badge Box */}
+              <div
+                ref={qrCardRef}
+                className="p-5 bg-white rounded-2xl border-2 border-[#F5C518] shadow-lg flex flex-col items-center gap-2.5 max-w-[220px]"
+              >
                 <QRCodeSVG
                   value={referralUrl}
                   size={160}
@@ -315,9 +483,12 @@ export default function ReferPage() {
                     excavate: true,
                   }}
                 />
+                <div className="text-[10px] font-bold text-[#0F1A4E] uppercase tracking-wider font-mono-num border-t border-slate-100 pt-1.5 w-full text-center">
+                  Primescore Partner &bull; {referralCode}
+                </div>
               </div>
 
-              <p className="text-[11px] text-slate-300 font-medium">
+              <p className="text-[11px] text-slate-300 font-medium max-w-xs">
                 Display this QR code in your office or present it on your smartphone for instant scan onboarding.
               </p>
             </div>
