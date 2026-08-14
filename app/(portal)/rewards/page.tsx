@@ -126,42 +126,47 @@ export default function RewardsPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* SILVER TIER (Base/Completed) */}
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
-              currentTier === 'Silver' ? 'bg-white border-[#1B2A72] ring-2 ring-[#1B2A72]/20 shadow-md' : 'bg-slate-50/80 border-slate-200/80'
+              currentTier === 'Silver' ? 'bg-white border-[#1B2A72] ring-2 ring-[#1B2A72]/20 shadow-lg' : 'bg-slate-50/80 border-slate-200/80'
             }`}>
-              {/* Big Wave Banner (Tier 1) */}
-              <div className="h-28 relative p-4 flex items-start justify-between overflow-hidden">
+              {/* Extra Big Wave Banner (Tier 1) */}
+              <div className="h-44 relative p-6 flex flex-col justify-between overflow-hidden">
                 <img
                   src="/tier1-wave.svg"
                   alt="Silver Wave Banner"
                   className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
                 />
 
-                <div className="relative z-10 flex items-center gap-2">
-                  <span className="text-sm font-display font-bold uppercase tracking-wider text-white drop-shadow-sm">Silver Partner</span>
-                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                    <Check size={12} weight="bold" />
-                  </span>
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-display font-extrabold tracking-tight text-white drop-shadow-md">Silver Partner</span>
+                    <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                      <Check size={14} weight="bold" />
+                    </span>
+                  </div>
+
+                  {currentTier === 'Silver' && (
+                    <span className="px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
+                      ACTIVE
+                    </span>
+                  )}
                 </div>
 
-                {currentTier === 'Silver' && (
-                  <span className="relative z-10 px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
-                    ACTIVE
-                  </span>
-                )}
+                <div className="relative z-10">
+                  <p className="text-xs font-mono-num text-slate-200 font-bold tracking-wider uppercase">0 &ndash; 4,999 PrimePoints</p>
+                </div>
               </div>
 
-              <div className="p-5 space-y-3">
-                <p className="text-xs font-mono-num text-[#1B2A72] font-bold">0 &ndash; 4,999 Pts</p>
-                <ul className="text-xs text-slate-600 space-y-2 font-medium">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle size={15} className="text-emerald-600 shrink-0" weight="fill" />
+              <div className="p-6 space-y-3 bg-white">
+                <ul className="text-sm text-slate-700 space-y-2.5 font-medium leading-relaxed">
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className="text-emerald-600 shrink-0" weight="fill" />
                     <span>500 Pts base reward / referral</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle size={15} className="text-emerald-600 shrink-0" weight="fill" />
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className="text-emerald-600 shrink-0" weight="fill" />
                     <span>Standard 24h voucher delivery</span>
                   </li>
                 </ul>
@@ -171,53 +176,58 @@ export default function RewardsPage() {
             {/* GOLD TIER */}
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
               currentTier === 'Gold'
-                ? 'bg-white border-amber-500 ring-2 ring-amber-500/30 shadow-md'
+                ? 'bg-white border-amber-500 ring-2 ring-amber-500/30 shadow-lg'
                 : totalPoints >= 5000
                 ? 'bg-emerald-50/40 border-emerald-300'
                 : 'bg-slate-50/70 border-slate-200/90'
             }`}>
-              {/* Big Wave Banner (Tier 2) */}
-              <div className="h-28 relative p-4 flex items-start justify-between overflow-hidden">
+              {/* Extra Big Wave Banner (Tier 2) */}
+              <div className="h-44 relative p-6 flex flex-col justify-between overflow-hidden">
                 <img
                   src="/tier2-wave.svg"
                   alt="Gold Wave Banner"
                   className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
                 />
 
-                <div className="relative z-10 flex items-center gap-2">
-                  <span className="text-sm font-display font-bold uppercase tracking-wider text-white flex items-center gap-1 drop-shadow-sm">
-                    <span>Gold Partner</span>
-                    <Sparkle size={15} className="text-amber-300" weight="fill" />
-                  </span>
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-display font-extrabold tracking-tight text-white flex items-center gap-1.5 drop-shadow-md">
+                      <span>Gold Partner</span>
+                      <Sparkle size={18} className="text-amber-300" weight="fill" />
+                    </span>
 
-                  {totalPoints >= 5000 ? (
-                    <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                      <Check size={12} weight="bold" />
+                    {totalPoints >= 5000 ? (
+                      <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                        <Check size={14} weight="bold" />
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {currentTier === 'Gold' ? (
+                    <span className="px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
+                      ACTIVE
+                    </span>
+                  ) : totalPoints < 5000 ? (
+                    <span className="px-3 py-1 bg-black/60 text-slate-200 font-mono-num text-[11px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
+                      <LockKey size={13} weight="fill" />
+                      <span>LOCKED</span>
                     </span>
                   ) : null}
                 </div>
 
-                {currentTier === 'Gold' ? (
-                  <span className="relative z-10 px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
-                    ACTIVE
-                  </span>
-                ) : totalPoints < 5000 ? (
-                  <span className="relative z-10 px-3 py-1 bg-black/60 text-slate-200 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
-                    <LockKey size={12} weight="fill" />
-                    <span>LOCKED</span>
-                  </span>
-                ) : null}
+                <div className="relative z-10">
+                  <p className="text-xs font-mono-num text-amber-200 font-bold tracking-wider uppercase">5,000 &ndash; 19,999 PrimePoints</p>
+                </div>
               </div>
 
-              <div className="p-5 space-y-3">
-                <p className={`text-xs font-mono-num font-bold ${totalPoints < 5000 ? 'text-slate-400' : 'text-amber-600'}`}>5,000 &ndash; 19,999 Pts</p>
-                <ul className={`text-xs space-y-2 font-medium ${totalPoints < 5000 ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle size={15} className={totalPoints < 5000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
+              <div className="p-6 space-y-3 bg-white">
+                <ul className={`text-sm space-y-2.5 font-medium leading-relaxed ${totalPoints < 5000 ? 'text-slate-400' : 'text-slate-700'}`}>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className={totalPoints < 5000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
                     <span className={totalPoints < 5000 ? 'text-slate-500' : 'font-bold text-slate-900'}>+15% Bonus (575 Pts / case)</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle size={15} className={totalPoints < 5000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className={totalPoints < 5000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
                     <span>Dedicated Relationship Manager</span>
                   </li>
                 </ul>
@@ -227,53 +237,58 @@ export default function RewardsPage() {
             {/* PLATINUM TIER */}
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
               currentTier === 'Platinum'
-                ? 'bg-white border-rose-500 ring-2 ring-rose-500/20 shadow-md'
+                ? 'bg-white border-rose-500 ring-2 ring-rose-500/20 shadow-lg'
                 : totalPoints >= 20000
                 ? 'bg-emerald-50/40 border-emerald-300'
                 : 'bg-slate-50/70 border-slate-200/90'
             }`}>
-              {/* Big Wave Banner (Tier 3) */}
-              <div className="h-28 relative p-4 flex items-start justify-between overflow-hidden">
+              {/* Extra Big Wave Banner (Tier 3) */}
+              <div className="h-44 relative p-6 flex flex-col justify-between overflow-hidden">
                 <img
                   src="/tier3-wave.svg"
                   alt="Platinum Wave Banner"
                   className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
                 />
 
-                <div className="relative z-10 flex items-center gap-2">
-                  <span className="text-sm font-display font-bold uppercase tracking-wider text-white flex items-center gap-1 drop-shadow-sm">
-                    <span>Platinum VIP</span>
-                    <Sparkle size={15} className="text-purple-300" weight="fill" />
-                  </span>
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-display font-extrabold tracking-tight text-white flex items-center gap-1.5 drop-shadow-md">
+                      <span>Platinum VIP</span>
+                      <Sparkle size={18} className="text-purple-300" weight="fill" />
+                    </span>
 
-                  {totalPoints >= 20000 ? (
-                    <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                      <Check size={12} weight="bold" />
+                    {totalPoints >= 20000 ? (
+                      <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                        <Check size={14} weight="bold" />
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {currentTier === 'Platinum' ? (
+                    <span className="px-3 py-1 bg-purple-400 text-purple-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
+                      ACTIVE
+                    </span>
+                  ) : totalPoints < 20000 ? (
+                    <span className="px-3 py-1 bg-black/60 text-slate-200 font-mono-num text-[11px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
+                      <LockKey size={13} weight="fill" />
+                      <span>LOCKED</span>
                     </span>
                   ) : null}
                 </div>
 
-                {currentTier === 'Platinum' ? (
-                  <span className="relative z-10 px-3 py-1 bg-purple-400 text-purple-950 font-mono-num text-[10px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
-                    ACTIVE
-                  </span>
-                ) : totalPoints < 20000 ? (
-                  <span className="relative z-10 px-3 py-1 bg-black/60 text-slate-200 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
-                    <LockKey size={12} weight="fill" />
-                    <span>LOCKED</span>
-                  </span>
-                ) : null}
+                <div className="relative z-10">
+                  <p className="text-xs font-mono-num text-rose-200 font-bold tracking-wider uppercase">20,000+ PrimePoints</p>
+                </div>
               </div>
 
-              <div className="p-5 space-y-3">
-                <p className={`text-xs font-mono-num font-bold ${totalPoints < 20000 ? 'text-slate-400' : 'text-purple-600'}`}>20,000+ Pts</p>
-                <ul className={`text-xs space-y-2 font-medium ${totalPoints < 20000 ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle size={15} className={totalPoints < 20000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
+              <div className="p-6 space-y-3 bg-white">
+                <ul className={`text-sm space-y-2.5 font-medium leading-relaxed ${totalPoints < 20000 ? 'text-slate-400' : 'text-slate-700'}`}>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className={totalPoints < 20000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
                     <span className={totalPoints < 20000 ? 'text-slate-500' : 'font-bold text-slate-900'}>+30% Bonus (650 Pts / case)</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle size={15} className={totalPoints < 20000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className={totalPoints < 20000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
                     <span>Same-day automated payout</span>
                   </li>
                 </ul>
