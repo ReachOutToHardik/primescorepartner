@@ -65,203 +65,131 @@ export default function RewardsPage() {
         </Link>
       </div>
 
-      {/* 2. FULL-WIDTH TIER & BALANCE HERO ROADMAP BANNER */}
-      <Card
-        variant="elevated"
-        className="bg-[#0F172A] text-white p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-xl space-y-7 relative overflow-hidden"
-      >
-        {/* Top Header Metrics Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-slate-800">
-          <div className="space-y-1">
-            <span className="text-[11px] uppercase font-bold tracking-widest text-slate-400 font-mono-num block">
-              Available Reward Balance
+      {/* 2. FULL-WIDTH HERO BALANCE & TIER PROGRESSION BANNER */}
+      <Card variant="elevated" className="p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-md space-y-6 bg-white">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+          <div className="space-y-1.5">
+            <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num block">
+              Total Available Reward Balance
             </span>
             <div className="flex items-baseline gap-3">
-              <span className="font-mono-num font-bold text-4xl sm:text-5xl text-white tracking-tight">
+              <span className="font-mono-num font-bold text-4xl sm:text-5xl text-slate-900 tracking-tight">
                 {totalPoints.toLocaleString()}
               </span>
-              <span className="font-display font-bold text-lg text-amber-400">Pts</span>
-              <span className="text-xs font-mono-num text-slate-400 font-semibold pl-1">
+              <span className="font-display font-bold text-xl text-[#1B2A72]">PrimePoints</span>
+              <span className="text-xs font-mono-num text-slate-500 font-bold pl-1">
                 (&asymp; ₹{(totalPoints / 10).toLocaleString()} Value)
               </span>
             </div>
           </div>
 
-          <div className="space-y-2 sm:text-right">
-            <div className="flex items-center sm:justify-end gap-2">
-              <span className="text-xs font-mono-num text-slate-400">Progress to {nextTierName}:</span>
-              <span className="font-mono-num font-bold text-xs text-amber-400">{progressPercent}%</span>
+          <div className="space-y-2 md:text-right">
+            <div className="flex items-center md:justify-end gap-2">
+              <span className="text-xs font-mono-num text-slate-500 font-semibold">Tier Progress:</span>
+              <span className="px-3 py-1 bg-amber-100 text-amber-900 font-mono-num text-xs font-bold rounded-full">
+                {progressPercent}% to {nextTierName}
+              </span>
             </div>
-            <p className="text-xs text-slate-300 font-medium">
+            <p className="text-xs text-slate-600 font-medium">
               {currentTier === 'Platinum'
-                ? '🏆 Maximum VIP Tier Unlocked'
+                ? '🏆 Maximum VIP Level Active (+30% bonus points per case)'
                 : `${(targetPoints - totalPoints).toLocaleString()} Pts needed to unlock ${nextTierName} tier`}
             </p>
           </div>
         </div>
 
-        {/* Continuous Horizontal Progression Roadmap & Milestone Progress Bar */}
-        <div className="space-y-5 pt-2">
+        {/* Milestone Steps Bar */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block font-mono-num">
-              Partner Tier Progression Roadmap
+              Partner Tier Roadmap
             </span>
-            <span className="text-xs font-mono-num text-amber-400 font-bold">
-              Milestone Progress: {totalPoints.toLocaleString()} / 20,000 Pts
+            <span className="text-xs font-mono-num text-[#1B2A72] font-bold">
+              Current Level: {currentTier} Partner
             </span>
           </div>
 
-          {/* Continuous Milestone Connecting Progress Line */}
-          <div className="relative py-2 hidden md:block">
-            {/* Background Line Track */}
-            <div className="absolute top-1/2 left-8 right-8 -translate-y-1/2 h-1.5 bg-slate-800 rounded-full" />
-            {/* Active Gold Progress Fill Line */}
-            <div
-              className="absolute top-1/2 left-8 -translate-y-1/2 h-1.5 bg-gradient-to-r from-slate-400 via-amber-400 to-amber-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(92, Math.max(8, Math.round((totalPoints / 20000) * 100)))}%` }}
-            />
-
-            {/* Milestone Nodes */}
-            <div className="relative z-10 grid grid-cols-3 text-center">
-              {/* Silver Node */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-6 h-6 rounded-full bg-slate-300 border-4 border-[#0F172A] shadow-md flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-[#0F172A]" />
-                </div>
-                <span className="text-[11px] font-bold text-white">Silver (Active)</span>
-                <span className="text-[10px] font-mono-num text-slate-400">0 Pts</span>
-              </div>
-
-              {/* Gold Node */}
-              <div className="flex flex-col items-center gap-1">
-                <div className={`w-6 h-6 rounded-full border-4 border-[#0F172A] shadow-md flex items-center justify-center ${
-                  totalPoints >= 5000 ? 'bg-amber-400' : 'bg-slate-700'
-                }`}>
-                  <div className="w-2 h-2 rounded-full bg-[#0F172A]" />
-                </div>
-                <span className={`text-[11px] font-bold ${totalPoints >= 5000 ? 'text-amber-400' : 'text-slate-400'}`}>Gold Partner</span>
-                <span className="text-[10px] font-mono-num text-slate-400">5,000 Pts</span>
-              </div>
-
-              {/* Platinum Node */}
-              <div className="flex flex-col items-center gap-1">
-                <div className={`w-6 h-6 rounded-full border-4 border-[#0F172A] shadow-md flex items-center justify-center ${
-                  totalPoints >= 20000 ? 'bg-slate-200' : 'bg-slate-700'
-                }`}>
-                  <div className="w-2 h-2 rounded-full bg-[#0F172A]" />
-                </div>
-                <span className={`text-[11px] font-bold ${totalPoints >= 20000 ? 'text-white' : 'text-slate-400'}`}>Platinum VIP</span>
-                <span className="text-[10px] font-mono-num text-slate-400">20,000 Pts</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative pt-2">
-            {/* SILVER STEP */}
-            <div
-              className={`p-4 rounded-xl border transition-all ${
-                currentTier === 'Silver'
-                  ? 'bg-slate-800/90 border-slate-400 ring-1 ring-slate-400/30'
-                  : 'bg-slate-900/60 border-slate-800 opacity-70'
-              }`}
-            >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* SILVER TIER */}
+            <div className={`p-4 rounded-xl border transition-all ${
+              currentTier === 'Silver' ? 'bg-indigo-50/50 border-[#1B2A72] ring-1 ring-[#1B2A72]/20' : 'bg-slate-50/60 border-slate-200/80 opacity-70'
+            }`}>
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${currentTier === 'Silver' ? 'bg-slate-300 shadow-xs' : 'bg-slate-600'}`} />
-                  <h4 className="font-display font-bold text-sm text-white">Silver Partner</h4>
-                </div>
+                <h4 className="font-display font-bold text-sm text-slate-900">Silver Partner</h4>
                 {currentTier === 'Silver' && (
-                  <span className="px-2.5 py-0.5 bg-slate-700 text-slate-200 font-mono-num text-[10px] font-bold uppercase rounded-full">
+                  <span className="px-2.5 py-0.5 bg-[#1B2A72] text-white text-[10px] font-bold uppercase rounded-full">
                     Active
                   </span>
                 )}
               </div>
-              <p className="text-xs font-mono-num text-slate-400 font-semibold mb-3">0 &ndash; 4,999 Pts</p>
-              <ul className="text-xs text-slate-300 space-y-1.5 font-medium">
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-slate-400 shrink-0" weight="fill" />
+              <p className="text-xs font-mono-num text-[#1B2A72] font-bold mb-2">0 &ndash; 4,999 Pts</p>
+              <ul className="text-xs text-slate-600 space-y-1.5 font-medium">
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
                   <span>500 Pts base reward / referral</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-slate-400 shrink-0" weight="fill" />
-                  <span>Standard 24h voucher turnaround</span>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
+                  <span>Standard 24h voucher delivery</span>
                 </li>
               </ul>
             </div>
 
-            {/* GOLD STEP */}
-            <div
-              className={`p-4 rounded-xl border transition-all ${
-                currentTier === 'Gold'
-                  ? 'bg-slate-800/90 border-amber-500 ring-1 ring-amber-500/30'
-                  : 'bg-slate-900/60 border-slate-800 opacity-80'
-              }`}
-            >
+            {/* GOLD TIER */}
+            <div className={`p-4 rounded-xl border transition-all ${
+              currentTier === 'Gold' ? 'bg-amber-50/60 border-amber-400 ring-1 ring-amber-400/30' : 'bg-slate-50/60 border-slate-200/80 opacity-70'
+            }`}>
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${currentTier === 'Gold' ? 'bg-amber-400 shadow-xs' : 'bg-slate-600'}`} />
-                  <h4 className="font-display font-bold text-sm text-white flex items-center gap-1.5">
-                    <span>Gold Partner</span>
-                    <Sparkle size={14} className="text-amber-400" weight="fill" />
-                  </h4>
-                </div>
+                <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-1">
+                  <span>Gold Partner</span>
+                  <Sparkle size={14} className="text-amber-500" weight="fill" />
+                </h4>
                 {currentTier === 'Gold' ? (
-                  <span className="px-2.5 py-0.5 bg-amber-500 text-slate-950 font-mono-num text-[10px] font-bold uppercase rounded-full">
+                  <span className="px-2.5 py-0.5 bg-amber-400 text-amber-950 text-[10px] font-bold uppercase rounded-full">
                     Active
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono-num text-slate-500 uppercase font-bold">
-                    Locked
-                  </span>
+                  <span className="text-[10px] font-mono-num text-slate-400 font-bold uppercase">Locked</span>
                 )}
               </div>
-              <p className="text-xs font-mono-num text-amber-400 font-semibold mb-3">5,000 &ndash; 19,999 Pts</p>
-              <ul className="text-xs text-slate-300 space-y-1.5 font-medium">
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-amber-400 shrink-0" weight="fill" />
-                  <span className="font-bold text-white">+15% Bonus (575 Pts / case)</span>
+              <p className="text-xs font-mono-num text-amber-600 font-bold mb-2">5,000 &ndash; 19,999 Pts</p>
+              <ul className="text-xs text-slate-600 space-y-1.5 font-medium">
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
+                  <span className="font-bold text-slate-900">+15% Bonus (575 Pts / case)</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-amber-400 shrink-0" weight="fill" />
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
                   <span>Dedicated Relationship Manager</span>
                 </li>
               </ul>
             </div>
 
-            {/* PLATINUM STEP */}
-            <div
-              className={`p-4 rounded-xl border transition-all ${
-                currentTier === 'Platinum'
-                  ? 'bg-slate-800/90 border-slate-400 ring-1 ring-slate-400/30'
-                  : 'bg-slate-900/60 border-slate-800 opacity-70'
-              }`}
-            >
+            {/* PLATINUM TIER */}
+            <div className={`p-4 rounded-xl border transition-all ${
+              currentTier === 'Platinum' ? 'bg-rose-50/60 border-rose-400 ring-1 ring-rose-400/20' : 'bg-slate-50/60 border-slate-200/80 opacity-70'
+            }`}>
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${currentTier === 'Platinum' ? 'bg-slate-200 shadow-xs' : 'bg-slate-600'}`} />
-                  <h4 className="font-display font-bold text-sm text-white flex items-center gap-1.5">
-                    <span>Platinum VIP</span>
-                    <Sparkle size={14} className="text-slate-300" weight="fill" />
-                  </h4>
-                </div>
+                <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-1">
+                  <span>Platinum VIP</span>
+                  <Sparkle size={14} className="text-rose-500" weight="fill" />
+                </h4>
                 {currentTier === 'Platinum' ? (
-                  <span className="px-2.5 py-0.5 bg-slate-200 text-slate-950 font-mono-num text-[10px] font-bold uppercase rounded-full">
+                  <span className="px-2.5 py-0.5 bg-rose-600 text-white text-[10px] font-bold uppercase rounded-full">
                     Active
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono-num text-slate-500 uppercase font-bold">
-                    Locked
-                  </span>
+                  <span className="text-[10px] font-mono-num text-slate-400 font-bold uppercase">Locked</span>
                 )}
               </div>
-              <p className="text-xs font-mono-num text-slate-300 font-semibold mb-3">20,000+ Pts</p>
-              <ul className="text-xs text-slate-300 space-y-1.5 font-medium">
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-slate-300 shrink-0" weight="fill" />
-                  <span className="font-bold text-white">+30% Bonus (650 Pts / case)</span>
+              <p className="text-xs font-mono-num text-rose-600 font-bold mb-2">20,000+ Pts</p>
+              <ul className="text-xs text-slate-600 space-y-1.5 font-medium">
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
+                  <span className="font-bold text-slate-900">+30% Bonus (650 Pts / case)</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-slate-300 shrink-0" weight="fill" />
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
                   <span>Same-day automated payout</span>
                 </li>
               </ul>
