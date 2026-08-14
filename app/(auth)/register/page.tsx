@@ -28,6 +28,8 @@ export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form State Step 1
+  const [accountRole, setAccountRole] = useState<'individual' | 'team_leader'>('individual');
+  const [teamLeaderCode, setTeamLeaderCode] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -100,15 +102,17 @@ export default function RegisterPage() {
 
     // Create partner record
     const newPartner = {
-      id: `partner-${Date.now()}`,
+      id: name.toLowerCase().replace(/\s+/g, '-'),
       name,
       email,
       phone,
       profession,
       city,
       state: stateName,
-      pan: pan.toUpperCase(),
+      pan,
       status: 'kyc_submitted' as const,
+      role: accountRole,
+      teamCode: accountRole === 'team_leader' ? `TL-${name.substring(0, 4).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}` : '',
       joinedAt: new Date().toISOString(),
     };
 
@@ -181,8 +185,51 @@ export default function RegisterPage() {
                 Personal & Professional Details
               </h2>
               <p className="text-xs text-[var(--ink-muted)] mt-1">
-                Tell us about your background so we can configure your referral payouts and dashboard.
+                Select your partner account type and tell us about your background.
               </p>
+            </div>
+
+            {/* Account Role Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--ink-2)]">
+                Select Partner Account Type *
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAccountRole('individual')}
+                  className={`p-4 rounded-xl border text-left transition-all ${
+                    accountRole === 'individual'
+                      ? 'bg-indigo-50/50 border-[#1B2A72] ring-2 ring-[#1B2A72]/20'
+                      : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <span className="font-display font-bold text-sm text-[#1B2A72] block">Individual Partner</span>
+                  <span className="text-xs text-slate-500 font-medium mt-0.5 block">
+                    Submit client referrals directly & earn 500 PrimePoints per case.
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAccountRole('team_leader')}
+                  className={`p-4 rounded-xl border text-left transition-all ${
+                    accountRole === 'team_leader'
+                      ? 'bg-amber-50/60 border-amber-500 ring-2 ring-amber-500/30'
+                      : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-display font-bold text-sm text-slate-900">Team Leader / Agency Lead</span>
+                    <span className="px-2 py-0.5 bg-amber-400 text-amber-950 font-mono-num text-[9px] font-extrabold uppercase rounded-full">
+                      10% Cut
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500 font-medium mt-0.5 block">
+                    Onboard advisors under your roster & earn an automatic 10% override cut.
+                  </span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

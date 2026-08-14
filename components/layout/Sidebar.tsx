@@ -10,6 +10,7 @@ import {
   Coins,
   Gift,
   ShieldCheck,
+  UsersThree,
   CaretLeft,
   CaretRight,
   X,
@@ -35,6 +36,11 @@ export const navItems = [
     name: 'Dashboard',
     href: '/dashboard',
     icon: SquaresFour,
+  },
+  {
+    name: 'Team Hub (10% Cut)',
+    href: '/team',
+    icon: UsersThree,
   },
   {
     name: 'Refer Customer',

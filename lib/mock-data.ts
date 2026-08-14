@@ -1,4 +1,4 @@
-import { Referral, RedemptionRecord } from './store';
+import { Referral, RedemptionRecord, TeamMember } from './store';
 
 export const MOCK_REFERRALS: Referral[] = [
   {
@@ -112,16 +112,60 @@ export const MOCK_REDEMPTIONS: RedemptionRecord[] = [
   },
 ];
 
+export const MOCK_TEAM_MEMBERS: TeamMember[] = [
+  {
+    id: 'TM-001',
+    name: 'Rahul Joshi',
+    email: 'rahul.joshi@example.com',
+    phone: '9811223344',
+    profession: 'DSA Agent',
+    city: 'Mumbai',
+    status: 'kyc_approved',
+    joinedAt: '2024-11-01T10:00:00Z',
+    casesCount: 8,
+    totalMemberPoints: 4000,
+    overridePointsEarned: 400,
+  },
+  {
+    id: 'TM-002',
+    name: 'Sneha Kulkarni',
+    email: 'sneha.k@example.com',
+    phone: '9822334455',
+    profession: 'Loan Consultant',
+    city: 'Pune',
+    status: 'kyc_approved',
+    joinedAt: '2024-11-10T14:30:00Z',
+    casesCount: 5,
+    totalMemberPoints: 2500,
+    overridePointsEarned: 250,
+  },
+  {
+    id: 'TM-003',
+    name: 'Rohan Gupta',
+    email: 'rohan.g@example.com',
+    phone: '9833445566',
+    profession: 'Financial Advisor',
+    city: 'Delhi',
+    status: 'kyc_submitted',
+    joinedAt: '2024-12-01T09:15:00Z',
+    casesCount: 2,
+    totalMemberPoints: 1000,
+    overridePointsEarned: 100,
+  },
+];
+
 export const MOCK_PARTNER = {
   id: 'demo',
   name: 'Arjun Mehta',
   email: 'arjun.mehta@example.com',
   phone: '9876543210',
-  profession: 'CA',
+  profession: 'Chartered Accountant (CA)',
   city: 'Mumbai',
   state: 'Maharashtra',
   pan: 'ABCDE1234F',
   status: 'kyc_approved' as const,
+  role: 'team_leader' as const,
+  teamCode: 'TL-ARJUN-884',
   joinedAt: '2024-10-01T00:00:00Z',
 };
 
