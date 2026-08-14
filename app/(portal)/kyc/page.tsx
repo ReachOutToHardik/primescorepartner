@@ -62,11 +62,11 @@ export default function KYCPage() {
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck size={24} className="text-[#1B2A72]" weight="bold" />
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--ink)]">
-              KYC & Account Verification Tracker
+              Profile & KYC Verification Tracker
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[var(--ink-muted)]">
-            Review your identity verification status, submitted documents, and compliance records.
+            Review your partner profile details, identity verification status, and bank payout records.
           </p>
         </div>
 

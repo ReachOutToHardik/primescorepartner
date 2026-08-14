@@ -57,10 +57,10 @@ export default function RewardsPage() {
       </div>
 
       {/* Big Balance Header Card */}
-      <div className="bg-[#0F1A4E] text-white p-6 sm:p-10 rounded-xs border border-white/10 shadow-xs relative overflow-hidden space-y-6">
+      <Card variant="elevated" className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 space-y-6 relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
-            <span className="text-xs uppercase font-semibold tracking-wider text-slate-300">
+            <span className="text-xs uppercase font-bold tracking-wider text-slate-300 font-mono-num">
               Total Available Reward Balance
             </span>
             <div className="flex items-baseline gap-3">
@@ -68,7 +68,7 @@ export default function RewardsPage() {
                 {totalPoints.toLocaleString()}
               </span>
               <span className="font-display font-bold text-xl text-[#F5C518]">PrimePoints</span>
-              <span className="text-sm font-mono-num text-slate-300">
+              <span className="text-xs font-mono-num text-slate-300 font-bold">
                 (&asymp; ₹{(totalPoints / 10).toLocaleString()} Value)
               </span>
             </div>
@@ -77,7 +77,7 @@ export default function RewardsPage() {
           <div className="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Link
               href="/redeem"
-              className="px-6 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-xs transition-colors inline-flex items-center justify-center gap-2 shadow-xs"
+              className="px-6 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-full transition-all inline-flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
             >
               <Gift size={18} weight="fill" />
               <span>Redeem Gift Vouchers</span>
@@ -100,66 +100,66 @@ export default function RewardsPage() {
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full bg-white/15 h-3 rounded-xs overflow-hidden">
+          <div className="w-full bg-white/15 h-3 rounded-full overflow-hidden">
             <div
               className="bg-[#F5C518] h-full transition-all duration-500 shadow-xs"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-300 gap-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-300 gap-1 font-medium">
             <p>
               {currentTier === 'Platinum'
                 ? '🏆 Maximum Partner Tier Unlocked! Enjoy 30% bonus points on every successful referral.'
                 : `Earn ${targetPoints - totalPoints} more points to reach ${nextTierName} tier and unlock higher commission bonuses.`}
             </p>
-            <span className="font-mono-num text-[11px] text-slate-400">
+            <span className="font-mono-num text-[11px] text-slate-400 font-bold">
               {totalPoints} / {targetPoints} Pts
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Points Breakdown Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-[var(--border)] p-5 rounded-xs shadow-xs space-y-2">
-          <span className="text-xs uppercase font-semibold text-[var(--ink-muted)]">
+        <Card variant="elevated" className="p-5 space-y-2">
+          <span className="text-xs uppercase font-bold text-slate-400 font-mono-num">
             Total Points Earned
           </span>
-          <p className="font-mono-num font-bold text-2xl text-[#3DAA4B]">
+          <p className="font-mono-num font-bold text-2xl text-emerald-600">
             +{totalEarnedFromRefs.toLocaleString()} Pts
           </p>
-          <p className="text-[11px] text-[var(--ink-subtle)]">From completed client referrals</p>
-        </div>
+          <p className="text-xs text-slate-500 font-medium">From completed client referrals</p>
+        </Card>
 
-        <div className="bg-white border border-[var(--border)] p-5 rounded-xs shadow-xs space-y-2">
-          <span className="text-xs uppercase font-semibold text-[var(--ink-muted)]">
+        <Card variant="elevated" className="p-5 space-y-2">
+          <span className="text-xs uppercase font-bold text-slate-400 font-mono-num">
             Total Points Redeemed
           </span>
-          <p className="font-mono-num font-bold text-2xl text-[#E63329]">
+          <p className="font-mono-num font-bold text-2xl text-rose-600">
             -{totalRedeemed.toLocaleString()} Pts
           </p>
-          <p className="text-[11px] text-[var(--ink-subtle)]">Claimed as Amazon / Flipkart vouchers</p>
-        </div>
+          <p className="text-xs text-slate-500 font-medium">Claimed as Amazon / Flipkart vouchers</p>
+        </Card>
 
-        <div className="bg-white border border-[var(--border)] p-5 rounded-xs shadow-xs space-y-2">
-          <span className="text-xs uppercase font-semibold text-[var(--ink-muted)]">
+        <Card variant="elevated" className="p-5 space-y-2">
+          <span className="text-xs uppercase font-bold text-slate-400 font-mono-num">
             Conversion Rate
           </span>
           <p className="font-mono-num font-bold text-2xl text-[#1B2A72]">
             10 Pts = ₹1.00
           </p>
-          <p className="text-[11px] text-[var(--ink-subtle)]">Instant 0% transaction fee payout</p>
-        </div>
+          <p className="text-xs text-slate-500 font-medium">Instant 0% transaction fee payout</p>
+        </Card>
       </div>
 
       {/* Partner Tier Privileges Visual Cards */}
       <div className="space-y-4">
         <div>
-          <h2 className="font-display text-xl font-bold text-[var(--ink)]">
+          <h2 className="font-display text-xl font-bold text-slate-900">
             Partner Tier Privileges
           </h2>
-          <p className="text-xs text-[var(--ink-muted)]">
+          <p className="text-xs text-slate-500 font-medium">
             Advance your tier status by completing more client referrals to unlock higher commission rates and VIP privileges.
           </p>
         </div>
@@ -167,31 +167,22 @@ export default function RewardsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* SILVER TIER CARD */}
           <Card
-            variant={currentTier === 'Silver' ? 'elevated' : 'default'}
+            variant="elevated"
             className={`overflow-hidden flex flex-col justify-between relative transition-all ${
               currentTier === 'Silver'
-                ? 'ring-2 ring-[#1B2A72]'
+                ? 'border-[#1B2A72] ring-2 ring-[#1B2A72]/20'
                 : ''
             }`}
           >
             {/* SVG Banner */}
             <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] p-5 text-white relative overflow-hidden">
-              <svg
-                className="absolute right-0 top-0 bottom-0 opacity-15 w-36 h-full pointer-events-none"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-              >
-                <path d="0 0 L100 0 L100 100 Z" fill="#FFFFFF" />
-                <circle cx="80" cy="50" r="30" fill="none" stroke="#FFFFFF" strokeWidth="3" />
-              </svg>
-
               <div className="relative z-10 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-300 font-mono-num">
                     Tier 01
                   </span>
                   {currentTier === 'Silver' && (
-                    <span className="px-2.5 py-0.5 bg-[#3DAA4B] text-white font-mono-num text-[10px] font-bold uppercase rounded-full shadow-2xs">
+                    <span className="px-2.5 py-0.5 bg-emerald-600 text-white font-mono-num text-[10px] font-bold uppercase rounded-full shadow-2xs">
                       Active Tier
                     </span>
                   )}
@@ -205,64 +196,56 @@ export default function RewardsPage() {
 
             {/* Perks Content */}
             <div className="p-5 space-y-4 flex-1 flex flex-col justify-between bg-white">
-              <ul className="space-y-2.5 text-xs text-[var(--ink-2)]">
+              <ul className="space-y-2.5 text-xs text-slate-700 font-medium">
                 <li className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-[#3DAA4B] shrink-0 mt-0.5" weight="fill" />
+                  <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" weight="fill" />
                   <div>
-                    <span className="font-bold text-[var(--ink)] block">500 Pts per referral</span>
-                    <span className="text-[11px] text-[var(--ink-muted)]">Base reward rate for every approved client</span>
+                    <span className="font-bold text-slate-900 block">500 Pts per referral</span>
+                    <span className="text-[11px] text-slate-500">Base reward rate for every approved client</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-[#3DAA4B] shrink-0 mt-0.5" weight="fill" />
+                  <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" weight="fill" />
                   <div>
-                    <span className="font-bold text-[var(--ink)] block">Standard Payouts</span>
-                    <span className="text-[11px] text-[var(--ink-muted)]">24-48 hour payout turnaround</span>
+                    <span className="font-bold text-slate-900 block">Standard Payouts</span>
+                    <span className="text-[11px] text-slate-500">24-48 hour payout turnaround</span>
                   </div>
                 </li>
               </ul>
 
-              <div className="pt-3 border-t border-[var(--border)] text-[11px] text-[var(--ink-subtle)] font-mono-num">
+              <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-400 font-mono-num font-medium">
                 Requirement: Default tier upon KYC approval
               </div>
             </div>
           </Card>
 
           {/* GOLD TIER CARD */}
-          <div
-            className={`bg-white border rounded-xs shadow-xs overflow-hidden flex flex-col justify-between relative transition-all ${
+          <Card
+            variant="elevated"
+            className={`overflow-hidden flex flex-col justify-between relative transition-all ${
               currentTier === 'Gold'
-                ? 'border-[#F5C518] ring-2 ring-[#F5C518]/30'
-                : 'border-[var(--border)]'
+                ? 'border-amber-400 ring-2 ring-amber-400/30'
+                : ''
             }`}
           >
-            {/* SVG Banner */}
-            <div className="bg-[#0F1A4E] p-5 text-white relative overflow-hidden border-b border-[#F5C518]/30">
-              <svg
-                className="absolute right-0 top-0 bottom-0 opacity-20 w-36 h-full pointer-events-none"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-              >
-                <polygon points="20,0 100,0 100,100 50,100" fill="#F5C518" />
-                <circle cx="75" cy="40" r="25" fill="none" stroke="#F5C518" strokeWidth="2" />
-              </svg>
-
+            {/* Header Banner */}
+            <div className="bg-[#0F1A4E] p-5 text-white relative overflow-hidden border-b border-amber-400/30">
               <div className="relative z-10 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#F5C518] font-mono-num">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400 font-mono-num">
                     Tier 02 &bull; Recommended
                   </span>
                   {currentTier === 'Gold' && (
-                    <span className="px-2 py-0.5 bg-[#F5C518] text-[#0F1A4E] font-mono-num text-[10px] font-bold uppercase rounded-xs">
+                    <span className="px-2.5 py-0.5 bg-amber-400 text-[#0F1A4E] font-mono-num text-[10px] font-bold uppercase rounded-full shadow-2xs">
                       Active Tier
                     </span>
                   )}
                 </div>
                 <h3 className="font-display text-2xl font-bold text-white flex items-center gap-2">
                   <span>Gold Partner</span>
-                  <Trophy size={20} className="text-[#F5C518]" weight="fill" />
+                  <Trophy size={20} className="text-amber-400" weight="fill" />
                 </h3>
-                <p className="text-xs font-mono-num text-[#F5C518] font-semibold">
+                <p className="text-xs font-mono-num text-amber-400 font-semibold">
                   5,000 – 19,999 Points
                 </p>
               </div>
@@ -270,64 +253,56 @@ export default function RewardsPage() {
 
             {/* Perks Content */}
             <div className="p-5 space-y-4 flex-1 flex flex-col justify-between bg-white">
-              <ul className="space-y-2.5 text-xs text-[var(--ink-2)]">
+              <ul className="space-y-2.5 text-xs text-slate-700 font-medium">
                 <li className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-[#3DAA4B] shrink-0 mt-0.5" weight="fill" />
+                  <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" weight="fill" />
                   <div>
-                    <span className="font-bold text-[var(--ink)] block">+15% Bonus Points</span>
-                    <span className="text-[11px] text-[var(--ink-muted)]">Earn 575 Pts per successful referral</span>
+                    <span className="font-bold text-slate-900 block">+15% Bonus Points</span>
+                    <span className="text-[11px] text-slate-500">Earn 575 Pts per successful referral</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-[#3DAA4B] shrink-0 mt-0.5" weight="fill" />
+                  <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" weight="fill" />
                   <div>
-                    <span className="font-bold text-[var(--ink)] block">Relationship Manager</span>
-                    <span className="text-[11px] text-[var(--ink-muted)]">Dedicated advisor for fast dispute priority</span>
+                    <span className="font-bold text-slate-900 block">Relationship Manager</span>
+                    <span className="text-[11px] text-slate-500">Dedicated advisor for fast dispute priority</span>
                   </div>
                 </li>
               </ul>
 
-              <div className="pt-3 border-t border-[var(--border)] text-[11px] text-[var(--ink-subtle)] font-mono-num">
+              <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-400 font-mono-num font-medium">
                 Requirement: 10 completed client cases
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* PLATINUM TIER CARD */}
-          <div
-            className={`bg-white border rounded-xs shadow-xs overflow-hidden flex flex-col justify-between relative transition-all ${
+          <Card
+            variant="elevated"
+            className={`overflow-hidden flex flex-col justify-between relative transition-all ${
               currentTier === 'Platinum'
-                ? 'border-[#E63329] ring-2 ring-[#E63329]/20'
-                : 'border-[var(--border)]'
+                ? 'border-rose-500 ring-2 ring-rose-500/20'
+                : ''
             }`}
           >
-            {/* SVG Banner */}
-            <div className="bg-[#1A1917] p-5 text-white relative overflow-hidden border-b border-[#E63329]/40">
-              <svg
-                className="absolute right-0 top-0 bottom-0 opacity-25 w-36 h-full pointer-events-none"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-              >
-                <path d="M30 0 L100 0 L100 100 L0 100 Z" fill="#E63329" />
-                <circle cx="85" cy="50" r="35" fill="none" stroke="#FFFFFF" strokeWidth="2" />
-              </svg>
-
+            {/* Header Banner */}
+            <div className="bg-slate-900 p-5 text-white relative overflow-hidden border-b border-rose-500/40">
               <div className="relative z-10 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#E63329] font-mono-num">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-rose-400 font-mono-num">
                     Tier 03 &bull; VIP Status
                   </span>
                   {currentTier === 'Platinum' && (
-                    <span className="px-2 py-0.5 bg-[#E63329] text-white font-mono-num text-[10px] font-bold uppercase rounded-xs">
+                    <span className="px-2.5 py-0.5 bg-rose-600 text-white font-mono-num text-[10px] font-bold uppercase rounded-full shadow-2xs">
                       Active Tier
                     </span>
                   )}
                 </div>
                 <h3 className="font-display text-2xl font-bold text-white flex items-center gap-2">
                   <span>Platinum VIP</span>
-                  <Sparkle size={20} className="text-[#E63329]" weight="fill" />
+                  <Sparkle size={20} className="text-rose-400" weight="fill" />
                 </h3>
-                <p className="text-xs font-mono-num text-slate-300 font-semibold">
+                <p className="text-xs font-mono-num text-rose-400 font-semibold">
                   20,000+ Points
                 </p>
               </div>
@@ -335,28 +310,28 @@ export default function RewardsPage() {
 
             {/* Perks Content */}
             <div className="p-5 space-y-4 flex-1 flex flex-col justify-between bg-white">
-              <ul className="space-y-2.5 text-xs text-[var(--ink-2)]">
+              <ul className="space-y-2.5 text-xs text-slate-700 font-medium">
                 <li className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-[#3DAA4B] shrink-0 mt-0.5" weight="fill" />
+                  <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" weight="fill" />
                   <div>
-                    <span className="font-bold text-[var(--ink)] block">+30% Bonus Points</span>
-                    <span className="text-[11px] text-[var(--ink-muted)]">Earn 650 Pts per successful referral</span>
+                    <span className="font-bold text-slate-900 block">+30% Bonus Points</span>
+                    <span className="text-[11px] text-slate-500">Earn 650 Pts per successful referral</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-[#3DAA4B] shrink-0 mt-0.5" weight="fill" />
+                  <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" weight="fill" />
                   <div>
-                    <span className="font-bold text-[var(--ink)] block">Same-Day Cash Payouts</span>
-                    <span className="text-[11px] text-[var(--ink-muted)]">Instant bank transfer on completion</span>
+                    <span className="font-bold text-slate-900 block">Instant Payouts</span>
+                    <span className="text-[11px] text-slate-500">Same-day automated bank transfer</span>
                   </div>
                 </li>
               </ul>
 
-              <div className="pt-3 border-t border-[var(--border)] text-[11px] text-[var(--ink-subtle)] font-mono-num">
+              <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-400 font-mono-num font-medium">
                 Requirement: 40 completed client cases
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 

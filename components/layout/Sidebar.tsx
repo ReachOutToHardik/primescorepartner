@@ -57,7 +57,7 @@ export const navItems = [
     icon: Gift,
   },
   {
-    name: 'KYC Status',
+    name: 'Profile & KYC',
     href: '/kyc',
     icon: ShieldCheck,
   },

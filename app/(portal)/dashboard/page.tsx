@@ -19,16 +19,29 @@ import {
 } from '@phosphor-icons/react';
 import { Card } from '@/components/ui/Card';
 
-// Recharts components
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts';
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip as ChartTooltip,
+  Filler,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  ChartTooltip,
+  Filler,
+  Legend
+);
 
 export default function DashboardPage() {
   const { partner, referrals, totalPoints, getTier } = usePartnerStore();
@@ -85,6 +98,72 @@ export default function DashboardPage() {
     }
   }, [timeRange, totalCount, totalPoints]);
 
+  // Chart.js Data Configuration
+  const chartJsData = useMemo(() => {
+    return {
+      labels: trendData.map((d) => d.label),
+      datasets: [
+        {
+          fill: true,
+          label: 'PrimePoints',
+          data: trendData.map((d) => d.points),
+          borderColor: '#1B2A72',
+          backgroundColor: (context: any) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+            gradient.addColorStop(0, 'rgba(27, 42, 114, 0.25)');
+            gradient.addColorStop(1, 'rgba(27, 42, 114, 0.0)');
+            return gradient;
+          },
+          borderWidth: 2.5,
+          tension: 0.4,
+          pointBackgroundColor: '#1B2A72',
+          pointBorderColor: '#FFFFFF',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+      ],
+    };
+  }, [trendData]);
+
+  // Chart.js Options
+  const chartJsOptions = useMemo(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1B2A72',
+          titleColor: '#FFFFFF',
+          bodyColor: '#FFFFFF',
+          titleFont: { family: "'DM Sans', sans-serif", size: 12, weight: 'bold' as const },
+          bodyFont: { family: "'Inter', sans-serif", size: 12, weight: 'bold' as const },
+          padding: 10,
+          cornerRadius: 6,
+          displayColors: false,
+          borderColor: 'rgba(255, 255, 255, 0.15)',
+          borderWidth: 1,
+          callbacks: {
+            label: (context: any) => `PrimePoints: ${context.parsed.y.toLocaleString()} Pts`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#64748B', font: { family: 'DM Sans', size: 11 } },
+        },
+        y: {
+          grid: { color: '#F1F5F9' },
+          ticks: { color: '#64748B', font: { family: 'Inter', size: 11 } },
+          border: { dash: [4, 4] },
+        },
+      },
+    };
+  }, []);
+
   // Helper for status badge styling
   const getStatusBadge = (status: ReferralStatus) => {
     switch (status) {
@@ -132,7 +211,7 @@ export default function DashboardPage() {
       {/* Welcome Banner Header */}
       <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white text-xs font-semibold rounded-full border border-white/15">
+          <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
             <Sparkle size={14} className="text-[#F5C518]" weight="fill" />
             <span>Welcome back, {partner?.name || 'Arjun Mehta'}</span>
           </div>
@@ -267,50 +346,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="h-64 w-full pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1B2A72" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#1B2A72" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EDECEA" vertical={false} />
-                <XAxis dataKey="label" stroke="#6B6764" fontSize={11} tickLine={false} />
-                <YAxis stroke="#6B6764" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0F1A4E',
-                    borderColor: 'rgba(255,255,255,0.2)',
-                    borderRadius: '12px',
-                    color: '#FFFFFF',
-                    fontSize: '12px',
-                    fontFamily: 'DM Sans',
-                    padding: '8px 12px',
-                    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
-                  }}
-                  itemStyle={{
-                    color: '#F5C518',
-                    fontWeight: 700,
-                    fontSize: '12px',
-                  }}
-                  labelStyle={{
-                    color: '#FFFFFF',
-                    fontWeight: 700,
-                    marginBottom: '4px',
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="points"
-                  stroke="#1B2A72"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#colorPoints)"
-                  name="PrimePoints"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Line data={chartJsData} options={chartJsOptions} />
           </div>
         </Card>
 
