@@ -149,8 +149,8 @@ export default function RedeemPage() {
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="h-11 px-3 py-1.5 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200/80 shadow-2xs">
-                      <BrandLogo id={card.id} brand={card.brand} className="h-7 w-auto" />
+                    <div className="h-12 flex items-center justify-start">
+                      <BrandLogo id={card.id} brand={card.brand} className="h-11 max-w-[160px] w-auto" />
                     </div>
                     <span className="text-[10px] font-mono-num uppercase font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                       Instant Delivery
@@ -273,9 +273,7 @@ export default function RedeemPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200/80">
-                  <BrandLogo id={selectedBrand.id} brand={selectedBrand.brand} className="w-5 h-5" />
-                </div>
+                <BrandLogo id={selectedBrand.id} brand={selectedBrand.brand} className="h-7 w-auto" />
                 <h3 className="font-display font-bold text-lg text-slate-900">
                   Redeem {selectedBrand.brand} Voucher
                 </h3>

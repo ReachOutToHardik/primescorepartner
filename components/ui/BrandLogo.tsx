@@ -10,28 +10,20 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ id, brand, className = 'h-
   switch (id) {
     case 'amazon':
       return (
-        <svg viewBox="0 0 200 60" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* Amazon text */}
-          <text x="0" y="38" fontFamily="Space Grotesk, sans-serif" fontWeight="800" fontSize="36" fill="#000000">amazon</text>
-          {/* Pay badge */}
-          <rect x="135" y="10" width="60" height="32" rx="6" fill="#FF9900" />
-          <text x="145" y="32" fontFamily="Space Grotesk, sans-serif" fontWeight="700" fontSize="18" fill="#FFFFFF">pay</text>
-          {/* Smile Arrow */}
-          <path d="M 15 44 Q 60 58 115 42" stroke="#FF9900" strokeWidth="4" strokeLinecap="round" fill="none" />
-          <path d="M 110 38 L 118 43 L 110 48" fill="#FF9900" />
-        </svg>
+        <img
+          src="/amazon-logo.svg"
+          alt="Amazon Pay"
+          className={`${className} object-contain`}
+        />
       );
 
     case 'flipkart':
       return (
-        <svg viewBox="0 0 180 50" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* Yellow bag icon */}
-          <rect x="2" y="10" width="30" height="30" rx="4" fill="#FFE500" />
-          <path d="M 10 10 C 10 2, 24 2, 24 10" stroke="#2874F0" strokeWidth="3" fill="none" />
-          <text x="12" y="32" fontFamily="Space Grotesk, sans-serif" fontWeight="900" fontSize="22" fill="#2874F0">f</text>
-          {/* Flipkart text */}
-          <text x="40" y="34" fontFamily="Space Grotesk, sans-serif" fontWeight="800" fontSize="26" fontStyle="italic" fill="#2874F0">Flipkart</text>
-        </svg>
+        <img
+          src="/flipkart-logo.svg"
+          alt="Flipkart"
+          className={`${className} object-contain`}
+        />
       );
 
     case 'swiggy':
