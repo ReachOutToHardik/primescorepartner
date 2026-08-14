@@ -94,11 +94,30 @@
   100% { transform: translateX(-50%); }
 }
 
+@keyframes stripeMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 30px 0; }
+}
+
 .animate-fade-up { animation: fadeUp 0.3s ease-out both; }
 .animate-fade-in { animation: fadeIn 0.2s ease-out both; }
 .animate-slide-in { animation: slideIn 0.25s ease-out both; }
 .animate-marquee { animation: marquee 20s linear infinite; }
 .animate-marquee:hover { animation-play-state: paused; }
+.animate-stripe {
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.25) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 30px 30px;
+  animation: stripeMove 1.2s linear infinite;
+}
 
 .skeleton {
   background: linear-gradient(

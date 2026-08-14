@@ -13,6 +13,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Lightning,
+  LockKey,
+  Check,
 } from '@phosphor-icons/react';
 import { Card } from '@/components/ui/Card';
 
@@ -98,9 +100,24 @@ export default function RewardsPage() {
           </div>
         </div>
 
-        {/* Milestone Steps Bar */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Progress Bar & Roadmap */}
+        <div className="space-y-5">
+          {/* Progress Bar Track: Grey Background with Navy Blue Fill */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono-num font-bold">
+              <span className="text-slate-500 uppercase tracking-wider">Overall Tier Progression</span>
+              <span className="text-[#1B2A72]">{progressPercent}% Completed</span>
+            </div>
+            <div className="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-300/60 shadow-inner">
+              <div
+                className="bg-[#1B2A72] h-full rounded-full transition-all duration-700 shadow-xs animate-stripe relative"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Roadmap Header */}
+          <div className="flex items-center justify-between pt-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block font-mono-num">
               Partner Tier Roadmap
             </span>
@@ -110,86 +127,124 @@ export default function RewardsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* SILVER TIER */}
-            <div className={`p-4 rounded-xl border transition-all ${
-              currentTier === 'Silver' ? 'bg-indigo-50/50 border-[#1B2A72] ring-1 ring-[#1B2A72]/20' : 'bg-slate-50/60 border-slate-200/80 opacity-70'
+            {/* SILVER TIER (Base/Completed) */}
+            <div className={`p-5 rounded-2xl border transition-all relative ${
+              currentTier === 'Silver' ? 'bg-indigo-50/60 border-[#1B2A72] ring-2 ring-[#1B2A72]/20' : 'bg-slate-50/80 border-slate-200/80'
             }`}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-display font-bold text-sm text-slate-900">Silver Partner</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-display font-bold text-base text-slate-900">Silver Partner</h4>
+                  {/* Big Check Mark Icon when Tier Completed */}
+                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                    <Check size={14} weight="bold" />
+                  </span>
+                </div>
                 {currentTier === 'Silver' && (
-                  <span className="px-2.5 py-0.5 bg-[#1B2A72] text-white text-[10px] font-bold uppercase rounded-full">
-                    Active
+                  <span className="px-3 py-1 bg-[#1B2A72] text-white text-[10px] font-bold uppercase rounded-full tracking-wider">
+                    ACTIVE
                   </span>
                 )}
               </div>
-              <p className="text-xs font-mono-num text-[#1B2A72] font-bold mb-2">0 &ndash; 4,999 Pts</p>
-              <ul className="text-xs text-slate-600 space-y-1.5 font-medium">
-                <li className="flex items-center gap-1.5">
-                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
+              <p className="text-xs font-mono-num text-[#1B2A72] font-bold mb-3">0 &ndash; 4,999 Pts</p>
+              <ul className="text-xs text-slate-600 space-y-2 font-medium">
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={15} className="text-emerald-600 shrink-0" weight="fill" />
                   <span>500 Pts base reward / referral</span>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={15} className="text-emerald-600 shrink-0" weight="fill" />
                   <span>Standard 24h voucher delivery</span>
                 </li>
               </ul>
             </div>
 
             {/* GOLD TIER */}
-            <div className={`p-4 rounded-xl border transition-all ${
-              currentTier === 'Gold' ? 'bg-amber-50/60 border-amber-400 ring-1 ring-amber-400/30' : 'bg-slate-50/60 border-slate-200/80 opacity-70'
+            <div className={`p-5 rounded-2xl border transition-all relative ${
+              currentTier === 'Gold'
+                ? 'bg-amber-50/60 border-amber-500 ring-2 ring-amber-500/30'
+                : totalPoints >= 5000
+                ? 'bg-emerald-50/40 border-emerald-300'
+                : 'bg-slate-50/70 border-slate-200/90'
             }`}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-1">
-                  <span>Gold Partner</span>
-                  <Sparkle size={14} className="text-amber-500" weight="fill" />
-                </h4>
+                <div className="flex items-center gap-2">
+                  <h4 className={`font-display font-bold text-base flex items-center gap-1.5 ${totalPoints < 5000 ? 'text-slate-500' : 'text-slate-900'}`}>
+                    <span>Gold Partner</span>
+                    <Sparkle size={15} className="text-amber-500" weight="fill" />
+                  </h4>
+
+                  {totalPoints >= 5000 ? (
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                      <Check size={14} weight="bold" />
+                    </span>
+                  ) : null}
+                </div>
+
                 {currentTier === 'Gold' ? (
-                  <span className="px-2.5 py-0.5 bg-amber-400 text-amber-950 text-[10px] font-bold uppercase rounded-full">
-                    Active
+                  <span className="px-3 py-1 bg-amber-400 text-amber-950 text-[10px] font-bold uppercase rounded-full tracking-wider">
+                    ACTIVE
                   </span>
-                ) : (
-                  <span className="text-[10px] font-mono-num text-slate-400 font-bold uppercase">Locked</span>
-                )}
+                ) : totalPoints < 5000 ? (
+                  <span className="px-2.5 py-1 bg-slate-200/80 text-slate-500 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5 opacity-70">
+                    <LockKey size={13} weight="fill" className="text-slate-500" />
+                    <span>LOCKED</span>
+                  </span>
+                ) : null}
               </div>
-              <p className="text-xs font-mono-num text-amber-600 font-bold mb-2">5,000 &ndash; 19,999 Pts</p>
-              <ul className="text-xs text-slate-600 space-y-1.5 font-medium">
-                <li className="flex items-center gap-1.5">
-                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
-                  <span className="font-bold text-slate-900">+15% Bonus (575 Pts / case)</span>
+              <p className={`text-xs font-mono-num font-bold mb-3 ${totalPoints < 5000 ? 'text-slate-400' : 'text-amber-600'}`}>5,000 &ndash; 19,999 Pts</p>
+              <ul className={`text-xs space-y-2 font-medium ${totalPoints < 5000 ? 'text-slate-400' : 'text-slate-600'}`}>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={15} className={totalPoints < 5000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
+                  <span className={totalPoints < 5000 ? 'text-slate-500' : 'font-bold text-slate-900'}>+15% Bonus (575 Pts / case)</span>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={15} className={totalPoints < 5000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
                   <span>Dedicated Relationship Manager</span>
                 </li>
               </ul>
             </div>
 
             {/* PLATINUM TIER */}
-            <div className={`p-4 rounded-xl border transition-all ${
-              currentTier === 'Platinum' ? 'bg-rose-50/60 border-rose-400 ring-1 ring-rose-400/20' : 'bg-slate-50/60 border-slate-200/80 opacity-70'
+            <div className={`p-5 rounded-2xl border transition-all relative ${
+              currentTier === 'Platinum'
+                ? 'bg-rose-50/60 border-rose-500 ring-2 ring-rose-500/20'
+                : totalPoints >= 20000
+                ? 'bg-emerald-50/40 border-emerald-300'
+                : 'bg-slate-50/70 border-slate-200/90'
             }`}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-1">
-                  <span>Platinum VIP</span>
-                  <Sparkle size={14} className="text-rose-500" weight="fill" />
-                </h4>
+                <div className="flex items-center gap-2">
+                  <h4 className={`font-display font-bold text-base flex items-center gap-1.5 ${totalPoints < 20000 ? 'text-slate-500' : 'text-slate-900'}`}>
+                    <span>Platinum VIP</span>
+                    <Sparkle size={15} className="text-rose-500" weight="fill" />
+                  </h4>
+
+                  {totalPoints >= 20000 ? (
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                      <Check size={14} weight="bold" />
+                    </span>
+                  ) : null}
+                </div>
+
                 {currentTier === 'Platinum' ? (
-                  <span className="px-2.5 py-0.5 bg-rose-600 text-white text-[10px] font-bold uppercase rounded-full">
-                    Active
+                  <span className="px-3 py-1 bg-rose-600 text-white text-[10px] font-bold uppercase rounded-full tracking-wider">
+                    ACTIVE
                   </span>
-                ) : (
-                  <span className="text-[10px] font-mono-num text-slate-400 font-bold uppercase">Locked</span>
-                )}
+                ) : totalPoints < 20000 ? (
+                  <span className="px-2.5 py-1 bg-slate-200/80 text-slate-500 font-mono-num text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5 opacity-70">
+                    <LockKey size={13} weight="fill" className="text-slate-500" />
+                    <span>LOCKED</span>
+                  </span>
+                ) : null}
               </div>
-              <p className="text-xs font-mono-num text-rose-600 font-bold mb-2">20,000+ Pts</p>
-              <ul className="text-xs text-slate-600 space-y-1.5 font-medium">
-                <li className="flex items-center gap-1.5">
-                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
-                  <span className="font-bold text-slate-900">+30% Bonus (650 Pts / case)</span>
+              <p className={`text-xs font-mono-num font-bold mb-3 ${totalPoints < 20000 ? 'text-slate-400' : 'text-rose-600'}`}>20,000+ Pts</p>
+              <ul className={`text-xs space-y-2 font-medium ${totalPoints < 20000 ? 'text-slate-400' : 'text-slate-600'}`}>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={15} className={totalPoints < 20000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
+                  <span className={totalPoints < 20000 ? 'text-slate-500' : 'font-bold text-slate-900'}>+30% Bonus (650 Pts / case)</span>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <CheckCircle size={14} className="text-emerald-600 shrink-0" weight="fill" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={15} className={totalPoints < 20000 ? 'text-slate-300' : 'text-emerald-600'} weight="fill" />
                   <span>Same-day automated payout</span>
                 </li>
               </ul>
