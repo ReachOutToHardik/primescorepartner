@@ -19,6 +19,7 @@ import {
   Coins,
   ArrowRight,
 } from '@phosphor-icons/react';
+import { Card } from '@/components/ui/Card';
 
 export default function ReferralsPage() {
   const { referrals, updateReferralStatus } = usePartnerStore();
@@ -182,7 +183,7 @@ export default function ReferralsPage() {
         {/* CSV Export Button */}
         <button
           onClick={handleExportCSV}
-          className="px-4 py-2.5 bg-white hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--ink)] font-display font-semibold text-xs rounded-xs transition-colors inline-flex items-center gap-2 shadow-xs"
+          className="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-800 font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-2xs hover:shadow-xs"
         >
           <DownloadSimple size={16} weight="bold" />
           <span>Export CSV Report</span>
@@ -190,7 +191,7 @@ export default function ReferralsPage() {
       </div>
 
       {/* Filter Controls Bar */}
-      <div className="bg-white border border-[var(--border)] p-4 rounded-xs shadow-xs space-y-4">
+      <Card variant="elevated" className="p-4 space-y-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Search Box */}
           <div className="relative w-full md:w-80">
@@ -199,9 +200,9 @@ export default function ReferralsPage() {
               placeholder="Search by client name, phone, city, or Ref ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)]"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:border-[#1B2A72] focus:ring-2 focus:ring-indigo-100 text-slate-900 transition-all font-medium"
             />
-            <MagnifyingGlass size={16} className="absolute left-3 top-2.5 text-[var(--ink-subtle)]" />
+            <MagnifyingGlass size={16} className="absolute left-3 top-2.5 text-slate-400" />
           </div>
 
           {/* Status Filter Pill Tabs */}
@@ -210,10 +211,10 @@ export default function ReferralsPage() {
               <button
                 key={opt.value}
                 onClick={() => setStatusFilter(opt.value)}
-                className={`px-3 py-1.5 rounded-xs text-xs font-semibold transition-colors ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                   statusFilter === opt.value
-                    ? 'bg-[#1B2A72] text-white shadow-xs'
-                    : 'bg-[var(--surface)] text-[var(--ink-2)] hover:bg-[var(--surface-2)] border border-[var(--border)]'
+                    ? 'bg-[#1B2A72] text-white shadow-md'
+                    : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60 font-semibold'
                 }`}
               >
                 {opt.label}
@@ -221,20 +222,21 @@ export default function ReferralsPage() {
             ))}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Referrals Mobile Card View (Visible on Mobile) */}
       <div className="md:hidden space-y-3">
         {filteredReferrals.length === 0 ? (
-          <div className="bg-white border border-[var(--border)] p-6 rounded-xs text-center text-xs text-[var(--ink-muted)]">
+          <Card variant="default" className="p-6 text-center text-xs text-slate-500 font-medium">
             No referrals match your search query or filter selection.
-          </div>
+          </Card>
         ) : (
           filteredReferrals.map((ref) => (
-            <div
+            <Card
               key={ref.id}
+              variant="elevated"
               onClick={() => setSelectedReferral(ref)}
-              className="bg-white border border-[var(--border)] p-4 rounded-xs shadow-xs space-y-3 active:bg-[var(--surface-2)] transition-colors cursor-pointer"
+              className="p-4 space-y-3 active:bg-slate-50 transition-all cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono-num font-bold text-xs text-[#1B2A72]">{ref.id}</span>
@@ -242,41 +244,41 @@ export default function ReferralsPage() {
               </div>
 
               <div>
-                <h4 className="font-display font-bold text-sm text-[var(--ink)]">{ref.customerName}</h4>
-                <p className="text-xs font-mono-num text-[var(--ink-muted)]">{ref.customerPhone} &bull; {ref.city}</p>
+                <h4 className="font-display font-bold text-sm text-slate-900">{ref.customerName}</h4>
+                <p className="text-xs font-mono-num text-slate-500">{ref.customerPhone} &bull; {ref.city}</p>
               </div>
 
-              <div className="flex items-center justify-between text-xs pt-2 border-t border-[var(--border)]">
-                <span className="font-medium text-[var(--ink-2)] truncate max-w-[180px]">{ref.service}</span>
-                <span className="font-mono-num font-bold text-[#3DAA4B]">
+              <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+                <span className="font-medium text-slate-700 truncate max-w-[180px]">{ref.service}</span>
+                <span className="font-mono-num font-bold text-emerald-600">
                   {ref.pointsEarned > 0 ? `+${ref.pointsEarned} Pts` : '0 Pts'}
                 </span>
               </div>
-            </div>
+            </Card>
           ))
         )}
       </div>
 
       {/* Referrals Desktop Main Table (Hidden on Mobile) */}
-      <div className="hidden md:block bg-white border border-[var(--border)] rounded-xs shadow-xs overflow-hidden">
+      <Card variant="elevated" className="hidden md:block overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--ink-muted)] uppercase tracking-wider font-semibold">
-                <th className="p-3.5">Ref ID</th>
-                <th className="p-3.5">Client Details</th>
-                <th className="p-3.5">Location</th>
-                <th className="p-3.5">Service Requested</th>
-                <th className="p-3.5">Status</th>
-                <th className="p-3.5">Submitted Date</th>
-                <th className="p-3.5 text-right">Points</th>
-                <th className="p-3.5 text-center">Action</th>
+              <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 uppercase tracking-wider font-bold">
+                <th className="p-4">Ref ID</th>
+                <th className="p-4">Client Details</th>
+                <th className="p-4">Location</th>
+                <th className="p-4">Service Requested</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Submitted Date</th>
+                <th className="p-4 text-right">Points</th>
+                <th className="p-4 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody className="divide-y divide-slate-100">
               {filteredReferrals.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-[var(--ink-muted)]">
+                  <td colSpan={8} className="p-8 text-center text-slate-500 font-medium">
                     No referrals match your search query or filter selection.
                   </td>
                 </tr>
@@ -285,26 +287,26 @@ export default function ReferralsPage() {
                   <tr
                     key={ref.id}
                     onClick={() => setSelectedReferral(ref)}
-                    className="hover:bg-[#1B2A72]/5 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                   >
-                    <td className="p-3.5 font-mono-num font-bold text-[#1B2A72]">{ref.id}</td>
-                    <td className="p-3.5">
-                      <div className="font-bold text-[var(--ink)]">{ref.customerName}</div>
-                      <div className="text-[11px] font-mono-num text-[var(--ink-subtle)]">
+                    <td className="p-4 font-mono-num font-bold text-[#1B2A72]">{ref.id}</td>
+                    <td className="p-4">
+                      <div className="font-bold text-slate-900">{ref.customerName}</div>
+                      <div className="text-[11px] font-mono-num text-slate-500">
                         {ref.customerPhone} &bull; {ref.customerEmail}
                       </div>
                     </td>
-                    <td className="p-3.5 font-medium text-[var(--ink-2)]">{ref.city}</td>
-                    <td className="p-3.5 font-semibold text-[var(--ink)]">{ref.service}</td>
-                    <td className="p-3.5">{getStatusBadge(ref.status)}</td>
-                    <td className="p-3.5 font-mono-num text-[var(--ink-muted)]">
+                    <td className="p-4 font-medium text-slate-700">{ref.city}</td>
+                    <td className="p-4 font-bold text-slate-900">{ref.service}</td>
+                    <td className="p-4">{getStatusBadge(ref.status)}</td>
+                    <td className="p-4 font-mono-num text-slate-500 font-medium">
                       {new Date(ref.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-3.5 text-right font-mono-num font-bold text-[#3DAA4B]">
+                    <td className="p-4 text-right font-mono-num font-bold text-emerald-600">
                       {ref.pointsEarned > 0 ? `+${ref.pointsEarned} Pts` : '0 Pts'}
                     </td>
-                    <td className="p-3.5 text-center">
-                      <button className="p-1 text-[var(--ink-muted)] hover:text-[#1B2A72]">
+                    <td className="p-4 text-center">
+                      <button className="p-1.5 rounded-full text-slate-400 hover:text-[#1B2A72] hover:bg-slate-100 transition-all">
                         <CaretRight size={18} weight="bold" />
                       </button>
                     </td>
@@ -314,7 +316,7 @@ export default function ReferralsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* 5-STAGE STATUS STEPPER MODAL */}
       {selectedReferral && (
