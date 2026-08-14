@@ -117,11 +117,11 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           <List className="w-6 h-6" />
         </button>
 
-        <div className="flex flex-col">
-          <h1 className="text-lg md:text-xl font-bold font-display text-[var(--ink)] leading-tight flex items-center gap-2">
+        <div className="flex flex-col min-w-0">
+          <h1 className="text-base sm:text-lg md:text-xl font-bold font-display text-[var(--ink)] leading-snug truncate">
             {title}
           </h1>
-          <p className="hidden sm:block text-xs text-[var(--ink-muted)] leading-tight">{subtitle}</p>
+          <p className="hidden sm:block text-xs text-[var(--ink-muted)] leading-tight truncate">{subtitle}</p>
         </div>
       </div>
 
@@ -149,15 +149,15 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       </div>
 
       {/* Right: Quick Actions & Profile */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* PrimePoints Coin Balance Widget */}
         <Link
           href="/rewards"
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FEF9E7] border border-[#F5C518]/60 hover:bg-[#FDF3CE] transition-all text-xs text-[#0F1A4E] font-bold shadow-2xs"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#FEF9E7] border border-[#F5C518]/60 hover:bg-[#FDF3CE] transition-all text-xs text-[#0F1A4E] font-bold shadow-2xs shrink-0"
           title="View PrimePoints Rewards"
         >
-          <Coins size={18} weight="fill" className="text-[#F5C518] shrink-0" />
-          <span className="font-mono-num text-xs tracking-tight">{totalPoints.toLocaleString('en-IN')} Pts</span>
+          <Coins size={16} weight="fill" className="text-[#F5C518] shrink-0" />
+          <span className="font-mono-num text-[11px] sm:text-xs tracking-tight whitespace-nowrap">{totalPoints.toLocaleString('en-IN')} Pts</span>
         </Link>
 
         {/* Quick Referral Button */}

@@ -9,6 +9,7 @@ import { usePartnerStore } from '@/lib/store';
 import { MOCK_PARTNER, MOCK_REFERRALS, MOCK_REDEMPTIONS } from '@/lib/mock-data';
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,18 +53,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   // Loading skeleton while store hydrator completes
   if (!isHydrated) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#0F1A4E] text-white">
-        <div className="flex flex-col items-center gap-3 animate-fade-in">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-red-500 p-0.5 animate-pulse">
-            <div className="w-full h-full bg-[#0F1A4E] rounded-[14px] flex items-center justify-center">
-              <span className="font-bold text-2xl font-display text-white">P</span>
-            </div>
-          </div>
-          <p className="text-sm text-indigo-200 font-medium">Loading Partner Portal...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading Primescore Portal..." />;
   }
 
   return (

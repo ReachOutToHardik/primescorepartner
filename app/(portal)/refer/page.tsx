@@ -307,11 +307,11 @@ export default function ReferPage() {
                   level={"H"}
                   includeMargin={false}
                   imageSettings={{
-                    src: "/logo.png",
+                    src: "/qr-logo.png",
                     x: undefined,
                     y: undefined,
-                    height: 36,
-                    width: 36,
+                    height: 38,
+                    width: 38,
                     excavate: true,
                   }}
                 />

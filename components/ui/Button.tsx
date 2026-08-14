@@ -72,7 +72,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <CircleNotch className="animate-spin shrink-0" size={size === 'sm' ? 14 : size === 'lg' ? 20 : 16} />
+          <div className="relative flex items-center justify-center shrink-0">
+            <CircleNotch className="animate-spin text-current" size={size === 'sm' ? 16 : size === 'lg' ? 22 : 18} />
+            <img src="/qr-logo.png" alt="" className="absolute w-2.5 h-2.5 object-contain animate-pulse" />
+          </div>
         ) : leftIcon ? (
           <span className="shrink-0 flex items-center">{leftIcon}</span>
         ) : null}

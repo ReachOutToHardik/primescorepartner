@@ -19,6 +19,7 @@ import {
   MapPin,
   Cardholder,
 } from '@phosphor-icons/react';
+import { LogoLight } from '@/components/ui/LogoLight';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -132,9 +133,9 @@ export default function RegisterPage() {
       <div className="max-w-4xl mx-auto w-full flex items-center justify-between py-4 border-b border-[var(--border)]">
         <Link href="/login" className="flex items-center gap-3">
           <img
-            src="/logo.png"
+            src="/logo-light.png"
             alt="PrimeScore Partner Network"
-            className="h-9 object-contain"
+            className="h-10 object-contain"
           />
         </Link>
 
