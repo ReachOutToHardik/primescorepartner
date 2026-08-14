@@ -164,10 +164,10 @@ export default function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition-all duration-200 group relative ${
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg select-none ${
                 isActive
-                  ? 'bg-[#1B2A72] text-white font-bold border border-white/10 shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
+                  ? 'bg-[#1B2A72] text-white font-bold'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'
               } ${isCollapsed ? 'justify-center px-0' : ''}`}
               title={isCollapsed ? item.name : undefined}
             >
@@ -176,7 +176,7 @@ export default function Sidebar({
               )}
               <Icon
                 weight={isActive ? 'fill' : 'bold'}
-                className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                className={`w-4 h-4 flex-shrink-0 ${
                   isActive ? 'text-white' : 'text-slate-400'
                 }`}
               />
