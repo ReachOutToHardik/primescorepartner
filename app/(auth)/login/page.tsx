@@ -50,26 +50,26 @@ export default function LoginPage() {
         .maybeSingle();
 
       if (profileErr) {
-        setError('Connection Error: Unable to verify account credentials right now. Please try again or contact support@primescore.in.');
+        setError('Unable to verify account credentials right now. Please try again or contact support@primescore.in.');
         setIsLoading(false);
         return;
       }
 
       if (!profile) {
-        setError(`Account Not Found: No Primescore partner profile was found for "${email.trim()}". Please verify your email or click "Register as Partner" below.`);
+        setError(`No account found for "${email.trim()}". Please check your email address or click "Register as Partner" below.`);
         setIsLoading(false);
         return;
       }
 
       // Check partner status before allowing access
       if (profile.status === 'kyc_submitted' || profile.status === 'pending_kyc') {
-        setError('⏳ Verification Pending: Your partner application has been submitted and is currently being verified by Primescore Compliance HQ. We will complete verification and onboard you within 2–4 business hours.');
+        setError('Your partner application has been submitted and is currently being verified by Primescore Compliance HQ. Verification takes 2–4 business hours.');
         setIsLoading(false);
         return;
       }
 
       if (profile.status === 'kyc_rejected') {
-        setError('❌ Application Declined: Your partner application was declined. Please contact support@primescore.in for assistance.');
+        setError('Your partner application was declined. Please contact support@primescore.in for assistance.');
         setIsLoading(false);
         return;
       }
@@ -82,11 +82,11 @@ export default function LoginPage() {
 
       if (authError) {
         if (authError.message.includes('Invalid login credentials')) {
-          setError('🔒 Incorrect Password: The password you entered does not match our records. Please try again or contact support@primescore.in.');
+          setError('Incorrect password. Please double-check your password and try again.');
           setIsLoading(false);
           return;
         }
-        setError('Authentication Failed: ' + authError.message);
+        setError(authError.message);
         setIsLoading(false);
         return;
       }

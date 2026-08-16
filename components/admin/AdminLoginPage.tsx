@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
 
     const success = adminLogin(email, password);
     if (!success) {
-      setError('🔒 Access Denied: Incorrect administrator email or password. Please verify your staff credentials (e.g. admin@primescore.in).');
+      setError('Incorrect administrator email or password. Please verify your staff credentials.');
     }
   };
 
