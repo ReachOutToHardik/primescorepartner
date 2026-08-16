@@ -127,10 +127,14 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
     <div className="space-y-6 animate-fade-up">
       {/* Top Navigation & Action Toolbar */}
       <div className="flex items-center justify-between">
-        <Link href="/admin/kyc">
-          <Button variant="secondary" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-1 text-[var(--navy)]" /> Back to Verification Directory
-          </Button>
+        <Link href="/admin/kyc" className="inline-block shrink-0">
+          <button
+            type="button"
+            className="whitespace-nowrap font-display font-semibold text-xs flex items-center gap-2 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition-all cursor-pointer border border-slate-200 shadow-2xs"
+          >
+            <ArrowLeft size={16} className="text-[var(--navy)] shrink-0" />
+            <span>Back to Verification Directory</span>
+          </button>
         </Link>
 
         <div className="flex items-center gap-3 shrink-0">
