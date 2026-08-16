@@ -38,9 +38,14 @@ export const navItems = [
     icon: SquaresFour,
   },
   {
-    name: 'Team Hub (10% Cut)',
+    name: 'Team Hub',
     href: '/team',
     icon: UsersThree,
+  },
+  {
+    name: 'Member Verifications',
+    href: '/team/verifications',
+    icon: ShieldCheck,
   },
   {
     name: 'Refer Customer',
@@ -160,11 +165,11 @@ export default function Sidebar({
         </div>
 
         {navItems
-          .filter((item) => item.href !== '/team' || partner?.role === 'team_leader')
+          .filter((item) => (item.href !== '/team' && item.href !== '/team/verifications') || partner?.role === 'team_leader')
           .map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'));
+            (item.href !== '/dashboard' && item.href !== '/team' && pathname.startsWith(item.href + '/'));
           const Icon = item.icon;
 
           return (

@@ -48,7 +48,7 @@
     font-family: var(--font-display);
     font-weight: 700;
     line-height: 1.2;
-    color: var(--ink);
+    color: inherit;
   }
 
   a {

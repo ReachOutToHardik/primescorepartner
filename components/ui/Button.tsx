@@ -32,7 +32,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseClasses =
-      'inline-flex items-center justify-center font-medium font-body transition-all duration-150 ease-in-out cursor-pointer select-none active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--navy)] focus-visible:ring-offset-2';
+      'inline-flex items-center justify-center font-medium font-body whitespace-nowrap transition-all duration-150 ease-in-out cursor-pointer select-none active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--navy)] focus-visible:ring-offset-2';
 
     const variantClasses: Record<ButtonVariant, string> = {
       primary:
@@ -74,13 +74,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {isLoading ? (
           <div className="relative flex items-center justify-center shrink-0">
             <CircleNotch className="animate-spin text-current" size={size === 'sm' ? 16 : size === 'lg' ? 22 : 18} />
-            <img src="/qr-logo.png" alt="" className="absolute w-2.5 h-2.5 object-contain animate-pulse" />
+            <img src="/qr-logo.png" alt="" className="absolute w-2.5 h-2.5 object-contain" />
           </div>
         ) : leftIcon ? (
           <span className="shrink-0 flex items-center">{leftIcon}</span>
         ) : null}
         
-        {children && <span>{children}</span>}
+        {children && <span className="whitespace-nowrap inline-block">{children}</span>}
 
         {!isLoading && rightIcon ? (
           <span className="shrink-0 flex items-center">{rightIcon}</span>

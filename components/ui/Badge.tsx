@@ -8,7 +8,13 @@ export type BadgeVariant =
   | 'warning'
   | 'danger'
   | 'info'
-  | 'neutral';
+  | 'neutral'
+  // Color aliases used by admin pages
+  | 'amber'
+  | 'green'
+  | 'gray'
+  | 'blue'
+  | 'red';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   status?: string;
@@ -55,6 +61,12 @@ export const Badge: React.FC<BadgeProps> = ({
     danger: 'bg-[var(--red-light)] text-[var(--red)] border-[var(--red)]/20',
     info: 'bg-blue-50 text-blue-700 border-blue-200',
     neutral: 'bg-[var(--surface-3)] text-[var(--ink-muted)] border-[var(--border-strong)]',
+    // Color aliases
+    amber: 'bg-amber-50 text-amber-800 border-amber-200',
+    green: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    gray: 'bg-slate-100 text-slate-600 border-slate-200',
+    blue: 'bg-blue-50 text-blue-700 border-blue-200',
+    red: 'bg-red-50 text-red-700 border-red-200',
   };
 
   const sizeClasses = {

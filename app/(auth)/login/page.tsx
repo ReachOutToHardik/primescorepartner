@@ -6,42 +6,121 @@ import { useRouter } from 'next/navigation';
 import { usePartnerStore } from '@/lib/store';
 import {
   ShieldCheck,
-  Lightning,
   CheckCircle,
   ArrowRight,
   User,
   LockKey,
-  Quotes,
-  TrendUp,
   Coins,
   Users,
+  Eye,
+  EyeSlash,
 } from '@phosphor-icons/react';
-
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginDemo } = usePartnerStore();
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  const handleStandardSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailOrPhone || !password) {
-      setError('Please enter your email/phone and password');
+    if (!email.trim()) {
+      setError('Please enter your registered email address.');
       return;
     }
-    setIsNavigating(true);
-    loginDemo();
-    router.push('/dashboard');
-  };
+    if (!password.trim()) {
+      setError('Please enter your password.');
+      return;
+    }
+    setError('');
+    setIsLoading(true);
 
-  const handleDemoSignIn = () => {
-    setIsNavigating(true);
-    loginDemo();
-    router.push('/dashboard');
+    try {
+      const { supabase } = await import('@/lib/supabase');
+
+      // First check if profile exists in the profiles table
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+
+      if (profileErr) {
+        setError('Connection Error: Unable to verify account credentials right now. Please try again or contact support@primescore.in.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profile) {
+        setError(`Account Not Found: No Primescore partner profile was found for "${email.trim()}". Please verify your email or click "Register as Partner" below.`);
+        setIsLoading(false);
+        return;
+      }
+
+      // Check partner status before allowing access
+      if (profile.status === 'kyc_submitted' || profile.status === 'pending_kyc') {
+        setError('⏳ Verification Pending: Your partner application has been submitted and is currently being verified by Primescore Compliance HQ. We will complete verification and onboard you within 2–4 business hours.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (profile.status === 'kyc_rejected') {
+        setError('❌ Application Declined: Your partner application was declined. Please contact support@primescore.in for assistance.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Approved partner — sign in with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+      });
+
+      if (authError) {
+        if (authError.message.includes('Invalid login credentials')) {
+          setError('🔒 Incorrect Password: The password you entered does not match our records. Please try again or contact support@primescore.in.');
+          setIsLoading(false);
+          return;
+        }
+        setError('Authentication Failed: ' + authError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (authData?.user) {
+        usePartnerStore.setState({
+          partner: {
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            phone: profile.phone || '',
+            profession: profile.profession || '',
+            city: profile.city || '',
+            state: profile.state || '',
+            pan: profile.pan || '',
+            status: profile.status,
+            role: profile.role,
+            teamCode: profile.team_code || '',
+            joinedAt: profile.joined_at || profile.created_at,
+            profilePhoto: profile.avatar_url || undefined,
+          },
+          totalPoints: profile.prime_points || 0,
+          isAuthenticated: true,
+        });
+
+        setIsNavigating(true);
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isNavigating) {
@@ -52,7 +131,7 @@ export default function LoginPage() {
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[var(--surface)] text-[var(--ink)]">
       {/* Left Side - Deep Navy Hero */}
       <div className="lg:col-span-5 bg-[#0F1A4E] text-white p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden">
-        {/* Background Graphic Accents (Crisp/Sharp, No Glow) */}
+        {/* Background Graphic Accents */}
         <div className="absolute top-0 right-0 w-64 h-64 border border-white/10 rounded-full -mr-20 -mt-20 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 border border-white/10 rounded-full -ml-32 -mb-32 pointer-events-none" />
 
@@ -103,7 +182,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Value Props Bullet Points */}
+          {/* Value Props */}
           <div className="mt-6 space-y-2.5 text-xs lg:text-sm text-slate-200">
             <div className="flex items-center gap-2.5">
               <CheckCircle size={18} className="text-[#3DAA4B]" weight="fill" />
@@ -120,16 +199,11 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Partner Testimonials Infinite Edge-to-Edge Marquee */}
+        {/* Testimonials marquee */}
         <div className="relative z-10 -mx-8 lg:-mx-12 overflow-hidden py-2">
           <div className="flex gap-4 animate-marquee w-max px-4">
-            {/* Review 1 - Sandip Sharma */}
             <div className="w-[310px] bg-[#1B2A72] border border-white/10 p-3.5 rounded-xs flex gap-3 shrink-0 items-center">
-              <img
-                src="/partner1.jpg"
-                alt="Sandip Sharma"
-                className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0"
-              />
+              <img src="/partner1.jpg" alt="Sandip Sharma" className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0" />
               <div className="space-y-1 min-w-0">
                 <p className="text-[11px] text-slate-200 italic leading-snug line-clamp-3">
                   &ldquo;PrimeScore helped my home loan clients fix bureau errors fast. Plus, I earned great referral points!&rdquo;
@@ -140,14 +214,8 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-
-            {/* Review 2 - Sachin Verma */}
             <div className="w-[310px] bg-[#1B2A72] border border-white/10 p-3.5 rounded-xs flex gap-3 shrink-0 items-center">
-              <img
-                src="/partner2.jpg"
-                alt="Sachin Verma"
-                className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0"
-              />
+              <img src="/partner2.jpg" alt="Sachin Verma" className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0" />
               <div className="space-y-1 min-w-0">
                 <p className="text-[11px] text-slate-200 italic leading-snug line-clamp-3">
                   &ldquo;Seamless 5-stage tracking for my CIBIL rectification clients. Instant voucher redemptions are top notch.&rdquo;
@@ -158,14 +226,9 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-
-            {/* Duplicate Duplicate Set for Smooth Infinite Loop */}
+            {/* Duplicated for infinite scroll */}
             <div className="w-[310px] bg-[#1B2A72] border border-white/10 p-3.5 rounded-xs flex gap-3 shrink-0 items-center">
-              <img
-                src="/partner1.jpg"
-                alt="Sandip Sharma"
-                className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0"
-              />
+              <img src="/partner1.jpg" alt="Sandip Sharma" className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0" />
               <div className="space-y-1 min-w-0">
                 <p className="text-[11px] text-slate-200 italic leading-snug line-clamp-3">
                   &ldquo;PrimeScore helped my home loan clients fix bureau errors fast. Plus, I earned great referral points!&rdquo;
@@ -176,13 +239,8 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-
             <div className="w-[310px] bg-[#1B2A72] border border-white/10 p-3.5 rounded-xs flex gap-3 shrink-0 items-center">
-              <img
-                src="/partner2.jpg"
-                alt="Sachin Verma"
-                className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0"
-              />
+              <img src="/partner2.jpg" alt="Sachin Verma" className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0" />
               <div className="space-y-1 min-w-0">
                 <p className="text-[11px] text-slate-200 italic leading-snug line-clamp-3">
                   &ldquo;Seamless 5-stage tracking for my CIBIL rectification clients. Instant voucher redemptions are top notch.&rdquo;
@@ -213,50 +271,26 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Quick Instant Demo Access Box */}
-          <div className="bg-[#FEF9E7] border border-[#F5C518] p-4 rounded-xs shadow-xs space-y-2">
-            <div className="flex items-center gap-2 text-[#1A1917]">
-              <Lightning size={20} className="text-[#E63329]" weight="fill" />
-              <h3 className="font-display font-bold text-sm">Instant Demo Access</h3>
-            </div>
-            <p className="text-xs text-[var(--ink-2)]">
-              Click below to jump directly into the full partner dashboard with pre-loaded mock referrals, rewards, and KYC metrics.
-            </p>
-            <button
-              onClick={handleDemoSignIn}
-              className="w-full mt-2 py-2.5 px-4 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-semibold text-sm rounded-xs transition-colors flex items-center justify-center gap-2 border border-transparent shadow-xs"
-            >
-              <span>Explore Portal as Partner (Demo)</span>
-              <ArrowRight size={16} weight="bold" />
-            </button>
-          </div>
-
-          <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-[var(--border)]"></div>
-            <span className="flex-shrink mx-4 text-xs font-semibold uppercase tracking-wider text-[var(--ink-subtle)]">
-              Or sign in manually
-            </span>
-            <div className="flex-grow border-t border-[var(--border)]"></div>
-          </div>
-
-          {/* Standard Login Form */}
-          <form onSubmit={handleStandardSubmit} className="space-y-4">
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 text-xs bg-[#FDECEA] border border-[#E63329] text-[#E63329] rounded-xs font-semibold">
+              <div className="p-3.5 text-xs bg-[#FDECEA] border border-[#E63329] text-[#E63329] rounded-xl font-semibold leading-relaxed">
                 {error}
               </div>
             )}
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1.5">
-                Email Address or Phone
+                Email Address
               </label>
               <div className="relative">
                 <input
-                  type="text"
-                  placeholder="arjun.mehta@example.com / 9876543210"
-                  value={emailOrPhone}
-                  onChange={(e) => setEmailOrPhone(e.target.value)}
+                  type="email"
+                  id="login-email"
+                  placeholder="arjun.mehta@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:ring-1 focus:ring-[#1B2A72] text-[var(--ink)] placeholder:text-[var(--ink-subtle)]"
                 />
                 <User size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
@@ -268,19 +302,34 @@ export default function LoginPage() {
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)]">
                   Password
                 </label>
-                <a href="#" onClick={(e) => { e.preventDefault(); alert('Demo password is reset upon instant access!'); }} className="text-xs text-[#1B2A72] hover:underline font-semibold">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alert('Please contact support@primescore.in to reset your password.');
+                  }}
+                  className="text-xs text-[#1B2A72] hover:underline font-semibold"
+                >
                   Forgot Password?
                 </a>
               </div>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
+                  id="login-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:ring-1 focus:ring-[#1B2A72] text-[var(--ink)]"
+                  autoComplete="current-password"
+                  className="w-full px-3.5 py-2.5 pr-10 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:ring-1 focus:ring-[#1B2A72] text-[var(--ink)]"
                 />
-                <LockKey size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors"
+                >
+                  {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
@@ -293,9 +342,20 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-[var(--ink)] hover:bg-[#000000] text-white font-display font-semibold text-sm rounded-xs transition-colors shadow-xs"
+              disabled={isLoading}
+              className="w-full py-3 bg-[var(--ink)] hover:bg-[#000000] disabled:opacity-60 disabled:cursor-not-allowed text-white font-display font-semibold text-sm rounded-xs transition-colors shadow-xs flex items-center justify-center gap-2"
             >
-              Sign In to Account
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In to Account</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
           </form>
 

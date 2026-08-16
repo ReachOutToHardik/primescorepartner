@@ -20,9 +20,10 @@ import { Card } from '@/components/ui/Card';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 
 export default function RedeemPage() {
-  const { totalPoints, redemptions, addRedemption } = usePartnerStore();
+  const { partner, totalPoints, redemptions, redeemGiftCard } = usePartnerStore();
 
   const [activeTab, setActiveTab] = useState<'catalog' | 'history'>('catalog');
+  const [isRedeeming, setIsRedeeming] = useState(false);
 
   // Selected Card for Redemption Modal
   const [selectedBrand, setSelectedBrand] = useState<typeof GIFT_CARDS[0] | null>(null);
@@ -31,6 +32,7 @@ export default function RedeemPage() {
   // OTP Modal Flow State
   const [otpStep, setOtpStep] = useState<'confirm' | 'otp' | 'success'>('confirm');
   const [otpValue, setOtpValue] = useState('');
+  const [internalOtp, setInternalOtp] = useState('');
   const [generatedVoucherCode, setGeneratedVoucherCode] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -49,32 +51,56 @@ export default function RedeemPage() {
   };
 
   const handleRequestOTP = () => {
+    // Generate a 6-digit OTP for this session
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setInternalOtp(otp);
     setOtpStep('otp');
-    setOtpValue('1234'); // Pre-fill mock OTP for seamless testing
+    // In production this would be sent via SMS/WhatsApp to partner.phone
+    // For now show it in the UI as a dev indicator
+    console.info(`[DEV] OTP for redemption: ${otp}`);
   };
 
-  const handleVerifyAndRedeem = () => {
-    if (!selectedBrand) return;
-    if (otpValue !== '1234' && otpValue.length < 4) {
-      setErrorMsg('Please enter valid 4-digit OTP (Try 1234)');
+  const handleVerifyAndRedeem = async () => {
+    if (!selectedBrand || !partner?.id) return;
+    if (otpValue.trim() !== internalOtp) {
+      setErrorMsg('Invalid OTP. Please check and try again.');
       return;
     }
 
+    setIsRedeeming(true);
+    setErrorMsg('');
+
     const pointsCost = selectedDenom * 10;
-    const code = `${selectedBrand.id.toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const voucherCode = `${selectedBrand.brand.substring(0, 4).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-    const record: RedemptionRecord = {
-      id: `RDM-${Date.now().toString().slice(-6)}`,
-      brand: selectedBrand.brand,
-      denomination: selectedDenom,
-      points: pointsCost,
-      redeemedAt: new Date().toISOString(),
-      voucherCode: code,
-    };
+    try {
+      const { supabase } = await import('@/lib/supabase');
 
-    addRedemption(record, pointsCost);
-    setGeneratedVoucherCode(code);
-    setOtpStep('success');
+      // Insert redemption record
+      await supabase.from('redemptions').insert([{
+        partner_id: partner.id,
+        brand_name: selectedBrand.brand,
+        denomination_inr: selectedDenom,
+        points_deducted: pointsCost,
+        voucher_code: voucherCode,
+      }]);
+
+      // Deduct points from profile
+      await supabase
+        .from('profiles')
+        .update({ prime_points: Math.max(0, totalPoints - pointsCost) })
+        .eq('id', partner.id);
+
+      // Update local state
+      redeemGiftCard(selectedBrand.brand, selectedDenom, pointsCost);
+      setGeneratedVoucherCode(voucherCode);
+      setOtpStep('success');
+    } catch (err) {
+      console.error('Redemption error:', err);
+      setErrorMsg('Redemption failed. Please try again.');
+    } finally {
+      setIsRedeeming(false);
+    }
   };
 
   const handleCopyCode = (code: string) => {
@@ -323,9 +349,9 @@ export default function RedeemPage() {
               <div className="space-y-4">
                 <div className="text-center space-y-1">
                   <ShieldCheck size={28} className="mx-auto text-[#1B2A72]" />
-                  <p className="font-display font-bold text-sm text-[var(--ink)]">Enter 4-Digit Security OTP</p>
+                  <p className="font-display font-bold text-sm text-[var(--ink)]">Enter 6-Digit Security OTP</p>
                   <p className="text-xs text-[var(--ink-muted)]">
-                    Simulated OTP sent to your registered mobile ending in ****3210.
+                    A one-time code has been generated for this redemption. Check the browser console (DevTools) for the OTP until SMS is integrated.
                   </p>
                 </div>
 
@@ -338,62 +364,62 @@ export default function RedeemPage() {
                 <div className="space-y-2">
                   <input
                     type="text"
-                    maxLength={4}
-                    placeholder="1 2 3 4"
+                    maxLength={6}
+                    placeholder="• • • • • •"
                     value={otpValue}
-                    onChange={(e) => setOtpValue(e.target.value)}
+                    onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
                     className="w-full py-3 text-center font-mono-num font-bold text-2xl tracking-widest bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)]"
                   />
                   <p className="text-[11px] text-[var(--ink-subtle)] text-center">
-                    Demo OTP: <strong className="text-[var(--ink)]">1234</strong> (auto-filled)
+                    Enter the 6-digit code shown in your browser console (F12 → Console)
                   </p>
                 </div>
 
                 <button
                   onClick={handleVerifyAndRedeem}
-                  className="w-full py-3 bg-[#3DAA4B] hover:bg-[#2e883a] text-white font-display font-bold text-xs rounded-xs transition-colors flex items-center justify-center gap-2"
+                  disabled={isRedeeming || otpValue.length < 6}
+                  className="w-full py-3 bg-[#3DAA4B] hover:bg-[#2e883a] disabled:opacity-60 disabled:cursor-not-allowed text-white font-display font-bold text-xs rounded-xs transition-colors flex items-center justify-center gap-2"
                 >
-                  <CheckCircle size={18} weight="fill" />
-                  <span>Verify OTP & Claim ₹{selectedDenom} Voucher</span>
+                  {isRedeeming ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={18} weight="fill" />
+                      <span>Verify OTP & Claim ₹{selectedDenom} Voucher</span>
+                    </>
+                  )}
                 </button>
               </div>
             )}
 
-            {/* STEP 3: SUCCESS & VOUCHER CODE */}
+            {/* STEP 3: SUCCESS & MANUAL SMS DISPATCH NOTICE */}
             {otpStep === 'success' && (
               <div className="space-y-4 text-center">
-                <div className="w-12 h-12 bg-[#EBF7ED] text-[#3DAA4B] rounded-full flex items-center justify-center mx-auto border border-[#3DAA4B]">
-                  <CheckCircle size={28} weight="fill" />
+                <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-300">
+                  <CheckCircle size={32} weight="fill" />
                 </div>
 
                 <div>
-                  <h4 className="font-display font-bold text-lg text-[var(--ink)]">
-                    Redemption Successful!
+                  <h4 className="font-display font-bold text-lg text-slate-900">
+                    Redemption Request Submitted!
                   </h4>
-                  <p className="text-xs text-[var(--ink-muted)]">
-                    Your {selectedBrand.brand} ₹{selectedDenom} voucher code is active below.
+                  <p className="text-xs text-slate-500 font-medium mt-1">
+                    Your OTP verification is confirmed. Your official {selectedBrand.brand} ₹{selectedDenom} voucher code will be dispatched to your registered mobile number <span className="font-mono text-slate-900 font-bold">({partner?.phone || '****3210'})</span> via SMS.
                   </p>
                 </div>
 
-                <div className="bg-[var(--surface)] p-4 border border-[var(--border)] rounded-xs space-y-2">
-                  <span className="text-[10px] uppercase font-semibold text-[var(--ink-subtle)] block">
-                    Voucher Code
-                  </span>
-                  <div className="font-mono-num font-bold text-lg text-[#1B2A72] tracking-wider select-all">
-                    {generatedVoucherCode}
-                  </div>
-                  <button
-                    onClick={() => handleCopyCode(generatedVoucherCode)}
-                    className="mt-2 w-full py-2 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-semibold text-xs rounded-xs transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <Copy size={14} />
-                    <span>{copiedCode ? 'Voucher Code Copied!' : 'Copy Voucher Code'}</span>
-                  </button>
+                <div className="bg-amber-50 p-4 border border-amber-200 rounded-xl text-left">
+                  <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                    Our team verifies and dispatches manual voucher codes to your phone number within 15 to 30 minutes.
+                  </p>
                 </div>
 
                 <button
                   onClick={() => setSelectedBrand(null)}
-                  className="w-full py-2.5 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--ink)] font-display font-semibold text-xs rounded-xs transition-colors border border-[var(--border)]"
+                  className="w-full py-3 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-xs rounded-xl transition-all shadow-xs"
                 >
                   Done
                 </button>

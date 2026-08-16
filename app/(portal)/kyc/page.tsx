@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import jsPDF from 'jspdf';
 import { usePartnerStore } from '@/lib/store';
 import {
   ShieldCheck,
@@ -13,15 +14,113 @@ import {
   PhoneCall,
   Envelope,
   WhatsappLogo,
-  ArrowRight,
   Headset,
+  QrCode,
+  UsersThree,
+  Crown,
+  IdentificationCard,
+  Building,
+  Check,
+  DownloadSimple
 } from '@phosphor-icons/react';
 
 export default function KYCPage() {
   const { partner } = usePartnerStore();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+
+      // Load template and QR code into clean canvas to completely bypass html2canvas lab() CSS errors
+      const canvas = document.createElement('canvas');
+      canvas.width = 1011;
+      canvas.height = 637;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) throw new Error('Canvas context not available');
+
+      // 1. Draw Template Background Image
+      const bgImg = new Image();
+      bgImg.crossOrigin = 'anonymous';
+      await new Promise((resolve, reject) => {
+        bgImg.onload = resolve;
+        bgImg.onerror = reject;
+        bgImg.src = '/id-card-bg.png';
+      });
+      ctx.drawImage(bgImg, 0, 0, 1011, 637);
+
+      // 2. Draw Dynamic Partner Details (Large Prominent Typography)
+      ctx.fillStyle = '#0F1A4E';
+      ctx.font = '900 36px "Plus Jakarta Sans", sans-serif';
+      const nameText = (partner?.name || 'RAHUL JOSHI').toUpperCase();
+      ctx.fillText(nameText, 66, 292);
+
+      ctx.fillStyle = '#1A1917';
+      ctx.font = '800 21px "Inter", sans-serif';
+      const refCodeText = `REF CODE : ${(partner?.teamCode || partner?.id?.toUpperCase() || 'EFWFFEW')}`;
+      ctx.fillText(refCodeText, 66, 350);
+
+      const phoneText = `MOBILE :- +91 ${partner?.phone || '9811223344'}`;
+      ctx.fillText(phoneText, 66, 388);
+
+      // 3. Draw Dynamic QR Code & Center Logo
+      const qrImg = new Image();
+      qrImg.crossOrigin = 'anonymous';
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=PRIMESCORE-PARTNER-${partner?.teamCode || partner?.id || 'demo'}&color=0F1A4E`;
+      
+      await new Promise((resolve, reject) => {
+        qrImg.onload = resolve;
+        qrImg.onerror = reject;
+        qrImg.src = qrUrl;
+      });
+
+      // Position: Top 28.5% (181px), Right 6.5% (X: 555px), Width: 390px, Height: 385px
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(555, 181, 390, 385);
+      ctx.drawImage(qrImg, 560, 186, 380, 375);
+
+      // Draw Center Brand Badge inside QR
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'anonymous';
+      await new Promise((resolve) => {
+        logoImg.onload = resolve;
+        logoImg.onerror = resolve;
+        logoImg.src = '/qr-logo.png';
+      });
+
+      if (logoImg.complete && logoImg.naturalWidth !== 0) {
+        ctx.fillStyle = '#0F1A4E';
+        ctx.fillRect(725, 348, 50, 50);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(725, 348, 50, 50);
+        ctx.drawImage(logoImg, 728, 351, 44, 44);
+      }
+
+      // Export to jsPDF CR80 Format
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [85.6, 54],
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
+      pdf.save(`PrimeScore_Partner_ID_${partner?.teamCode || partner?.id || 'card'}.pdf`);
+    } catch (err) {
+      console.error('PDF Generation failed', err);
+      alert('Could not generate PDF. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const isApproved = partner?.status === 'kyc_approved' || !partner?.status;
   const isSubmitted = partner?.status === 'kyc_submitted';
+
+  const role = partner?.role || 'team_leader';
 
   const documentChecklist = [
     {
@@ -56,6 +155,8 @@ export default function KYCPage() {
 
   return (
     <div className="space-y-8 animate-fade-up">
+
+
       {/* Page Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div>
@@ -66,7 +167,7 @@ export default function KYCPage() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[var(--ink-muted)]">
-            Review your partner profile details, identity verification status, and bank payout records.
+            Review your partner profile details, official ID card badge, identity verification status, and bank payout records.
           </p>
         </div>
 
@@ -93,13 +194,13 @@ export default function KYCPage() {
 
       {/* Main Grid: Checklist + Details */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left 7 cols: Status overview & document checklist */}
+        {/* Left 7 cols: Account Status Summary & ID Card Badge */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Overview Panel */}
+          {/* Account Status Summary */}
           <div className="bg-white border border-[var(--border)] p-6 rounded-xs shadow-xs space-y-4">
-            <h2 className="font-display text-lg font-bold text-[var(--ink)] flex items-center justify-between">
+            <h2 className="font-display text-lg font-bold text-[var(--ink)] flex items-center justify-between border-b border-gray-100 pb-3">
               <span>Account Status Summary</span>
-              <span className="text-xs font-mono-num font-normal text-[var(--ink-muted)]">
+              <span className="text-xs font-mono-num font-bold text-[var(--navy)] bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100">
                 ID: {partner?.id || 'demo'}
               </span>
             </h2>
@@ -118,7 +219,7 @@ export default function KYCPage() {
                   Category
                 </span>
                 <span className="font-display font-bold text-sm text-[#1B2A72]">
-                  {partner?.profession || 'CA'}
+                  {partner?.profession || 'Chartered Accountant (CA)'}
                 </span>
               </div>
               <div>
@@ -126,14 +227,88 @@ export default function KYCPage() {
                   Registered On
                 </span>
                 <span className="font-mono-num font-semibold text-xs text-[var(--ink)]">
-                  {partner?.joinedAt ? new Date(partner.joinedAt).toLocaleDateString() : '01 Oct 2024'}
+                  {partner?.joinedAt ? new Date(partner.joinedAt).toLocaleDateString() : '10/1/2024'}
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-[var(--ink-2)] leading-relaxed">
+            <p className="text-xs text-[var(--ink-2)] leading-relaxed bg-emerald-50/60 p-3 rounded-lg border border-emerald-200/60 text-emerald-900 font-medium">
               Your partner account is fully compliant with RBI and bureau referral regulations. You are eligible for 100% instant referral payouts and reward point redemptions.
             </p>
+          </div>
+
+          {/* OFFICIAL PRIMESCORE PARTNER ID CARD DOWNLOAD ACTION */}
+          <div className="space-y-3 bg-white border border-[var(--border)] p-6 rounded-xs shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+                  <IdentificationCard size={20} className="text-[#1B2A72]" weight="fill" />
+                  Official PrimeScore Partner Digital ID Card
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Your identity is verified. Download your official high-definition Partner ID Card as a formatted PDF.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className="px-5 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
+              >
+                <DownloadSimple size={18} weight="bold" />
+                <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download ID Card (PDF)'}</span>
+              </button>
+            </div>
+
+            {/* OFF-SCREEN HIGH-RES CARD RENDERER FOR JSPDF */}
+            <div className="fixed -left-[9999px] -top-[9999px] pointer-events-none">
+              <div
+                id="pdf-id-card-renderer"
+                ref={cardRef}
+                className="relative w-[1011px] h-[637px] rounded-none overflow-hidden bg-white select-none shadow-none"
+              >
+                {/* Background Image Template */}
+                <img
+                  src="/id-card-bg.png"
+                  alt="PrimeScore ID Card Background"
+                  className="absolute inset-0 w-full h-full object-fill"
+                />
+
+                {/* OVERLAY CONTENT FOR PDF */}
+                <div className="absolute top-[41%] left-[6.5%] max-w-[46%] z-10 flex flex-col justify-start">
+                  <h4 className="font-display font-extrabold text-slate-950 text-3xl leading-none uppercase tracking-tight truncate">
+                    {partner?.name || 'RAHUL JOSHI'}
+                  </h4>
+
+                  <div className="mt-5 space-y-2 font-body font-bold text-slate-900 text-lg tracking-wide">
+                    <p className="flex items-center gap-2 truncate">
+                      <span className="text-slate-900 font-bold">REF CODE :</span>
+                      <span className="font-display text-slate-950 font-extrabold uppercase">{partner?.teamCode || partner?.id?.toUpperCase() || 'EFWFFEW'}</span>
+                    </p>
+                    <p className="flex items-center gap-2 truncate">
+                      <span className="text-slate-900 font-bold">MOBILE :-</span>
+                      <span className="font-display text-slate-950 font-extrabold">+91 {partner?.phone || '9811223344'}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="absolute top-[28.5%] right-[6.5%] w-[38.5%] h-[60.5%] flex items-center justify-center p-2 z-10">
+                  <div className="w-full h-full relative bg-white p-2 rounded-none flex items-center justify-center">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=PRIMESCORE-PARTNER-${partner?.teamCode || partner?.id || 'demo'}&color=0F1A4E`}
+                      alt="Partner Verification QR Code"
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-12 h-12 bg-[#0F1A4E] rounded-none p-1 border-2 border-white shadow-md flex items-center justify-center overflow-hidden">
+                        <img src="/qr-logo.png" alt="PrimeScore Logo" className="w-full h-full object-contain" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Document Checklist List */}
@@ -165,7 +340,7 @@ export default function KYCPage() {
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#EBF7ED] text-[#3DAA4B] text-[11px] font-bold uppercase tracking-wider rounded-xs border border-[#3DAA4B]/30">
                         <CheckCircle size={12} weight="fill" /> {doc.status}
                       </span>
-                      <p className="text-[10px] font-mono-num text-[var(--ink-subtle)] mt-1">
+                        <p className="text-[10px] font-mono-num text-[var(--ink-subtle)] mt-1">
                         {doc.timestamp}
                       </p>
                     </div>

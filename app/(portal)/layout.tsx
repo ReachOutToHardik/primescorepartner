@@ -2,16 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import { usePartnerStore } from '@/lib/store';
-import { MOCK_PARTNER, MOCK_REFERRALS, MOCK_REDEMPTIONS } from '@/lib/mock-data';
-
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useSupabaseSync } from '@/lib/useSupabaseSync';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
+  useSupabaseSync();
   const pathname = usePathname();
   const router = useRouter();
   const [isHydrated, setIsHydrated] = useState(false);
@@ -19,41 +18,31 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const partner = usePartnerStore((state) => state.partner);
-  const referrals = usePartnerStore((state) => state.referrals);
   const isAuthenticated = usePartnerStore((state) => state.isAuthenticated);
 
-  // Handle Zustand store hydration and auto-seeding
   useEffect(() => {
-    // Wait for store rehydration
-    const state = usePartnerStore.getState();
-
-    // Auto-seed mock partner and mock data if state is empty
-    if (!state.partner) {
-      const initialTotalPoints = MOCK_REFERRALS.reduce(
-        (sum, ref) => sum + (ref.status === 'completed' ? 500 : 0),
-        0
-      );
-
-      usePartnerStore.setState({
-        partner: MOCK_PARTNER,
-        referrals: MOCK_REFERRALS,
-        redemptions: MOCK_REDEMPTIONS,
-        totalPoints: initialTotalPoints > 0 ? initialTotalPoints : 1000,
-        isAuthenticated: true,
-      });
-    }
-
     setIsHydrated(true);
   }, []);
+
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated && !partner) {
+      router.replace('/login');
+    }
+  }, [isHydrated, isAuthenticated, partner, router]);
 
   // Close mobile sidebar on route change
   useEffect(() => {
     setMobileSidebarOpen(false);
   }, [pathname]);
 
-  // Loading skeleton while store hydrator completes
   if (!isHydrated) {
     return <LoadingSpinner message="Loading Primescore Portal..." />;
+  }
+
+  // Show loading while redirecting unauthenticated users
+  if (!isAuthenticated && !partner) {
+    return <LoadingSpinner message="Redirecting to login..." />;
   }
 
   return (

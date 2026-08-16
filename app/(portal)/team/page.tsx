@@ -15,23 +15,24 @@ import {
   ShareNetwork,
   Lightning,
   Sparkle,
-  ShieldCheck,
   Phone,
   Envelope,
   User,
   MapPin,
   Coins,
-  ClipboardText,
-  Gift,
+  QrCode,
+  DownloadSimple,
+  Printer
 } from '@phosphor-icons/react';
 
 export default function TeamPage() {
   const router = useRouter();
-  const { partner, teamMembers, onboardTeamMember } = usePartnerStore();
+  const { partner, teamMembers, onboardTeamMember, updateTeamMemberStatus } = usePartnerStore();
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Onboard Member Form State
   const [memberName, setMemberName] = useState('');
@@ -117,85 +118,85 @@ export default function TeamPage() {
       </div>
 
       {/* 2. Team Metrics Stats Rail */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <Card variant="elevated" className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card variant="elevated" className="p-5 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 font-mono-num">
               Total Onboarded Members
             </span>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-[#1B2A72] flex items-center justify-center font-bold">
-              <UsersThree size={22} weight="fill" />
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-[#1B2A72] flex items-center justify-center font-bold shrink-0">
+              <UsersThree size={20} weight="fill" />
             </div>
           </div>
-          <p className="font-mono-num font-extrabold text-3xl text-slate-900 mt-3">
+          <p className="font-mono-num font-extrabold text-2xl sm:text-3xl text-slate-900 mt-2.5">
             {totalOnboarded}
           </p>
-          <span className="text-xs text-slate-500 font-medium block mt-1">
+          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
             Active team advisors onboarded
           </span>
         </Card>
 
-        <Card variant="elevated" className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+        <Card variant="elevated" className="p-5 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 font-mono-num">
               10% Override Revenue Cut
             </span>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <Coins size={22} weight="fill" />
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0">
+              <Coins size={20} weight="fill" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2 mt-3">
-            <p className="font-mono-num font-extrabold text-3xl text-[#1B2A72]">
+          <div className="flex items-baseline gap-1.5 mt-2.5">
+            <p className="font-mono-num font-extrabold text-2xl sm:text-3xl text-[#1B2A72]">
               +{totalOverrideEarned.toLocaleString()}
             </p>
-            <span className="font-display font-bold text-sm text-amber-500">Pts</span>
+            <span className="font-display font-bold text-xs text-amber-600">Pts</span>
           </div>
-          <span className="text-xs text-slate-500 font-medium block mt-1">
+          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
             Passive points earned from team cases
           </span>
         </Card>
 
-        <Card variant="elevated" className="p-6 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+        <Card variant="elevated" className="p-5 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 font-mono-num">
               Team Resolved Cases
             </span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <Lightning size={22} weight="fill" />
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+              <Lightning size={20} weight="fill" />
             </div>
           </div>
-          <p className="font-mono-num font-extrabold text-3xl text-slate-900 mt-3">
+          <p className="font-mono-num font-extrabold text-2xl sm:text-3xl text-slate-900 mt-2.5">
             {totalCasesByTeam}
           </p>
-          <span className="text-xs text-slate-500 font-medium block mt-1">
+          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
             Completed credit client cases by roster
           </span>
         </Card>
       </div>
 
-      {/* 3. Team Leader Invite Code Bar (Clean High-Contrast White Card) */}
+      {/* 3. Team Leader Invite Code Bar & QR Generator Card */}
       <Card variant="elevated" className="p-6 rounded-2xl bg-white border border-slate-200/80 space-y-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1 max-w-xl">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
                 <Sparkle size={16} weight="fill" />
               </div>
-              <h3 className="font-display font-bold text-base text-slate-900">Your Team Leader Invite Code</h3>
+              <h3 className="font-display font-bold text-base text-slate-900">Your Unique Team Leader Signup Link & QR Code</h3>
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              Share your team invite link or code. Any new partner who registers with your code is automatically added to your team.
+              Share your unique signup link or QR code. Any new partner who registers through your link is automatically attached under your team roster.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="px-4 py-2 bg-amber-50 border border-amber-200/80 rounded-xl font-mono-num font-extrabold text-[#1B2A72] text-sm tracking-wider shadow-xs">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="px-3.5 py-2 bg-amber-50 border border-amber-200/80 rounded-xl font-mono-num font-extrabold text-[#1B2A72] text-xs sm:text-sm tracking-wider shadow-xs">
               {teamCode}
             </div>
             <Button
               onClick={handleCopyCode}
               variant="outline"
-              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 px-3.5 py-2 text-xs font-bold rounded-xl"
+              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 px-3.5 py-2 text-xs font-bold rounded-xl whitespace-nowrap"
             >
               {copiedCode ? <CheckCircle size={16} className="text-emerald-600" /> : <Copy size={16} />}
               <span>{copiedCode ? 'Copied' : 'Copy Code'}</span>
@@ -203,19 +204,31 @@ export default function TeamPage() {
           </div>
         </div>
 
+        {/* Unique Signup URL & Action Bar */}
         <div className="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-slate-100">
-          <input
-            type="text"
-            readOnly
-            value={inviteUrl}
-            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-mono-num font-semibold focus:outline-none"
-          />
+          <div className="w-full flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={inviteUrl}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-mono-num font-semibold focus:outline-none"
+            />
+            <Button
+              onClick={handleCopyLink}
+              className="bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold px-4 py-2.5 text-xs rounded-xl flex items-center gap-1.5 shadow-xs shrink-0 whitespace-nowrap"
+            >
+              {copiedLink ? <CheckCircle size={16} className="text-emerald-400" /> : <ShareNetwork size={16} />}
+              <span>{copiedLink ? 'Copied!' : 'Copy Unique Link'}</span>
+            </Button>
+          </div>
+
           <Button
-            onClick={handleCopyLink}
-            className="w-full sm:w-auto bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold px-5 py-2.5 text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs shrink-0"
+            onClick={() => setIsQrModalOpen(true)}
+            variant="outline"
+            className="w-full sm:w-auto bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200 font-bold px-4 py-2.5 text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs shrink-0 whitespace-nowrap"
           >
-            {copiedLink ? <CheckCircle size={16} className="text-emerald-400" /> : <ShareNetwork size={16} />}
-            <span>{copiedLink ? 'Link Copied!' : 'Copy Shareable Link'}</span>
+            <QrCode size={18} weight="bold" />
+            <span>Get Team QR Code</span>
           </Button>
         </div>
       </Card>
@@ -261,10 +274,33 @@ export default function TeamPage() {
                   </td>
                   <td className="py-3.5 px-4 font-semibold text-slate-800">{m.profession}</td>
                   <td className="py-3.5 px-4 text-slate-600">{m.city}</td>
-                  <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono-num text-[10px] font-bold rounded-full uppercase">
-                      KYC Approved
-                    </span>
+                  <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+                    {m.status === 'kyc_submitted' ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => updateTeamMemberStatus(m.id, 'kyc_approved')}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-md transition-colors shadow-2xs cursor-pointer"
+                          title="Approve Member & Forward to Admin Verification"
+                        >
+                          Approve & Forward
+                        </button>
+                        <button
+                          onClick={() => updateTeamMemberStatus(m.id, 'kyc_rejected')}
+                          className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] rounded-md transition-colors cursor-pointer border border-red-200"
+                          title="Reject Application"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={`px-2.5 py-0.5 font-mono-num text-[10px] font-bold rounded-full uppercase border ${
+                        m.status === 'kyc_approved'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-red-50 text-red-700 border-red-200'
+                      }`}>
+                        {m.status === 'kyc_approved' ? 'KYC Approved' : 'Rejected'}
+                      </span>
+                    )}
                   </td>
                   <td className="py-3.5 px-4 text-center font-mono-num font-bold text-slate-900">{m.casesCount}</td>
                   <td className="py-3.5 px-4 text-right font-mono-num font-bold text-slate-800">
@@ -396,6 +432,73 @@ export default function TeamPage() {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+      {/* 6. Modal: Downloadable & Printable Team Signup QR Code */}
+      {isQrModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 animate-fade-in">
+          <Card variant="elevated" className="max-w-sm w-full p-6 space-y-6 rounded-2xl bg-white relative text-center">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
+                <QrCode size={22} className="text-[#1B2A72]" weight="bold" />
+                Team QR Code
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsQrModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* QR Card Presentation */}
+            <div id="qr-downloadable-card" className="p-6 bg-slate-50 border-2 border-dashed border-amber-300 rounded-2xl space-y-4 shadow-inner">
+              <div className="w-48 h-48 mx-auto bg-white p-3 rounded-xl border border-slate-200 shadow-md flex flex-col items-center justify-center relative">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteUrl)}`}
+                  alt="Team Leader Signup QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <p className="font-display font-extrabold text-sm text-[#1B2A72]">{partner?.name || 'Arjun Mehta'}</p>
+                <p className="text-[11px] font-mono text-amber-700 font-bold bg-amber-100/70 inline-block px-2.5 py-0.5 rounded-full">
+                  Team Code: {teamCode}
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium pt-1">
+                  Scan to register under 10% leader commission roster
+                </p>
+              </div>
+            </div>
+
+            {/* Download & Print Controls */}
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <Button
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(inviteUrl)}`;
+                  link.download = `PrimeScore_Team_QR_${teamCode}.png`;
+                  link.target = '_blank';
+                  link.click();
+                }}
+                className="bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold py-2.5 px-3 text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <DownloadSimple size={16} weight="bold" />
+                <span>Download PNG</span>
+              </Button>
+
+              <Button
+                onClick={() => window.print()}
+                variant="outline"
+                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 font-bold py-2.5 px-3 text-xs rounded-xl flex items-center justify-center gap-1.5"
+              >
+                <Printer size={16} weight="bold" />
+                <span>Print Poster</span>
+              </Button>
+            </div>
           </Card>
         </div>
       )}

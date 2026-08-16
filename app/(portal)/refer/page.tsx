@@ -23,7 +23,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 export default function ReferPage() {
-  const { partner, addReferral } = usePartnerStore();
+  const { partner, setReferrals, referrals } = usePartnerStore();
   const qrCardRef = useRef<HTMLDivElement>(null);
 
   // Referral Form State
@@ -41,9 +41,9 @@ export default function ReferPage() {
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Generated Referral Link
-  const referralCode = partner?.id ? partner.id.toUpperCase() : 'DEMO123';
-  const referralUrl = `https://primescore.in/ref/${referralCode}`;
+  // Generated Referral Link (use team code if available, else partner id)
+  const referralCode = partner?.teamCode || partner?.id?.toUpperCase() || 'PARTNER';
+  const referralUrl = `https://app.primescore.in/register?ref=${referralCode}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(referralUrl);
@@ -164,7 +164,7 @@ export default function ReferPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
 
@@ -177,42 +177,76 @@ export default function ReferPage() {
       return;
     }
 
-    const newRefId = `REF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    if (!partner?.id) {
+      setErrors({ submit: 'You must be logged in to submit a referral.' });
+      return;
+    }
 
-    const newReferral: Referral = {
-      id: newRefId,
-      partnerId: partner?.id || 'demo',
-      customerName,
-      customerPhone,
-      customerEmail: customerEmail || `${customerName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-      city,
-      service,
-      notes,
-      status: 'submitted',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      pointsEarned: 0,
-      statusHistory: [
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data: insertedReferral, error: refError } = await supabase
+        .from('referrals')
+        .insert([
+          {
+            partner_id: partner.id,
+            customer_name: customerName.trim(),
+            customer_phone: customerPhone.trim(),
+            customer_email: customerEmail.trim() || null,
+            city: city.trim(),
+            service_name: service,
+            notes: notes.trim() || null,
+            current_stage: 'submitted',
+            partner_points_earned: 0,
+          },
+        ])
+        .select('id')
+        .single();
+
+      if (refError) {
+        console.error('Referral insert error:', refError);
+        setErrors({ submit: 'Failed to submit referral. Please try again.' });
+        return;
+      }
+
+      const newRefId = insertedReferral?.id || `REF-${Date.now()}`;
+
+      // Also update local Zustand store immediately for instant UI update
+      const now = new Date().toISOString();
+      setReferrals([
         {
+          id: newRefId,
+          partnerId: partner.id,
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          customerEmail: customerEmail.trim() || '',
+          city: city.trim(),
+          service,
+          notes: notes.trim(),
           status: 'submitted',
-          date: new Date().toISOString(),
-          note: 'Referral submitted by partner via portal form',
+          createdAt: now,
+          updatedAt: now,
+          pointsEarned: 0,
+          statusHistory: [
+            { status: 'submitted', date: now, note: 'Referral submitted by partner via portal form' },
+          ],
         },
-      ],
-    };
+        ...referrals,
+      ]);
 
-    addReferral(newReferral);
+      // Reset Form
+      setCustomerName('');
+      setCustomerPhone('');
+      setCustomerEmail('');
+      setCity('');
+      setNotes('');
+      setErrors({});
 
-    // Reset Form
-    setCustomerName('');
-    setCustomerPhone('');
-    setCustomerEmail('');
-    setCity('');
-    setNotes('');
-    setErrors({});
-
-    setSuccessToast(`Referral ${newRefId} submitted successfully! Our advisors will contact the client within 2 hours.`);
-    setTimeout(() => setSuccessToast(null), 5000);
+      setSuccessToast(`Referral submitted successfully! Our advisors will contact ${customerName.trim()} within 2 business hours.`);
+      setTimeout(() => setSuccessToast(null), 5000);
+    } catch (err) {
+      console.error('Referral submission error:', err);
+      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+    }
   };
 
   return (
