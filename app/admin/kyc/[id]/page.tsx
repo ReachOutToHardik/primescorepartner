@@ -133,15 +133,25 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
           </Button>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 shrink-0">
           {partner.status === 'kyc_submitted' && (
             <>
-              <Button variant="primary" size="sm" onClick={handleApprove}>
-                <CheckCircle className="w-4 h-4 mr-1" /> Approve Partner KYC
-              </Button>
-              <Button variant="danger" size="sm" onClick={() => setRejectModalOpen(true)}>
-                <XCircle className="w-4 h-4 mr-1" /> Reject Application
-              </Button>
+              <button
+                type="button"
+                onClick={handleApprove}
+                className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+              >
+                <CheckCircle size={18} weight="fill" className="shrink-0 text-emerald-400" />
+                <span>Approve Partner KYC</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRejectModalOpen(true)}
+                className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-[#E63329] hover:bg-[#c42820] text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+              >
+                <XCircle size={18} weight="fill" className="shrink-0 text-white" />
+                <span>Reject Application</span>
+              </button>
             </>
           )}
         </div>
