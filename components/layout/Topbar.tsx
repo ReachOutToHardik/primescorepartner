@@ -117,8 +117,8 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           <List className="w-6 h-6" />
         </button>
 
-        <div className="flex flex-col min-w-0">
-          <h1 className="text-base sm:text-lg md:text-xl font-bold font-display text-[var(--ink)] leading-snug truncate">
+        <div className="flex flex-col min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-full">
+          <h1 className="text-sm sm:text-lg md:text-xl font-bold font-display text-[var(--ink)] leading-snug truncate">
             {title}
           </h1>
           <p className="hidden sm:block text-xs text-[var(--ink-muted)] leading-tight truncate">{subtitle}</p>

@@ -156,8 +156,17 @@ export default function DashboardPage() {
           ticks: { color: '#64748B', font: { family: 'DM Sans', size: 11 } },
         },
         y: {
+          beginAtZero: true,
+          min: 0,
+          suggestedMin: 0,
+          suggestedMax: 5,
           grid: { color: '#F1F5F9' },
-          ticks: { color: '#64748B', font: { family: 'Inter', size: 11 } },
+          ticks: {
+            color: '#64748B',
+            font: { family: 'Inter', size: 11 },
+            precision: 0,
+            stepSize: 1,
+          },
           border: { dash: [4, 4] },
         },
       },
