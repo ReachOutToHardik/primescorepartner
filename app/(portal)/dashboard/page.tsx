@@ -235,95 +235,95 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Metric Stats Rail (Modern Clickable Card Primitives) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Metric Stats Rail (2x2 Grid on Mobile, 4 Blocks on Desktop) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         {/* Total Referrals */}
         <Link href="/referrals" className="block">
-          <Card variant="elevated" className="p-5 space-y-3 hover:shadow-md hover:border-[#1B2A72]/30 transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-bold text-slate-500 group-hover:text-[#1B2A72] transition-colors tracking-wider">
+          <Card variant="elevated" className="p-3.5 sm:p-5 space-y-2 sm:space-y-3 hover:shadow-md hover:border-[#1B2A72]/30 transition-all cursor-pointer group h-full flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 group-hover:text-[#1B2A72] transition-colors tracking-wider truncate">
                 Total Referrals
               </span>
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-[#1B2A72] group-hover:bg-[#1B2A72] group-hover:text-white transition-colors flex items-center justify-center shadow-2xs">
-                <Users size={20} weight="bold" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-indigo-50 text-[#1B2A72] group-hover:bg-[#1B2A72] group-hover:text-white transition-colors flex items-center justify-center shadow-2xs shrink-0">
+                <Users size={18} weight="bold" />
               </div>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono-num font-bold text-3xl text-slate-900">
+            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+              <span className="font-mono-num font-bold text-2xl sm:text-3xl text-slate-900">
                 {totalCount}
               </span>
-              <span className="text-xs text-emerald-600 font-bold flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                <TrendUp size={14} /> +15%
+              <span className="text-[10px] sm:text-xs text-emerald-600 font-bold flex items-center gap-0.5 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full border border-emerald-200">
+                <TrendUp size={12} /> +15%
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">Cumulative submitted client leads</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">Submitted client leads</p>
           </Card>
         </Link>
 
         {/* Approved & Completed */}
         <Link href="/referrals?status=completed" className="block">
-          <Card variant="elevated" className="p-5 space-y-3 hover:shadow-md hover:border-emerald-500/30 transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-bold text-slate-500 group-hover:text-emerald-700 transition-colors tracking-wider">
+          <Card variant="elevated" className="p-3.5 sm:p-5 space-y-2 sm:space-y-3 hover:shadow-md hover:border-emerald-500/30 transition-all cursor-pointer group h-full flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 group-hover:text-emerald-700 transition-colors tracking-wider truncate">
                 Completed & Paid
               </span>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors flex items-center justify-center shadow-2xs">
-                <CheckCircle size={20} weight="fill" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors flex items-center justify-center shadow-2xs shrink-0">
+                <CheckCircle size={18} weight="fill" />
               </div>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono-num font-bold text-3xl text-slate-900">
+            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+              <span className="font-mono-num font-bold text-2xl sm:text-3xl text-slate-900">
                 {completedCount}
               </span>
-              <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[10px] sm:text-xs text-emerald-600 font-bold bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full border border-emerald-200">
                 {Math.round((completedCount / (totalCount || 1)) * 100)}% Success
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">Successfully resolved & rewarded</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">Resolved & rewarded</p>
           </Card>
         </Link>
 
         {/* Pending In Progress */}
         <Link href="/referrals?status=pending" className="block">
-          <Card variant="elevated" className="p-5 space-y-3 hover:shadow-md hover:border-amber-500/30 transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-bold text-slate-500 group-hover:text-amber-700 transition-colors tracking-wider">
+          <Card variant="elevated" className="p-3.5 sm:p-5 space-y-2 sm:space-y-3 hover:shadow-md hover:border-amber-500/30 transition-all cursor-pointer group h-full flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 group-hover:text-amber-700 transition-colors tracking-wider truncate">
                 Active Pending
               </span>
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors flex items-center justify-center shadow-2xs">
-                <Clock size={20} weight="bold" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors flex items-center justify-center shadow-2xs shrink-0">
+                <Clock size={18} weight="bold" />
               </div>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono-num font-bold text-3xl text-slate-900">
+            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+              <span className="font-mono-num font-bold text-2xl sm:text-3xl text-slate-900">
                 {pendingCount}
               </span>
-              <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-semibold border border-amber-200">In Pipeline</span>
+              <span className="text-[10px] sm:text-xs text-amber-700 bg-amber-50 px-1.5 sm:px-2 py-0.5 rounded-full font-semibold border border-amber-200">In Pipeline</span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">Under active bureau processing</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">Active bureau processing</p>
           </Card>
         </Link>
 
         {/* Total Reward Points */}
         <Link href="/rewards" className="block">
-          <Card variant="elevated" className="p-5 space-y-3 hover:shadow-md hover:border-amber-500/30 transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-bold text-slate-500 group-hover:text-[#1B2A72] transition-colors tracking-wider">
-                PrimePoints Balance
+          <Card variant="elevated" className="p-3.5 sm:p-5 space-y-2 sm:space-y-3 hover:shadow-md hover:border-amber-500/30 transition-all cursor-pointer group h-full flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 group-hover:text-[#1B2A72] transition-colors tracking-wider truncate">
+                PrimePoints
               </span>
-              <div className="w-10 h-10 rounded-xl bg-amber-100/60 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors flex items-center justify-center shadow-2xs">
-                <Coins size={20} weight="fill" className="text-amber-500 group-hover:text-white" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-100/60 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors flex items-center justify-center shadow-2xs shrink-0">
+                <Coins size={18} weight="fill" className="text-amber-500 group-hover:text-white" />
               </div>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono-num font-bold text-3xl text-[#1B2A72]">
+            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+              <span className="font-mono-num font-bold text-2xl sm:text-3xl text-[#1B2A72]">
                 {totalPoints.toLocaleString()}
               </span>
-              <span className="text-xs font-mono-num text-slate-500 font-bold">
-                (&asymp; ₹{totalPoints / 10})
+              <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                (≈ ₹{(totalPoints / 10).toLocaleString('en-IN')})
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">Redeemable for Instant Gift Cards</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">Instant Gift Vouchers</p>
           </Card>
         </Link>
       </div>
