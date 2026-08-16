@@ -63,7 +63,7 @@ export default function LoginPage() {
 
       // Check partner status before allowing access
       if (profile.status === 'kyc_submitted' || profile.status === 'pending_kyc') {
-        setError('Your partner application has been submitted and is currently being verified by Primescore Compliance HQ. Verification takes 2–4 business hours.');
+        setError('Your partner application has been submitted and is currently being verified by Primescore. Verification takes 2–4 business hours.');
         setIsLoading(false);
         return;
       }
