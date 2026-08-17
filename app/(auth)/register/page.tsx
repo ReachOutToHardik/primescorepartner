@@ -282,6 +282,29 @@ export default function RegisterPage() {
         ]);
       }
 
+      // Authenticate partner and open /kyc Application Under Review screen directly
+      const newPartner = {
+        id: userId,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        profession,
+        city: city.trim(),
+        state: stateName.trim(),
+        pan: pan.trim().toUpperCase(),
+        role: teamLeaderCode ? ('team_member' as const) : accountRole,
+        status: 'kyc_submitted' as const,
+        teamCode: generatedTeamCode,
+        joinedAt: new Date().toISOString(),
+        profilePhoto: avatarUrl || undefined,
+      };
+
+      const { usePartnerStore } = await import('@/lib/store');
+      usePartnerStore.setState({
+        partner: newPartner,
+        isAuthenticated: true,
+      });
+
       router.push('/kyc');
     } catch (err) {
       console.error('Registration error:', err);

@@ -123,15 +123,11 @@ export default function KYCPage() {
     return (
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-up py-4">
         {/* Status Header Banner */}
-        <div className="bg-gradient-to-br from-[#0F1A4E] via-[#121F5E] to-[#0A1238] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 transform translate-x-8 -translate-y-8 opacity-10 pointer-events-none">
-            <HourglassHigh size={280} weight="fill" className="text-amber-400" />
-          </div>
-
+        <div className="bg-gradient-to-br from-[#0F1A4E] via-[#121F5E] to-[#0A1238] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="relative z-10 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/20 border border-amber-400/30 text-amber-300 rounded-full text-xs font-bold font-mono tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              APPLICATION UNDER VERIFICATION
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-400/20 border border-amber-400/30 text-amber-300 rounded-full text-xs font-bold font-mono tracking-wider">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+              <span>APPLICATION UNDER VERIFICATION</span>
             </div>
 
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
@@ -139,10 +135,10 @@ export default function KYCPage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Thank you for registering with PrimeScore Partner Network, <strong className="text-white">{partner?.name}</strong>. Our Compliance Team is verifying your submitted PAN, Aadhaar, and payout bank credentials.
+              Thank you for registering with PrimeScore Partner Network, <strong className="text-white">{partner?.name}</strong>. Our Compliance Team is verifying your submitted identity proofs and banking details.
             </p>
 
-            <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono text-slate-300">
+            <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-mono text-slate-300">
               <span className="bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
                 Dossier Code: <strong className="text-amber-300">{partner?.teamCode || 'PENDING'}</strong>
               </span>
@@ -152,6 +148,19 @@ export default function KYCPage() {
               <span className="bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
                 SLA: <strong className="text-emerald-400">2–4 Business Hours</strong>
               </span>
+            </div>
+          </div>
+
+          {/* Animated Vacancy Under Review Vector Badge Icon */}
+          <div className="relative z-10 shrink-0 self-center">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white/10 border border-white/20 p-3 flex items-center justify-center backdrop-blur-md shadow-2xl relative group">
+              <div className="w-full h-full rounded-xl bg-[#1B2A72] flex flex-col items-center justify-center p-2 text-center border border-amber-400/40 shadow-inner">
+                <svg width="42" height="42" viewBox="0 0 48 48" fill="none" className="animate-spin-slow">
+                  <path d="M24 6L38.5 14V34L24 42L9.5 34V14L24 6Z" stroke="#F5C518" strokeWidth="2.5" strokeLinejoin="round" />
+                  <path d="M24 16V25L30 28" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="text-[9px] font-mono font-bold text-amber-300 uppercase tracking-widest mt-1">Reviewing</span>
+              </div>
             </div>
           </div>
         </div>
