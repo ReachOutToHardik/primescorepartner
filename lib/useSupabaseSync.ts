@@ -67,6 +67,7 @@ export function useSupabaseSync() {
         pointsEarned: r.partner_points_earned || 0,
         statusHistory: [],
       }));
+      useAdminStore.setState({ referrals: mappedReferrals });
       // Fetch live reward engine config
       const { data: dbConfig } = await supabase
         .from('system_config')

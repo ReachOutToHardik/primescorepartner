@@ -248,14 +248,14 @@ export default function RegisterPage() {
             document_type: 'pan_card',
             file_url: panFileUrl,
             document_number: pan.trim().toUpperCase(),
-            verification_status: 'pending',
+            verification_status: 'kyc_submitted',
           },
           {
             partner_id: createdProfile.id,
             document_type: 'aadhaar_front',
             file_url: aadhaarFileUrl,
             document_number: aadhaar.trim(),
-            verification_status: 'pending',
+            verification_status: 'kyc_submitted',
           },
         ]);
 
