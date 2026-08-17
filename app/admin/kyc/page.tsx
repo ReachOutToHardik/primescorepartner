@@ -142,14 +142,32 @@ export default function AdminKycListPage() {
       {/* Directory Table with Pagination */}
       <Card className="overflow-hidden">
         {currentTabList.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="flex flex-col items-center justify-center space-y-2">
-              <User size={36} className="text-slate-400" />
-              <p className="font-display font-bold text-slate-800 text-base">No Partner Accounts Found</p>
-              <p className="text-xs text-slate-500 max-w-sm">
-                Your Supabase database table `profiles` is currently empty for this tab. When new users register, their account dossiers will appear here live.
-              </p>
+          <div className="p-12 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-[#1B2A72] flex items-center justify-center mx-auto mb-1">
+              <User size={24} weight="bold" />
             </div>
+            <h3 className="font-display font-bold text-slate-900 text-base">
+              {searchQuery || roleFilter !== 'all' ? 'No Matching Partners Found' : 'No Partner Accounts Found'}
+            </h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+              {searchQuery || roleFilter !== 'all'
+                ? `No partner dossiers match your search "${searchQuery || roleFilter}". Try clearing your filters.`
+                : 'When new users register in the portal, their account dossiers will appear here live.'}
+            </p>
+
+            {(searchQuery || roleFilter !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setRoleFilter('all');
+                  setCurrentPage(1);
+                }}
+                className="mt-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#1B2A72] font-bold text-xs rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 border border-slate-200"
+              >
+                Clear Search &amp; Filters
+              </button>
+            )}
           </div>
         ) : (
           <>

@@ -83,7 +83,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/my-referrals?search=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/referrals?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
