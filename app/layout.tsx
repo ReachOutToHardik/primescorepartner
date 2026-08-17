@@ -2,15 +2,22 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PrimeScore Partner Portal',
-  description: "Refer customers, track referral status, and earn rewards with PrimeScore's partner network.",
-  keywords: 'credit repair, referral partner, DSA, CA, CS, loan consultant, PrimeScore',
+  title: 'Primescore Partner Portal | Credit Bureau & Loan Advisory Network',
+  description: 'Official referral portal for DSAs, CAs, and Loan Consultants to submit client credit rectification cases, track bureau progress, and claim PrimePoints payouts.',
+  keywords: 'Primescore, partner portal, credit bureau advisory, CIBIL rectification, DSA network, CA referral, loan consultant',
+  icons: {
+    icon: '/qr-logo.png',
+    shortcut: '/qr-logo.png',
+    apple: '/qr-logo.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/qr-logo.png" type="image/png" sizes="any" />
+        <link rel="apple-touch-icon" href="/qr-logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

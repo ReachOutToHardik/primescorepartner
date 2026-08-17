@@ -47,8 +47,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Super Admin Mode
             </span>
             <button
-              onClick={adminLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors"
+              onClick={() => {
+                adminLogout();
+                if (typeof window !== 'undefined') {
+                  window.localStorage.removeItem('primescore-admin-store-v6');
+                  window.sessionStorage.clear();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors cursor-pointer"
               title="Sign out of Admin HQ"
             >
               <SignOut size={14} weight="bold" />

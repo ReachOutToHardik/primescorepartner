@@ -230,7 +230,17 @@ export const usePartnerStore = create<PartnerStore>()(
         set({ teamMembers: updated });
       },
 
-      logout: () => {
+      logout: async () => {
+        try {
+          const { supabase } = await import('./supabase');
+          await supabase.auth.signOut();
+        } catch (e) {
+          console.error('Signout error:', e);
+        }
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem('primescore-partner-store-v9');
+          window.sessionStorage.clear();
+        }
         set({
           partner: null,
           referrals: [],
