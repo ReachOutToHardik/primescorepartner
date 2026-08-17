@@ -57,8 +57,78 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
   const [dbDocuments, setDbDocuments] = useState<KycDocRecord[]>([]);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
 
+  // Points Adjustment Modal State
+  const [adjustPointsModalOpen, setAdjustPointsModalOpen] = useState(false);
+  const [pointsChange, setPointsChange] = useState('500');
+  const [pointsReason, setPointsReason] = useState('Performance Reward / Special Bonus');
+  const [isSubmittingPoints, setIsSubmittingPoints] = useState(false);
+
   // Document Viewer Modal State
   const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
+
+  const handleAdjustPointsSubmit = async () => {
+    if (!partner) return;
+    const change = parseInt(pointsChange, 10);
+    if (isNaN(change) || change === 0) return;
+
+    setIsSubmittingPoints(true);
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      
+      // 1. Fetch current profile points
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('prime_points, lifetime_points_earned')
+        .eq('id', partner.id)
+        .single();
+
+      const currPoints = prof?.prime_points || 0;
+      const currLifetime = prof?.lifetime_points_earned || 0;
+      const newBalance = Math.max(0, currPoints + change);
+      const newLifetime = Math.max(currLifetime, currLifetime + (change > 0 ? change : 0));
+
+      // 2. Update profile points in Supabase
+      await supabase
+        .from('profiles')
+        .update({
+          prime_points: newBalance,
+          lifetime_points_earned: newLifetime,
+        })
+        .eq('id', partner.id);
+
+      // 3. Insert point_transactions ledger row
+      await supabase.from('point_transactions').insert([
+        {
+          partner_id: partner.id,
+          transaction_type: 'admin_adjustment',
+          points_change: change,
+          balance_after: newBalance,
+          title: pointsReason.trim() || 'Admin Points Adjustment',
+          reference_id: `ADM-${Date.now().toString().slice(-6)}`,
+        },
+      ]);
+
+      // 4. Send notification alert to partner
+      await supabase.from('notifications').insert([
+        {
+          partner_id: partner.id,
+          title: change > 0 ? `🎁 ${change} Bonus PrimePoints Credited!` : `PrimePoints Balance Adjusted`,
+          message: `Admin has adjusted your PrimePoints balance by ${change > 0 ? `+${change}` : change} Pts. Note: ${pointsReason.trim()}`,
+          type: change > 0 ? 'reward' : 'info',
+          points_badge: change > 0 ? `+${change} Pts` : `${change} Pts`,
+          is_read: false,
+        },
+      ]);
+
+      alert(`Successfully ${change > 0 ? 'credited' : 'adjusted'} ${Math.abs(change)} PrimePoints to ${partner.name}!`);
+      setAdjustPointsModalOpen(false);
+    } catch (err) {
+      console.error('Points adjustment failed:', err);
+      alert('Could not adjust points. Please check network connection.');
+    } finally {
+      setIsSubmittingPoints(false);
+    }
+  };
 
   // Fetch real documents from Supabase `kyc_documents` table
   useEffect(() => {
@@ -138,6 +208,15 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         </Link>
 
         <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => setAdjustPointsModalOpen(true)}
+            className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+          >
+            <Coins size={18} weight="fill" className="shrink-0 text-amber-200" />
+            <span>Add / Adjust PrimePoints</span>
+          </button>
+
           {partner.status === 'kyc_submitted' && (
             <>
               <button
@@ -415,6 +494,55 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
             </Button>
             <Button variant="danger" onClick={handleRejectConfirm} disabled={!rejectReason.trim()}>
               Confirm Rejection
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* POINTS ADJUSTMENT MODAL */}
+      <Modal
+        isOpen={adjustPointsModalOpen}
+        onClose={() => setAdjustPointsModalOpen(false)}
+        title={`Add / Adjust PrimePoints for ${partner.name}`}
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-600">
+            Directly credit bonus points or adjust points balance for <strong className="text-slate-900">{partner.name}</strong>. An entry will be logged into the <code>point_transactions</code> ledger and a real-time notification will be sent.
+          </p>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+              Points Change (+ for credit, - for deduction) *
+            </label>
+            <input
+              type="number"
+              value={pointsChange}
+              onChange={(e) => setPointsChange(e.target.value)}
+              placeholder="e.g. 500 or -200"
+              className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-bold text-slate-900 outline-none"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Example: Type <code>500</code> for +500 Pts bonus or <code>-100</code> to deduct 100 Pts.</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+              Reason / Note for Partner *
+            </label>
+            <textarea
+              value={pointsReason}
+              onChange={(e) => setPointsReason(e.target.value)}
+              placeholder="e.g. Monthly Top Performer Reward / Bureau Rectification Milestone Bonus"
+              rows={2}
+              className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:border-[#1B2A72] font-body outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setAdjustPointsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleAdjustPointsSubmit} isLoading={isSubmittingPoints}>
+              Confirm Points Adjustment
             </Button>
           </div>
         </div>
