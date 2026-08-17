@@ -398,21 +398,46 @@ export default function AdminNotificationsPage() {
               </p>
             ) : (
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                {sentHistory.map((n) => (
-                  <div key={n.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-slate-900 font-display">{n.title}</span>
-                      <Badge variant={n.partner_id ? 'blue' : 'amber'}>
-                        {n.partner_id ? 'Direct Message' : 'Broadcast'}
-                      </Badge>
+                {sentHistory.map((n) => {
+                  const targetProf = partners.find((p) => p.id === n.partner_id);
+                  return (
+                    <div key={n.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-slate-900 font-display">{n.title}</span>
+                        <Badge variant={!n.partner_id ? 'amber' : 'blue'}>
+                          {!n.partner_id ? 'Broadcast' : 'Direct Target'}
+                        </Badge>
+                      </div>
+
+                      {/* Recipient Target Details (ID, Name, Team) */}
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700 bg-white p-2 rounded-lg border border-slate-200/70 shadow-2xs">
+                        <User size={14} className="text-[#1B2A72] shrink-0" />
+                        {!n.partner_id ? (
+                          <span className="text-amber-800 font-bold">📢 Sent to: All Partners (Global Network)</span>
+                        ) : targetProf ? (
+                          <span className="truncate">
+                            Sent to: <strong className="text-slate-900">{targetProf.name}</strong>{' '}
+                            <span className="font-mono text-[10px] text-slate-500">(ID: {targetProf.id})</span>
+                            {targetProf.referredByLeaderId && (
+                              <span className="text-slate-500"> • Team: {targetProf.referredByLeaderName || 'Team Network'}</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="font-mono text-slate-500 text-[10px]">
+                            Sent to Partner ID: {n.partner_id}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-slate-600 leading-relaxed text-[11px]">{n.message}</p>
+                      
+                      <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400 font-mono border-t border-slate-100">
+                        <span>{n.points_badge ? `Badge: ${n.points_badge}` : `Type: ${n.type}`}</span>
+                        <span suppressHydrationWarning>{new Date(n.created_at).toLocaleString()}</span>
+                      </div>
                     </div>
-                    <p className="text-slate-600 leading-relaxed text-[11px]">{n.message}</p>
-                    <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400 font-mono">
-                      <span>{n.points_badge ? `Badge: ${n.points_badge}` : `Type: ${n.type}`}</span>
-                      <span suppressHydrationWarning>{new Date(n.created_at).toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Card>
