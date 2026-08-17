@@ -73,7 +73,7 @@ export default function PartnerDashboard() {
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthKey = d.toLocaleString('en-US', { month: 'short' });
-        monthsMap.set(monthKey, { label: monthKey, referrals: 0, points: 0 });
+        monthsMap.set(monthKey, { label: monthKey, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
       }
 
       referrals.forEach((r) => {
@@ -82,9 +82,6 @@ export default function PartnerDashboard() {
         if (monthsMap.has(mKey)) {
           const existing = monthsMap.get(mKey)!;
           existing.referrals += 1;
-          if (r.status === 'completed') {
-            existing.points += r.pointsEarned || 500;
-          }
         }
       });
 
@@ -96,7 +93,7 @@ export default function PartnerDashboard() {
         { label: 'Week 1', referrals: 0, points: 0 },
         { label: 'Week 2', referrals: 0, points: 0 },
         { label: 'Week 3', referrals: 0, points: 0 },
-        { label: 'Week 4', referrals: 0, points: 0 },
+        { label: 'Week 4', referrals: 0, points: totalPoints || 0 },
       ];
 
       referrals.forEach((r) => {
@@ -107,7 +104,6 @@ export default function PartnerDashboard() {
           const target = weeks[3 - weekIdx];
           if (target) {
             target.referrals += 1;
-            if (r.status === 'completed') target.points += r.pointsEarned || 500;
           }
         }
       });
@@ -120,7 +116,7 @@ export default function PartnerDashboard() {
         { label: '15d ago', referrals: 0, points: 0 },
         { label: '10d ago', referrals: 0, points: 0 },
         { label: '5d ago', referrals: 0, points: 0 },
-        { label: 'Today', referrals: 0, points: 0 },
+        { label: 'Today', referrals: 0, points: totalPoints || 0 },
       ];
 
       referrals.forEach((r) => {
@@ -131,7 +127,6 @@ export default function PartnerDashboard() {
           const target = days[idx];
           if (target) {
             target.referrals += 1;
-            if (r.status === 'completed') target.points += r.pointsEarned || 500;
           }
         }
       });
@@ -143,7 +138,7 @@ export default function PartnerDashboard() {
       { label: 'Q1', referrals: 0, points: 0 },
       { label: 'Q2', referrals: 0, points: 0 },
       { label: 'Q3', referrals: 0, points: 0 },
-      { label: 'Q4', referrals: 0, points: 0 },
+      { label: 'Q4', referrals: 0, points: totalPoints || 0 },
     ];
 
     referrals.forEach((r) => {
@@ -151,12 +146,11 @@ export default function PartnerDashboard() {
       const qIdx = Math.floor(refDate.getMonth() / 3);
       if (quarters[qIdx]) {
         quarters[qIdx].referrals += 1;
-        if (r.status === 'completed') quarters[qIdx].points += r.pointsEarned || 500;
       }
     });
 
     return quarters;
-  }, [timeRange, referrals]);
+  }, [timeRange, referrals, totalPoints]);
 
   // Chart.js Dual Dataset Configuration
   const chartJsData = useMemo(() => {
