@@ -127,48 +127,38 @@ export default function RewardsPage() {
           </div>
         </div>
 
-        {/* Dynamic Multi-Node Tier Progression Bar */}
-        <div className="space-y-5">
+        {/* Progression Bar Track (Restored original layout with dynamic tier milestone color) */}
+        <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-mono-num font-bold">
-              <span className="text-slate-500 uppercase tracking-wider">Overall Tier Progression</span>
-              <span className="text-[#1B2A72]">{levelDetails.progressPercent}% Completed towards {levelDetails.nextLevelName}</span>
+              <span className="text-slate-500 uppercase tracking-wider">OVERALL TIER PROGRESSION</span>
+              <span className={`font-bold ${
+                activeLevel === 'Platinum' ? 'text-rose-600' : activeLevel === 'Gold' ? 'text-amber-600' : 'text-[#1B2A72]'
+              }`}>
+                {levelDetails.progressPercent}% Completed
+              </span>
             </div>
-
-            {/* Visual Level Nodes Track */}
-            <div className="relative pt-1 pb-4">
-              <div className="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5 border border-slate-300/60 shadow-inner relative">
-                <div
-                  className="bg-gradient-to-r from-[#1B2A72] via-amber-500 to-[#F5C518] h-full rounded-full transition-all duration-700 shadow-xs relative"
-                  style={{ width: `${levelDetails.progressPercent}%` }}
-                />
-              </div>
-
-              {/* Node Indicators */}
-              <div className="flex justify-between items-center mt-2 text-[11px] font-bold">
-                <div className="flex items-center gap-1 text-slate-700">
-                  <span className="w-2 h-2 rounded-full bg-[#1B2A72]"></span>
-                  <span>Silver (0 Pts)</span>
-                </div>
-                <div className={`flex items-center gap-1 ${totalPoints >= 5000 ? 'text-amber-700 font-bold' : 'text-slate-400'}`}>
-                  <span className={`w-2 h-2 rounded-full ${totalPoints >= 5000 ? 'bg-amber-500' : 'bg-slate-300'}`}></span>
-                  <span>Gold (5,000 Pts)</span>
-                </div>
-                <div className={`flex items-center gap-1 ${totalPoints >= 20000 ? 'text-rose-700 font-bold' : 'text-slate-400'}`}>
-                  <span className={`w-2 h-2 rounded-full ${totalPoints >= 20000 ? 'bg-rose-500' : 'bg-slate-300'}`}></span>
-                  <span>Platinum VIP (20,000 Pts)</span>
-                </div>
-              </div>
+            <div className="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-300/60 shadow-inner">
+              <div
+                className={`h-full rounded-full transition-all duration-700 shadow-xs relative ${
+                  activeLevel === 'Platinum'
+                    ? 'bg-gradient-to-r from-rose-600 to-amber-400'
+                    : activeLevel === 'Gold'
+                    ? 'bg-gradient-to-r from-amber-500 to-[#F5C518]'
+                    : 'bg-[#1B2A72]'
+                }`}
+                style={{ width: `${levelDetails.progressPercent}%` }}
+              />
             </div>
           </div>
 
           {/* Roadmap Header */}
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block font-mono-num">
-              Partner Tier Roadmap &amp; Level Status
+              Partner Tier Roadmap
             </span>
-            <span className="text-xs font-mono-num text-[#1B2A72] font-bold">
-              Current Level: <strong className="text-amber-600">{levelDetails.currentLevelName}</strong>
+            <span className="text-xs font-mono-num text-slate-700 font-bold">
+              Current Level: <strong className={activeLevel === 'Platinum' ? 'text-rose-600' : activeLevel === 'Gold' ? 'text-amber-600' : 'text-[#1B2A72]'}>{levelDetails.currentLevelName}</strong>
             </span>
           </div>
 
