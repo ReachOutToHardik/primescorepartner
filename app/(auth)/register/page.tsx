@@ -237,7 +237,8 @@ export default function RegisterPage() {
             team_code: generatedTeamCode,
             referred_by_leader_id: teamLeaderCode || null,
             avatar_url: avatarUrl || null,
-            prime_points: 0,
+            prime_points: 100,
+            lifetime_points_earned: 100,
           },
         ])
         .select('id')
@@ -248,6 +249,24 @@ export default function RegisterPage() {
         setErrors({ submit: 'Registration failed. Please try again.' });
         setIsSubmitting(false);
         return;
+      }
+
+      // Record 100 Pts Welcome Signup Bonus in point_transactions table
+      if (createdProfile?.id) {
+        try {
+          await supabase.from('point_transactions').insert([
+            {
+              partner_id: createdProfile.id,
+              transaction_type: 'signup_bonus',
+              points_change: 100,
+              balance_after: 100,
+              title: '🎁 Welcome Partner Registration Bonus',
+              reference_id: 'BONUS-100',
+            },
+          ]);
+        } catch (txErr) {
+          console.error('Point transaction insert error:', txErr);
+        }
       }
 
       // 6. Insert KYC documents
@@ -302,6 +321,7 @@ export default function RegisterPage() {
       const { usePartnerStore } = await import('@/lib/store');
       usePartnerStore.setState({
         partner: newPartner,
+        totalPoints: 100,
         isAuthenticated: true,
       });
 
