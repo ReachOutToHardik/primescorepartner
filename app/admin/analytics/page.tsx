@@ -176,7 +176,7 @@ export default function AdminAnalyticsPage() {
                   </tr>
                 ) : (
                   leaderboard.map((agent, idx) => (
-                    <tr key={agent.name} className="hover:bg-[var(--surface-2)] transition-colors">
+                    <tr key={`${agent.id || agent.name}-${idx}`} className="hover:bg-[var(--surface-2)] transition-colors">
                       <td className="px-6 py-4 font-bold">
                         {idx === 0 ? (
                           <span className="w-7 h-7 rounded-full bg-amber-400 text-amber-950 font-black flex items-center justify-center text-xs shadow-xs">
