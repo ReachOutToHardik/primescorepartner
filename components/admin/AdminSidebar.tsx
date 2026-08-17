@@ -21,7 +21,8 @@ import {
   User,
   CheckCircle,
   Coins,
-  ArrowSquareOut
+  ArrowSquareOut,
+  Megaphone
 } from '@phosphor-icons/react';
 
 const ADMIN_NAV = [
@@ -33,6 +34,7 @@ const ADMIN_NAV = [
   { name: 'Gift Card Inventory', href: '/admin/gift-cards', icon: Gift },
   { name: 'Services Catalog', href: '/admin/services', icon: Wrench },
   { name: 'Reward Engine & Rates', href: '/admin/rewards-config', icon: Coins },
+  { name: 'Send Notifications', href: '/admin/notifications', icon: Megaphone },
   { name: 'System Settings & Audit', href: '/admin/settings', icon: Gear },
 ];
 

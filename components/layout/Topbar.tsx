@@ -87,23 +87,64 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     }
   };
 
-  const sampleNotifications = [
-    {
-      id: 1,
-      title: 'Referral Completed!',
-      desc: 'Rajesh Kumar (REF-2024-001) completed successfully.',
-      points: '+500 pts',
-      time: '2 hours ago',
-      type: 'success',
-    },
-    {
-      id: 2,
-      title: 'KYC Verified',
-      desc: 'Your partner KYC documents have been approved.',
-      time: '1 day ago',
-      type: 'info',
-    },
-  ];
+  const [realNotifications, setRealNotifications] = useState<{
+    id: string;
+    title: string;
+    message: string;
+    type: string;
+    points_badge?: string;
+    created_at: string;
+  }[]>([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        let query = supabase.from('notifications').select('*');
+        if (partner?.id) {
+          query = query.or(`partner_id.eq.${partner.id},partner_id.is.null`);
+        } else {
+          query = query.is('partner_id', null);
+        }
+        const { data } = await query.order('created_at', { ascending: false }).limit(10);
+        if (data && data.length > 0) {
+          setRealNotifications(data);
+          setUnreadNotifs(data.length);
+        }
+      } catch (err) {
+        console.error('Failed to fetch notifications:', err);
+      }
+    };
+
+    fetchNotifications();
+  }, [partner?.id]);
+
+  const sampleNotifications = realNotifications.length > 0
+    ? realNotifications.map((n) => ({
+        id: n.id,
+        title: n.title,
+        desc: n.message,
+        points: n.points_badge || undefined,
+        time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: n.type,
+      }))
+    : [
+        {
+          id: '1',
+          title: 'Referral Completed!',
+          desc: 'Rajesh Kumar (REF-2024-001) completed successfully.',
+          points: '+500 pts',
+          time: '2 hours ago',
+          type: 'success',
+        },
+        {
+          id: '2',
+          title: 'KYC Verification Status',
+          desc: partner?.status === 'kyc_approved' ? 'Your partner account is active and verified.' : 'Your partner documents are under review.',
+          time: '1 day ago',
+          type: 'info',
+        },
+      ];
 
   return (
     <header className="sticky top-0 z-20 h-[72px] bg-white border-b border-[var(--border)] px-4 md:px-6 flex items-center justify-between shadow-xs">
