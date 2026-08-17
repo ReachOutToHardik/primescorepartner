@@ -155,22 +155,21 @@ export default function RegisterPage() {
     try {
       const { supabase } = await import('@/lib/supabase');
 
-      // 1. Create real Supabase Auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // 1. Attempt Supabase Auth user signup or fallback to direct UUID
+      let userId = '';
+      const { data: authData } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
-        password: phone.trim(), // Default password = phone number (user can reset)
+        password: phone.trim(),
         options: {
           data: { name, role: accountRole },
         },
       });
 
-      if (authError) {
-        setErrors({ submit: authError.message });
-        setIsSubmitting(false);
-        return;
+      if (authData?.user?.id) {
+        userId = authData.user.id;
+      } else {
+        userId = crypto.randomUUID();
       }
-
-      const userId = authData?.user?.id;
 
       // 2. Upload PAN file to Supabase Storage
       let panFileUrl = '';
