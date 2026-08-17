@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from './supabase';
-import { usePartnerStore, Referral, ReferralStatus } from './store';
+import { usePartnerStore, Referral, ReferralStatus, RedemptionRecord } from './store';
 import { useAdminStore } from './admin-store';
 
 /**
@@ -167,16 +167,26 @@ export function useSupabaseSync() {
         dbRedemptions = fallback.data;
       }
 
-      setRedemptions(
-        (dbRedemptions || []).map((rd) => ({
-          id: rd.id,
-          brand: rd.brand_name || '',
-          denomination: rd.denomination_inr || 0,
-          points: rd.points_burned || rd.points_deducted || rd.points_required || 0,
-          redeemedAt: rd.created_at || rd.redeemed_at || new Date().toISOString(),
-          voucherCode: rd.voucher_code || '',
-        }))
-      );
+      const currentLocalRedemptions = usePartnerStore.getState().redemptions || [];
+      const dbMappedRedemptions: RedemptionRecord[] = (dbRedemptions || []).map((rd) => ({
+        id: rd.id,
+        brand: rd.brand_name || '',
+        denomination: rd.denomination_inr || 0,
+        points: rd.points_burned || rd.points_deducted || rd.points_required || 0,
+        redeemedAt: rd.created_at || rd.redeemed_at || new Date().toISOString(),
+        voucherCode: rd.voucher_code || '',
+      }));
+
+      // Combine DB redemptions and local redemptions, removing duplicates by ID/voucherCode
+      const mergedRedemptionsMap = new Map<string, RedemptionRecord>();
+      dbMappedRedemptions.forEach((r) => mergedRedemptionsMap.set(r.id, r));
+      currentLocalRedemptions.forEach((r) => {
+        if (!mergedRedemptionsMap.has(r.id)) {
+          mergedRedemptionsMap.set(r.id, r);
+        }
+      });
+
+      setRedemptions(Array.from(mergedRedemptionsMap.values()));
 
       // If team leader, fetch team members
       const currentPartner = usePartnerStore.getState().partner;
