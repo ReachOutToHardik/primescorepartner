@@ -1,25 +1,32 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePartnerStore, ReferralStatus } from '@/lib/store';
+import { usePartnerStore } from '@/lib/store';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 import {
   Users,
   CheckCircle,
   Clock,
   Coins,
-  ArrowRight,
-  UserPlus,
-  Trophy,
-  Sparkle,
   TrendUp,
-  CaretRight,
-  ShareNetwork,
+  UserPlus,
+  ArrowRight,
+  Sparkle,
+  Trophy,
+  ShieldCheck,
+  Building,
+  Headset,
+  BookBookmark,
+  Receipt,
+  ArrowUpRight,
+  ArrowDownRight,
   Lightning,
+  Funnel
 } from '@phosphor-icons/react';
-import { Card } from '@/components/ui/Card';
-import { EmptyState } from '@/components/ui/EmptyState';
 
+// Chart.js Setup
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -27,9 +34,9 @@ import {
   PointElement,
   LineElement,
   Title,
-  Tooltip as ChartTooltip,
-  Filler,
+  Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -39,14 +46,13 @@ ChartJS.register(
   PointElement,
   LineElement,
   Title,
-  ChartTooltip,
-  Filler,
-  Legend
+  Tooltip,
+  Legend,
+  Filler
 );
 
-export default function DashboardPage() {
-  const { partner, referrals, totalPoints, tier } = usePartnerStore();
-
+export default function PartnerDashboard() {
+  const { partner, referrals, redemptions, totalPoints, tier } = usePartnerStore();
   const currentTier = tier || 'Gold';
 
   // Metrics calculation
@@ -54,8 +60,9 @@ export default function DashboardPage() {
   const completedCount = referrals.filter((r) => r.status === 'completed').length;
   const pendingCount = referrals.filter((r) => r.status !== 'completed' && r.status !== 'rejected').length;
 
-  // Time range filter state
+  // Time range filter state & Chart Metric mode toggle
   const [timeRange, setTimeRange] = useState<'15d' | '30d' | '6m' | '1y'>('6m');
+  const [chartMetricMode, setChartMetricMode] = useState<'both' | 'referrals' | 'points'>('both');
 
   // Interactive trend datasets dynamically aggregated from EVERY real partner referral log
   const trendData = useMemo(() => {
@@ -69,7 +76,6 @@ export default function DashboardPage() {
         monthsMap.set(monthKey, { label: monthKey, referrals: 0, points: 0 });
       }
 
-      // Populate every real referral log into its exact month
       referrals.forEach((r) => {
         const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
         const mKey = refDate.toLocaleString('en-US', { month: 'short' });
@@ -133,7 +139,6 @@ export default function DashboardPage() {
       return days;
     }
 
-    // 1y Default
     const quarters = [
       { label: 'Q1', referrals: 0, points: 0 },
       { label: 'Q2', referrals: 0, points: 0 },
@@ -153,122 +158,200 @@ export default function DashboardPage() {
     return quarters;
   }, [timeRange, referrals]);
 
-  // Chart.js Data Configuration
+  // Chart.js Dual Dataset Configuration
   const chartJsData = useMemo(() => {
+    const datasets: any[] = [];
+
+    if (chartMetricMode === 'points' || chartMetricMode === 'both') {
+      datasets.push({
+        fill: true,
+        label: 'PrimePoints Earned (Pts)',
+        data: trendData.map((d) => d.points),
+        borderColor: '#1B2A72',
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+          gradient.addColorStop(0, 'rgba(27, 42, 114, 0.25)');
+          gradient.addColorStop(1, 'rgba(27, 42, 114, 0.0)');
+          return gradient;
+        },
+        borderWidth: 2.5,
+        tension: 0.4,
+        pointBackgroundColor: '#1B2A72',
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        yAxisID: 'y',
+      });
+    }
+
+    if (chartMetricMode === 'referrals' || chartMetricMode === 'both') {
+      datasets.push({
+        fill: true,
+        label: 'Referral Leads Submitted',
+        data: trendData.map((d) => d.referrals),
+        borderColor: '#E63329',
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+          gradient.addColorStop(0, 'rgba(230, 51, 41, 0.2)');
+          gradient.addColorStop(1, 'rgba(230, 51, 41, 0.0)');
+          return gradient;
+        },
+        borderWidth: 2.5,
+        tension: 0.4,
+        pointBackgroundColor: '#E63329',
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        yAxisID: chartMetricMode === 'both' ? 'y1' : 'y',
+      });
+    }
+
     return {
       labels: trendData.map((d) => d.label),
-      datasets: [
-        {
-          fill: true,
-          label: 'PrimePoints',
-          data: trendData.map((d) => d.points),
-          borderColor: '#1B2A72',
-          backgroundColor: (context: any) => {
-            const ctx = context.chart.ctx;
-            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-            gradient.addColorStop(0, 'rgba(27, 42, 114, 0.25)');
-            gradient.addColorStop(1, 'rgba(27, 42, 114, 0.0)');
-            return gradient;
-          },
-          borderWidth: 2.5,
-          tension: 0.4,
-          pointBackgroundColor: '#1B2A72',
-          pointBorderColor: '#FFFFFF',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-        },
-      ],
+      datasets,
     };
-  }, [trendData]);
+  }, [trendData, chartMetricMode]);
 
   // Chart.js Options
-  const chartJsOptions = useMemo(() => {
+  const chartJsOptions: any = useMemo(() => {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
       plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1B2A72',
-          titleColor: '#FFFFFF',
-          bodyColor: '#FFFFFF',
-          titleFont: { family: "'DM Sans', sans-serif", size: 12, weight: 'bold' as const },
-          bodyFont: { family: "'Inter', sans-serif", size: 12, weight: 'bold' as const },
-          padding: 10,
-          cornerRadius: 6,
-          displayColors: false,
-          borderColor: 'rgba(255, 255, 255, 0.15)',
-          borderWidth: 1,
-          callbacks: {
-            label: (context: any) => `PrimePoints: ${context.parsed.y.toLocaleString()} Pts`,
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            font: { family: 'Inter', size: 11, weight: '600' },
+            usePointStyle: true,
+            boxWidth: 8,
           },
+        },
+        tooltip: {
+          backgroundColor: '#0F1A4E',
+          padding: 12,
+          cornerRadius: 8,
         },
       },
       scales: {
         x: {
           grid: { display: false },
-          ticks: { color: '#64748B', font: { family: 'DM Sans', size: 11 } },
+          ticks: { font: { family: 'Inter', size: 11 } },
         },
         y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
           beginAtZero: true,
           min: 0,
-          suggestedMin: 0,
-          suggestedMax: 5,
-          grid: { color: '#F1F5F9' },
           ticks: {
-            color: '#64748B',
             font: { family: 'Inter', size: 11 },
             precision: 0,
-            stepSize: 1,
           },
-          border: { dash: [4, 4] },
+          grid: { color: 'rgba(226, 232, 240, 0.6)' },
         },
+        y1: chartMetricMode === 'both' ? {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          beginAtZero: true,
+          min: 0,
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            precision: 0,
+          },
+          grid: { drawOnChartArea: false },
+        } : undefined,
       },
     };
-  }, []);
+  }, [chartMetricMode]);
 
-  // Helper for status badge styling
-  const getStatusBadge = (status: ReferralStatus) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#EBF7ED] text-[#3DAA4B] text-[11px] font-bold uppercase tracking-wider rounded-xs border border-[#3DAA4B]/30">
-            <CheckCircle size={12} weight="fill" /> Completed
-          </span>
-        );
-      case 'in_progress':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#FEF9E7] text-[#1A1917] text-[11px] font-bold uppercase tracking-wider rounded-xs border border-[#F5C518]">
-            <Clock size={12} weight="fill" className="text-[#F5C518]" /> In Progress
-          </span>
-        );
-      case 'enrolled':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-blue-50 text-[#1B2A72] text-[11px] font-bold uppercase tracking-wider rounded-xs border border-[#1B2A72]/30">
-            Enrolled
-          </span>
-        );
-      case 'received':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-purple-50 text-purple-700 text-[11px] font-bold uppercase tracking-wider rounded-xs border border-purple-300">
-            Received
-          </span>
-        );
-      case 'submitted':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-100 text-[var(--ink-muted)] text-[11px] font-bold uppercase tracking-wider rounded-xs border border-[var(--border)]">
-            Submitted
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-red-50 text-red-600 text-[11px] font-bold uppercase tracking-wider rounded-xs border border-red-200">
-            Rejected
-          </span>
-        );
-    }
-  };
+  // Chronologically sorted transaction ledger for IN / OUT activity
+  const passbookLedger = useMemo(() => {
+    const transactions: {
+      id: string;
+      date: string;
+      rawDate: Date;
+      category: 'earned_referral' | 'earned_enrolled' | 'submitted' | 'redeemed_voucher';
+      title: string;
+      referenceId: string;
+      amount: number;
+      runningBalance: number;
+    }[] = [];
+
+    referrals.forEach((r) => {
+      const d = r.createdAt ? new Date(r.createdAt) : new Date();
+      if (r.status === 'completed') {
+        transactions.push({
+          id: `tx-ref-comp-${r.id}`,
+          date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          rawDate: d,
+          category: 'earned_referral',
+          title: `Referral Case Resolved (${r.customerName})`,
+          referenceId: r.id,
+          amount: r.pointsEarned || 500,
+          runningBalance: 0,
+        });
+      } else if (r.status === 'enrolled') {
+        transactions.push({
+          id: `tx-ref-enr-${r.id}`,
+          date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          rawDate: d,
+          category: 'earned_enrolled',
+          title: `Customer Enrolled (${r.customerName})`,
+          referenceId: r.id,
+          amount: 20,
+          runningBalance: 0,
+        });
+      } else {
+        transactions.push({
+          id: `tx-ref-sub-${r.id}`,
+          date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          rawDate: d,
+          category: 'submitted',
+          title: `Client Lead Submitted (${r.customerName})`,
+          referenceId: r.id,
+          amount: 0,
+          runningBalance: 0,
+        });
+      }
+    });
+
+    redemptions.forEach((rdm) => {
+      const d = rdm.redeemedAt ? new Date(rdm.redeemedAt) : new Date();
+      transactions.push({
+        id: `tx-rdm-${rdm.id}`,
+        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        rawDate: d,
+        category: 'redeemed_voucher',
+        title: `Voucher Redemption Claim (${rdm.brand} ₹${rdm.denomination})`,
+        referenceId: rdm.id,
+        amount: -(rdm.points || 0),
+        runningBalance: 0,
+      });
+    });
+
+    transactions.sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime());
+
+    let currBalance = 0;
+    transactions.forEach((tx) => {
+      currBalance += tx.amount;
+      tx.runningBalance = Math.max(0, currBalance);
+    });
+
+    return transactions.reverse();
+  }, [referrals, redemptions]);
+
+  // Recent 5 referrals
+  const recentReferrals = useMemo(() => referrals.slice(0, 5), [referrals]);
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -287,7 +370,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Quick Submit CTA */}
         <div className="relative z-10 shrink-0">
           <Link
             href="/refer"
@@ -373,7 +455,7 @@ export default function DashboardPage() {
           <Card variant="elevated" className="p-3.5 sm:p-5 space-y-2 sm:space-y-3 hover:shadow-md hover:border-amber-500/30 transition-all cursor-pointer group h-full flex flex-col justify-between">
             <div className="flex items-center justify-between gap-1">
               <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 group-hover:text-[#1B2A72] transition-colors tracking-wider truncate">
-                PrimePoints
+                PrimePoints Balance
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-100/60 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors flex items-center justify-center shadow-2xs shrink-0">
                 <Coins size={18} weight="fill" className="text-amber-500 group-hover:text-white" />
@@ -394,7 +476,7 @@ export default function DashboardPage() {
 
       {/* Middle Section: Chart + PrimePoints Tier Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Referral Trend Chart (8 cols) */}
+        {/* Referral & Earnings Trend Chart (8 cols) */}
         <Card variant="elevated" className="lg:col-span-8 p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -402,18 +484,19 @@ export default function DashboardPage() {
                 Referral & Earnings Trend
               </h2>
               <p className="text-xs text-slate-500 font-medium">
-                Monthly volume of client referrals and accumulated reward points.
+                Compare client referral volumes and accumulated reward points over time.
               </p>
             </div>
+
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as any)}
               className="text-xs font-semibold px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer shadow-2xs"
             >
-              <option value="15d">Last 15 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="6m">Last 6 Months</option>
-              <option value="1y">Last 1 Year</option>
+              <option value="15d">15 Days</option>
+              <option value="30d">30 Days</option>
+              <option value="6m">6 Months</option>
+              <option value="1y">1 Year</option>
             </select>
           </div>
 
@@ -422,9 +505,8 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        {/* Right 4 cols: PrimePoints Tier Status & Quick Referral Action */}
+        {/* Right 4 cols: PrimePoints Tier Status & Quick Action */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Reward Card & Tier Status */}
           <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 rounded-2xl border border-white/10 shadow-xl space-y-4 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase font-semibold tracking-wider text-slate-300">
@@ -438,128 +520,108 @@ export default function DashboardPage() {
             <div>
               <span className="text-xs text-slate-300 block">Available Balance</span>
               <span className="font-mono-num font-bold text-3xl text-white">
-                {totalPoints.toLocaleString()} <span className="text-sm font-normal text-[#F5C518]">Pts</span>
+                {totalPoints.toLocaleString()} Pts
               </span>
-            </div>
-
-            {/* Progress bar to next tier */}
-            <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between text-xs text-slate-300">
-                <span>Gold Tier Progress</span>
-                <span className="font-mono-num text-white">
-                  {totalPoints >= 5000 ? '100%' : `${Math.min(100, Math.round((totalPoints / 5000) * 100))}%`}
-                </span>
-              </div>
-              <div className="w-full bg-white/20 h-2 rounded-xs overflow-hidden">
-                <div
-                  className="bg-[#F5C518] h-full transition-all duration-300"
-                  style={{ width: `${Math.min(100, (totalPoints / 5000) * 100)}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-300">
-                {totalPoints >= 5000
-                  ? '🎉 You unlocked Gold Partner perks (+15% bonus points per referral)!'
-                  : `${5000 - totalPoints} pts needed to reach Gold Partner status.`}
+              <p className="text-xs text-[#F5C518] font-bold mt-1 font-mono-num">
+                &asymp; ₹{(totalPoints / 10).toLocaleString('en-IN')} INR Payout Equivalent
               </p>
             </div>
 
-            <Link
-              href="/redeem"
-              className="w-full py-2.5 px-4 bg-white hover:bg-slate-100 text-[#1B2A72] font-display font-bold text-xs rounded-xs transition-colors flex items-center justify-center gap-2 shadow-xs"
-            >
-              <span>Redeem Gift Cards Now</span>
-              <ArrowRight size={16} weight="bold" />
-            </Link>
-          </div>
+            <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+              <Link
+                href="/rewards"
+                className="text-xs text-slate-300 hover:text-white font-semibold flex items-center gap-1 group"
+              >
+                <span>View Rewards Roadmap</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
 
-          {/* Quick Action Link Sharing Card */}
-          <div className="bg-white border border-[var(--border)] p-6 rounded-xs shadow-xs space-y-3">
-            <div className="flex items-center gap-2 text-[#1B2A72]">
-              <ShareNetwork size={20} weight="bold" />
-              <h3 className="font-display font-bold text-sm text-[var(--ink)]">
-                Instant Referral URL
-              </h3>
+              <Link
+                href="/redeem"
+                className="px-3.5 py-1.5 bg-white text-[#1B2A72] hover:bg-slate-100 font-bold text-xs rounded-lg transition-colors shadow-xs"
+              >
+                Redeem
+              </Link>
             </div>
-            <p className="text-xs text-[var(--ink-muted)]">
-              Share your direct client signup link or scan to open referral submission form.
-            </p>
-            <Link
-              href="/refer"
-              className="w-full py-2.5 px-4 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--ink)] font-display font-semibold text-xs rounded-xs transition-colors flex items-center justify-between"
-            >
-              <span>Generate Client QR & Link</span>
-              <CaretRight size={16} />
-            </Link>
           </div>
         </div>
       </div>
 
-      {/* Recent Referrals Mini-Table */}
-      <Card variant="elevated" className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Itemized PrimePoints Transaction Passbook & Audit Ledger Table */}
+      <Card variant="elevated" className="p-6 space-y-4 rounded-2xl shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
-            <h2 className="font-display text-lg font-bold text-slate-900">
-              Recent Referrals Pipeline
+            <h2 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Receipt size={22} className="text-[#1B2A72]" /> Itemized PrimePoints Transaction Passbook
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              Latest client submissions and active bureau progress.
+              Complete chronological audit log of all points earned from client referrals, team overrides, and redeemed gift vouchers.
             </p>
           </div>
 
-          <Link
-            href="/referrals"
-            className="text-xs text-[#1B2A72] font-bold hover:underline flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100/80 transition-all hover:bg-indigo-100"
-          >
-            <span>View All Referrals</span>
-            <CaretRight size={14} weight="bold" />
-          </Link>
+          <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 shrink-0">
+            {passbookLedger.length} Total Activity Log(s)
+          </span>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[var(--surface)] border-y border-[var(--border)] text-[var(--ink-muted)] uppercase tracking-wider font-semibold">
-                <th className="p-3">Ref ID</th>
-                <th className="p-3">Customer Name</th>
-                <th className="p-3">City</th>
-                <th className="p-3">Requested Service</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Submitted Date</th>
-                <th className="p-3 text-right">Points</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
+                <th className="py-3.5 px-4">Date & Time</th>
+                <th className="py-3.5 px-4">Type</th>
+                <th className="py-3.5 px-4">Transaction Details & Reference</th>
+                <th className="py-3.5 px-4 text-right">Points Change</th>
+                <th className="py-3.5 px-4 text-right">Running Balance</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {referrals.length === 0 ? (
+            <tbody className="divide-y divide-slate-100 font-mono-num">
+              {passbookLedger.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-4">
-                    <EmptyState
-                      title="No Referrals Yet"
-                      description="You haven't submitted any client referral leads yet. Submit your first referral to earn points."
-                      actionText="Submit Referral"
-                      actionHref="/refer"
-                      icon="user"
-                    />
+                  <td colSpan={5} className="py-10 text-center text-slate-400 font-medium">
+                    No points transactions recorded yet. Submit client referrals or claim gift vouchers to log activities.
                   </td>
                 </tr>
               ) : (
-                referrals.slice(0, 5).map((ref) => (
-                  <tr key={ref.id} className="hover:bg-[var(--surface)] transition-colors">
-                    <td className="p-3 font-mono-num font-semibold text-[var(--ink)]">{ref.id}</td>
-                    <td className="p-3 font-semibold text-[var(--ink)]">
-                      {ref.customerName}
-                      <span className="block text-[10px] text-[var(--ink-subtle)] font-mono-num">
-                        {ref.customerPhone}
-                      </span>
+                passbookLedger.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 px-4 text-slate-500 font-sans">
+                      {tx.date}
                     </td>
-                    <td className="p-3 text-[var(--ink-2)]">{ref.city}</td>
-                    <td className="p-3 font-medium text-[#1B2A72]">{ref.service}</td>
-                    <td className="p-3">{getStatusBadge(ref.status)}</td>
-                    <td className="p-3 font-mono-num text-[var(--ink-muted)]">
-                      {new Date(ref.createdAt).toLocaleDateString()}
+
+                    <td className="py-3.5 px-4">
+                      {tx.category === 'earned_referral' ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 font-bold text-[10px] uppercase rounded-md border border-emerald-200">
+                          <ArrowUpRight size={12} className="text-emerald-600" /> Earned IN
+                        </span>
+                      ) : tx.category === 'earned_enrolled' ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-blue-50 text-blue-700 font-bold text-[10px] uppercase rounded-md border border-blue-200">
+                          <ArrowUpRight size={12} className="text-blue-600" /> Enrolled IN
+                        </span>
+                      ) : tx.category === 'redeemed_voucher' ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-red-50 text-red-700 font-bold text-[10px] uppercase rounded-md border border-red-200">
+                          <ArrowDownRight size={12} className="text-red-600" /> Redeemed OUT
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-100 text-slate-600 font-bold text-[10px] uppercase rounded-md border border-slate-200">
+                          Submitted
+                        </span>
+                      )}
                     </td>
-                    <td className="p-3 text-right font-mono-num font-bold text-[#3DAA4B]">
-                      {ref.pointsEarned > 0 ? `+${ref.pointsEarned} Pts` : '—'}
+
+                    <td className="py-3.5 px-4 font-sans font-medium text-slate-900">
+                      <div>{tx.title}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">Ref: {tx.referenceId}</div>
+                    </td>
+
+                    <td className={`py-3.5 px-4 text-right font-bold text-sm font-mono ${
+                      tx.amount > 0 ? 'text-emerald-600' : tx.amount < 0 ? 'text-red-600' : 'text-slate-400'
+                    }`}>
+                      {tx.amount > 0 ? `+${tx.amount.toLocaleString()} Pts` : tx.amount < 0 ? `${tx.amount.toLocaleString()} Pts` : '0 Pts'}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right font-bold text-slate-900 font-mono">
+                      {tx.runningBalance.toLocaleString()} Pts
                     </td>
                   </tr>
                 ))
