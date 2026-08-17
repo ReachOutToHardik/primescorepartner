@@ -10,6 +10,7 @@ import {
   PaperPlaneRight, 
   Users, 
   User, 
+  UsersThree,
   Bell, 
   CheckCircle, 
   Info, 
@@ -32,8 +33,9 @@ export interface DbNotification {
 
 export default function AdminNotificationsPage() {
   const { partners } = useAdminStore();
-  const [targetType, setTargetType] = useState<'all' | 'specific'>('all');
+  const [targetType, setTargetType] = useState<'all' | 'specific' | 'team'>('all');
   const [selectedPartnerId, setSelectedPartnerId] = useState('');
+  const [selectedTeamLeaderId, setSelectedTeamLeaderId] = useState('');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [notifType, setNotifType] = useState<'info' | 'success' | 'warning' | 'reward'>('info');
@@ -43,6 +45,9 @@ export default function AdminNotificationsPage() {
 
   const [sentHistory, setSentHistory] = useState<DbNotification[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+
+  // Filter team leaders for dropdown
+  const teamLeaders = partners.filter((p) => p.role === 'team_leader' || p.teamCode);
 
   // Fetch real notification history from Supabase
   const fetchHistory = async () => {
@@ -79,30 +84,67 @@ export default function AdminNotificationsPage() {
       return;
     }
 
+    if (targetType === 'team' && !selectedTeamLeaderId) {
+      setFeedbackMsg({ type: 'error', text: 'Please select a team leader / network.' });
+      return;
+    }
+
     setIsSending(true);
     setFeedbackMsg(null);
 
     try {
       const { supabase } = await import('@/lib/supabase');
-      const { error } = await supabase.from('notifications').insert([
-        {
-          partner_id: targetType === 'all' ? null : selectedPartnerId,
+
+      if (targetType === 'team') {
+        // Fetch all sub-members under this team leader + team leader's own profile
+        const { data: teamProfData } = await supabase
+          .from('profiles')
+          .select('id')
+          .or(`id.eq.${selectedTeamLeaderId},referred_by_leader_id.eq.${selectedTeamLeaderId}`);
+
+        const recipientIds = (teamProfData || []).map((p) => p.id);
+        if (recipientIds.length === 0) recipientIds.push(selectedTeamLeaderId);
+
+        const rowsToInsert = recipientIds.map((pid) => ({
+          partner_id: pid,
           title: title.trim(),
           message: message.trim(),
           type: notifType,
           points_badge: pointsBadge.trim() || null,
           is_read: false,
-        },
-      ]);
+        }));
 
-      if (error) {
-        setFeedbackMsg({ type: 'error', text: 'Failed to send notification: ' + error.message });
+        const { error } = await supabase.from('notifications').insert(rowsToInsert);
+        if (error) {
+          setFeedbackMsg({ type: 'error', text: 'Failed to send team notification: ' + error.message });
+        } else {
+          setFeedbackMsg({ type: 'success', text: `Notification dispatched live to all ${recipientIds.length} members of the team network!` });
+          setTitle('');
+          setMessage('');
+          setPointsBadge('');
+          fetchHistory();
+        }
       } else {
-        setFeedbackMsg({ type: 'success', text: 'Notification sent successfully to partner network!' });
-        setTitle('');
-        setMessage('');
-        setPointsBadge('');
-        fetchHistory();
+        const { error } = await supabase.from('notifications').insert([
+          {
+            partner_id: targetType === 'all' ? null : selectedPartnerId,
+            title: title.trim(),
+            message: message.trim(),
+            type: notifType,
+            points_badge: pointsBadge.trim() || null,
+            is_read: false,
+          },
+        ]);
+
+        if (error) {
+          setFeedbackMsg({ type: 'error', text: 'Failed to send notification: ' + error.message });
+        } else {
+          setFeedbackMsg({ type: 'success', text: 'Notification sent successfully to partner network!' });
+          setTitle('');
+          setMessage('');
+          setPointsBadge('');
+          fetchHistory();
+        }
       }
     } catch (err) {
       console.error('Notification send error:', err);
@@ -146,36 +188,49 @@ export default function AdminNotificationsPage() {
             )}
 
             <form onSubmit={handleSendNotification} className="space-y-4">
-              {/* Target Audience Selector */}
+              {/* Target Audience Selector (3 Options) */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
                   Target Audience
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setTargetType('all')}
-                    className={`p-3.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       targetType === 'all'
                         ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-sm'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    <Users size={18} />
-                    <span>All Partners (Broadcast)</span>
+                    <Users size={16} />
+                    <span>All Partners</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setTargetType('specific')}
-                    className={`p-3.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       targetType === 'specific'
                         ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-sm'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    <User size={18} />
-                    <span>Target Specific Partner</span>
+                    <User size={16} />
+                    <span>Specific Partner</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTargetType('team')}
+                    className={`p-3 rounded-xl border text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      targetType === 'team'
+                        ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <UsersThree size={16} />
+                    <span>Entire Team</span>
                   </button>
                 </div>
               </div>
@@ -195,6 +250,27 @@ export default function AdminNotificationsPage() {
                     {partners.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name} ({p.email} • {p.profession})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Select Team Leader Dropdown (if team) */}
+              {targetType === 'team' && (
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                    Select Target Team Network *
+                  </label>
+                  <select
+                    value={selectedTeamLeaderId}
+                    onChange={(e) => setSelectedTeamLeaderId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#1B2A72]"
+                  >
+                    <option value="">-- Choose Team Leader Network --</option>
+                    {teamLeaders.map((tl) => (
+                      <option key={tl.id} value={tl.id}>
+                        {tl.name}'s Network ({tl.teamCode || 'TL'} • {tl.city || 'HQ'})
                       </option>
                     ))}
                   </select>
