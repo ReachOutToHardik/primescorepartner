@@ -23,7 +23,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Lightning,
-  Funnel
+  Funnel,
+  ShareNetwork,
+  Copy
 } from '@phosphor-icons/react';
 
 // Chart.js Setup
@@ -538,6 +540,51 @@ export default function PartnerDashboard() {
               </Link>
             </div>
           </div>
+
+          {/* Partner Unique Referral Link & Share Card */}
+          <Card variant="elevated" className="p-5 space-y-3.5 border border-slate-200/80 shadow-xs rounded-2xl">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <ShareNetwork size={16} className="text-[#1B2A72]" weight="bold" /> Your Referral Link
+              </span>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Active
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed font-medium">
+              Share your unique referral link with clients to automatically credit leads and earn PrimePoints.
+            </p>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`}
+                className="w-full px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none select-all font-semibold"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`);
+                  alert('Referral link copied to clipboard!');
+                }}
+                className="px-3.5 py-2 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold text-xs rounded-xl transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Copy size={15} weight="bold" /> Copy
+              </button>
+            </div>
+
+            <div className="pt-1 flex items-center justify-between border-t border-slate-100">
+              <Link
+                href="/refer"
+                className="text-xs font-bold text-[#E63329] hover:underline inline-flex items-center gap-1"
+              >
+                <span>Submit Lead Manually &rarr;</span>
+              </Link>
+              <span className="text-[10px] text-slate-400 font-mono">Code: {partner?.teamCode || 'REF-ACTIVE'}</span>
+            </div>
+          </Card>
         </div>
       </div>
 
