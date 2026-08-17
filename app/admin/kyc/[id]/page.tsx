@@ -108,14 +108,19 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         },
       ]);
 
-      // 4. Send notification alert to partner
+      // 4. Send notification alert to partner with clean merged text
+      const mergedReason = pointsReason.trim() ? `for ${pointsReason.trim()}` : '';
+      const cleanMessage = change > 0
+        ? `🎉 You received +${change.toLocaleString()} bonus PrimePoints ${mergedReason}. Your new balance is ${newBalance.toLocaleString()} Pts!`
+        : `Your PrimePoints balance was adjusted by ${change.toLocaleString()} Pts ${mergedReason}. Your updated balance is ${newBalance.toLocaleString()} Pts.`;
+
       await supabase.from('notifications').insert([
         {
           partner_id: partner.id,
-          title: change > 0 ? `🎁 ${change} Bonus PrimePoints Credited!` : `PrimePoints Balance Adjusted`,
-          message: `Admin has adjusted your PrimePoints balance by ${change > 0 ? `+${change}` : change} Pts. Note: ${pointsReason.trim()}`,
+          title: change > 0 ? `🎁 +${change.toLocaleString()} Bonus PrimePoints Credited!` : `PrimePoints Balance Adjusted`,
+          message: cleanMessage,
           type: change > 0 ? 'reward' : 'info',
-          points_badge: change > 0 ? `+${change} Pts` : `${change} Pts`,
+          points_badge: change > 0 ? `+${change.toLocaleString()} Pts` : `${change.toLocaleString()} Pts`,
           is_read: false,
         },
       ]);

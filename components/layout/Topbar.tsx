@@ -109,7 +109,13 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         const { data } = await query.order('created_at', { ascending: false }).limit(10);
         if (data && data.length > 0) {
           setRealNotifications(data);
-          setUnreadNotifs(data.length);
+          const unreadCount = data.filter((n: any) => n.is_read === false).length;
+          setUnreadNotifs(unreadCount > 0 ? unreadCount : data.length);
+
+          // Automatically open notification drawer if there are unread alerts
+          if (unreadCount > 0) {
+            setNotifOpen(true);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch notifications:', err);
