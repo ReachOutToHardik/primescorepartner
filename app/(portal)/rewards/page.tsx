@@ -30,18 +30,18 @@ export default function RewardsPage() {
     return 'Silver';
   }, [totalPoints]);
 
-  // Level Progression & Bar Calculations
+  // Level Progression & Text Calculations
   const levelDetails = useMemo(() => {
     if (activeLevel === 'Silver') {
       const needed = Math.max(0, 5000 - totalPoints);
       const progress = Math.min(100, Math.max(0, Math.round((totalPoints / 5000) * 100)));
       return {
         currentLevelName: 'Silver Partner',
-        nextLevelName: 'Gold Partner',
+        nextLevelName: 'Gold',
         targetPoints: 5000,
         pointsNeeded: needed,
         progressPercent: progress,
-        levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Gold Partner tier`,
+        levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Gold tier`,
       };
     }
 
@@ -52,18 +52,18 @@ export default function RewardsPage() {
       const needed = Math.max(0, 20000 - totalPoints);
       return {
         currentLevelName: 'Gold Partner',
-        nextLevelName: 'Platinum VIP',
+        nextLevelName: 'Platinum',
         targetPoints: 20000,
         pointsNeeded: needed,
         progressPercent: progress,
-        levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Platinum VIP tier`,
+        levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Platinum tier`,
       };
     }
 
     // Platinum VIP
     return {
-      currentLevelName: 'Platinum VIP Partner',
-      nextLevelName: 'Max Level Reached',
+      currentLevelName: 'Platinum VIP',
+      nextLevelName: 'Max Tier Reached',
       targetPoints: 20000,
       pointsNeeded: 0,
       progressPercent: 100,
@@ -96,55 +96,52 @@ export default function RewardsPage() {
         </Link>
       </div>
 
-      {/* 2. FULL-WIDTH HERO BALANCE & DYNAMIC TIER PROGRESSION BANNER */}
-      <Card variant="elevated" className="p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-md space-y-6 bg-white">
+      {/* 2. FULL-WIDTH HERO BALANCE & TIER PROGRESSION BANNER (EXACT SCREENSHOT MATCH) */}
+      <Card variant="elevated" className="p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6 bg-white">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
           <div className="space-y-1.5">
             <span className="text-xs uppercase font-bold tracking-wider text-slate-400 font-mono-num block">
-              Total Available Reward Balance
+              TOTAL AVAILABLE REWARD BALANCE
             </span>
             <div className="flex items-baseline gap-3">
               <span className="font-mono-num font-bold text-4xl sm:text-5xl text-slate-900 tracking-tight">
                 {totalPoints.toLocaleString()}
               </span>
               <span className="font-display font-bold text-xl text-[#1B2A72]">PrimePoints</span>
-              <span className="text-xs font-mono-num text-slate-500 font-bold pl-1">
+              <span className="text-xs font-mono-num text-slate-500 font-semibold pl-1">
                 (&asymp; ₹{(totalPoints / 10).toLocaleString('en-IN')} Value)
               </span>
             </div>
           </div>
 
-          <div className="space-y-2 md:text-right">
+          <div className="space-y-1.5 md:text-right">
             <div className="flex items-center md:justify-end gap-2">
               <span className="text-xs font-mono-num text-slate-500 font-semibold">Tier Progress:</span>
               <span className="px-3 py-1 bg-amber-100 text-amber-900 font-mono-num text-xs font-bold rounded-full">
                 {levelDetails.progressPercent}% to {levelDetails.nextLevelName}
               </span>
             </div>
-            <p className="text-xs text-slate-600 font-medium">
+            <p className="text-xs text-slate-500 font-medium">
               {levelDetails.levelSubtext}
             </p>
           </div>
         </div>
 
-        {/* Progression Bar Track (Restored original layout with dynamic tier milestone color) */}
+        {/* OVERALL TIER PROGRESSION TRACK */}
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-mono-num font-bold">
               <span className="text-slate-500 uppercase tracking-wider">OVERALL TIER PROGRESSION</span>
-              <span className={`font-bold ${
-                activeLevel === 'Platinum' ? 'text-rose-600' : activeLevel === 'Gold' ? 'text-amber-600' : 'text-[#1B2A72]'
-              }`}>
-                {levelDetails.progressPercent}% Completed
-              </span>
+              <span className="text-[#1B2A72] font-bold">{levelDetails.progressPercent}% Completed</span>
             </div>
+
             <div className="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-300/60 shadow-inner">
               <div
-                className={`h-full rounded-full transition-all duration-700 shadow-xs relative ${
+                className={`h-full rounded-full transition-all duration-700 shadow-xs animate-stripe ${
                   activeLevel === 'Platinum'
-                    ? 'bg-gradient-to-r from-rose-600 to-amber-400'
+                    ? 'bg-rose-600'
                     : activeLevel === 'Gold'
-                    ? 'bg-gradient-to-r from-amber-500 to-[#F5C518]'
+                    ? 'bg-amber-500'
                     : 'bg-[#1B2A72]'
                 }`}
                 style={{ width: `${levelDetails.progressPercent}%` }}
@@ -152,17 +149,17 @@ export default function RewardsPage() {
             </div>
           </div>
 
-          {/* Roadmap Header */}
-          <div className="flex items-center justify-between pt-1">
+          {/* PARTNER TIER ROADMAP HEADER */}
+          <div className="flex items-center justify-between pt-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block font-mono-num">
-              Partner Tier Roadmap
+              PARTNER TIER ROADMAP
             </span>
             <span className="text-xs font-mono-num text-slate-700 font-bold">
-              Current Level: <strong className={activeLevel === 'Platinum' ? 'text-rose-600' : activeLevel === 'Gold' ? 'text-amber-600' : 'text-[#1B2A72]'}>{levelDetails.currentLevelName}</strong>
+              Current Level: <strong className="text-[#1B2A72]">{levelDetails.currentLevelName}</strong>
             </span>
           </div>
 
-          {/* 3 DYNAMIC ROADMAP CARDS */}
+          {/* 3 ROADMAP CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* 1. SILVER TIER */}
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
@@ -192,7 +189,7 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-xs font-mono-num text-slate-200 font-bold tracking-wider uppercase">0 &ndash; 4,999 PrimePoints</p>
+                  <p className="text-xs font-mono-num text-slate-200 font-bold tracking-wider uppercase">0 &ndash; 4,999 PRIMEPOINTS</p>
                 </div>
               </div>
 
@@ -239,7 +236,7 @@ export default function RewardsPage() {
                     </span>
                   ) : totalPoints >= 5000 ? (
                     <span className="px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
-                      ACTIVE UNLOCKED
+                      ACTIVE
                     </span>
                   ) : (
                     <span className="px-3.5 py-1.5 bg-black/80 text-slate-100 font-mono-num text-[11px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
@@ -250,7 +247,7 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-xs font-mono-num text-amber-200/90 font-bold tracking-wider uppercase">5,000 &ndash; 19,999 PrimePoints</p>
+                  <p className="text-xs font-mono-num text-amber-200/90 font-bold tracking-wider uppercase">5,000 &ndash; 19,999 PRIMEPOINTS</p>
                 </div>
               </div>
 
@@ -302,7 +299,7 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-xs font-mono-num text-rose-200/90 font-bold tracking-wider uppercase">20,000+ PrimePoints</p>
+                  <p className="text-xs font-mono-num text-rose-200/90 font-bold tracking-wider uppercase">20,000+ PRIMEPOINTS</p>
                 </div>
               </div>
 
