@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePartnerStore } from '@/lib/store';
 import {
@@ -15,32 +15,61 @@ import {
   Lightning,
   LockKey,
   Check,
+  Crown,
+  ShieldCheck
 } from '@phosphor-icons/react';
 import { Card } from '@/components/ui/Card';
 
 export default function RewardsPage() {
-  const { totalPoints, referrals, redemptions, tier } = usePartnerStore();
-  const currentTier = tier || 'Gold';
+  const { totalPoints, referrals, redemptions } = usePartnerStore();
 
-  // Next tier details
-  let nextTierName = 'Gold';
-  let targetPoints = 5000;
-  if (currentTier === 'Gold') {
-    nextTierName = 'Platinum';
-    targetPoints = 20000;
-  } else if (currentTier === 'Platinum') {
-    nextTierName = 'Max Tier Reached';
-    targetPoints = 20000;
-  }
+  // Dynamically compute effective active level based on totalPoints
+  const activeLevel: 'Silver' | 'Gold' | 'Platinum' = useMemo(() => {
+    if (totalPoints >= 20000) return 'Platinum';
+    if (totalPoints >= 5000) return 'Gold';
+    return 'Silver';
+  }, [totalPoints]);
 
-  const progressPercent = Math.min(100, Math.round((totalPoints / targetPoints) * 100));
+  // Level Progression & Bar Calculations
+  const levelDetails = useMemo(() => {
+    if (activeLevel === 'Silver') {
+      const needed = Math.max(0, 5000 - totalPoints);
+      const progress = Math.min(100, Math.max(0, Math.round((totalPoints / 5000) * 100)));
+      return {
+        currentLevelName: 'Silver Partner',
+        nextLevelName: 'Gold Partner',
+        targetPoints: 5000,
+        pointsNeeded: needed,
+        progressPercent: progress,
+        levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Gold Partner tier`,
+      };
+    }
 
-  // Calculated totals
-  const totalEarnedFromRefs = referrals
-    .filter((r) => r.status === 'completed')
-    .reduce((acc, r) => acc + (r.pointsEarned || 500), 0);
+    if (activeLevel === 'Gold') {
+      const span = 20000 - 5000;
+      const currentInTier = totalPoints - 5000;
+      const progress = Math.min(100, Math.max(0, Math.round((currentInTier / span) * 100)));
+      const needed = Math.max(0, 20000 - totalPoints);
+      return {
+        currentLevelName: 'Gold Partner',
+        nextLevelName: 'Platinum VIP',
+        targetPoints: 20000,
+        pointsNeeded: needed,
+        progressPercent: progress,
+        levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Platinum VIP tier`,
+      };
+    }
 
-  const totalRedeemed = redemptions.reduce((acc, r) => acc + r.points, 0);
+    // Platinum VIP
+    return {
+      currentLevelName: 'Platinum VIP Partner',
+      nextLevelName: 'Max Level Reached',
+      targetPoints: 20000,
+      pointsNeeded: 0,
+      progressPercent: 100,
+      levelSubtext: '🏆 Maximum VIP Level Active (+30% bonus points per case)',
+    };
+  }, [activeLevel, totalPoints]);
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -67,7 +96,7 @@ export default function RewardsPage() {
         </Link>
       </div>
 
-      {/* 2. FULL-WIDTH HERO BALANCE & TIER PROGRESSION BANNER */}
+      {/* 2. FULL-WIDTH HERO BALANCE & DYNAMIC TIER PROGRESSION BANNER */}
       <Card variant="elevated" className="p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-md space-y-6 bg-white">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
           <div className="space-y-1.5">
@@ -80,7 +109,7 @@ export default function RewardsPage() {
               </span>
               <span className="font-display font-bold text-xl text-[#1B2A72]">PrimePoints</span>
               <span className="text-xs font-mono-num text-slate-500 font-bold pl-1">
-                (&asymp; ₹{(totalPoints / 10).toLocaleString()} Value)
+                (&asymp; ₹{(totalPoints / 10).toLocaleString('en-IN')} Value)
               </span>
             </div>
           </div>
@@ -89,49 +118,66 @@ export default function RewardsPage() {
             <div className="flex items-center md:justify-end gap-2">
               <span className="text-xs font-mono-num text-slate-500 font-semibold">Tier Progress:</span>
               <span className="px-3 py-1 bg-amber-100 text-amber-900 font-mono-num text-xs font-bold rounded-full">
-                {progressPercent}% to {nextTierName}
+                {levelDetails.progressPercent}% to {levelDetails.nextLevelName}
               </span>
             </div>
             <p className="text-xs text-slate-600 font-medium">
-              {currentTier === 'Platinum'
-                ? '🏆 Maximum VIP Level Active (+30% bonus points per case)'
-                : `${(targetPoints - totalPoints).toLocaleString()} Pts needed to unlock ${nextTierName} tier`}
+              {levelDetails.levelSubtext}
             </p>
           </div>
         </div>
 
-        {/* Progress Bar & Roadmap */}
+        {/* Dynamic Multi-Node Tier Progression Bar */}
         <div className="space-y-5">
-          {/* Progress Bar Track: Grey Background with Navy Blue Fill */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-mono-num font-bold">
               <span className="text-slate-500 uppercase tracking-wider">Overall Tier Progression</span>
-              <span className="text-[#1B2A72]">{progressPercent}% Completed</span>
+              <span className="text-[#1B2A72]">{levelDetails.progressPercent}% Completed towards {levelDetails.nextLevelName}</span>
             </div>
-            <div className="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-300/60 shadow-inner">
-              <div
-                className="bg-[#1B2A72] h-full rounded-full transition-all duration-700 shadow-xs animate-stripe relative"
-                style={{ width: `${progressPercent}%` }}
-              />
+
+            {/* Visual Level Nodes Track */}
+            <div className="relative pt-1 pb-4">
+              <div className="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5 border border-slate-300/60 shadow-inner relative">
+                <div
+                  className="bg-gradient-to-r from-[#1B2A72] via-amber-500 to-[#F5C518] h-full rounded-full transition-all duration-700 shadow-xs relative"
+                  style={{ width: `${levelDetails.progressPercent}%` }}
+                />
+              </div>
+
+              {/* Node Indicators */}
+              <div className="flex justify-between items-center mt-2 text-[11px] font-bold">
+                <div className="flex items-center gap-1 text-slate-700">
+                  <span className="w-2 h-2 rounded-full bg-[#1B2A72]"></span>
+                  <span>Silver (0 Pts)</span>
+                </div>
+                <div className={`flex items-center gap-1 ${totalPoints >= 5000 ? 'text-amber-700 font-bold' : 'text-slate-400'}`}>
+                  <span className={`w-2 h-2 rounded-full ${totalPoints >= 5000 ? 'bg-amber-500' : 'bg-slate-300'}`}></span>
+                  <span>Gold (5,000 Pts)</span>
+                </div>
+                <div className={`flex items-center gap-1 ${totalPoints >= 20000 ? 'text-rose-700 font-bold' : 'text-slate-400'}`}>
+                  <span className={`w-2 h-2 rounded-full ${totalPoints >= 20000 ? 'bg-rose-500' : 'bg-slate-300'}`}></span>
+                  <span>Platinum VIP (20,000 Pts)</span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Roadmap Header */}
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-1">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block font-mono-num">
-              Partner Tier Roadmap
+              Partner Tier Roadmap &amp; Level Status
             </span>
             <span className="text-xs font-mono-num text-[#1B2A72] font-bold">
-              Current Level: {currentTier} Partner
+              Current Level: <strong className="text-amber-600">{levelDetails.currentLevelName}</strong>
             </span>
           </div>
 
+          {/* 3 DYNAMIC ROADMAP CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* SILVER TIER (Base/Completed) */}
+            {/* 1. SILVER TIER */}
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
-              currentTier === 'Silver' ? 'bg-white border-[#1B2A72] ring-2 ring-[#1B2A72]/20 shadow-lg' : 'bg-slate-50/80 border-slate-200/80'
+              activeLevel === 'Silver' ? 'bg-white border-[#1B2A72] ring-2 ring-[#1B2A72]/20 shadow-lg' : 'bg-white border-slate-200'
             }`}>
-              {/* Extra Big Wave Banner (Tier 1) */}
               <div className="h-44 relative p-6 flex flex-col justify-between overflow-hidden">
                 <img
                   src="/tier1-wave.svg"
@@ -142,12 +188,13 @@ export default function RewardsPage() {
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-display font-extrabold tracking-tight text-white drop-shadow-md">Silver Partner</span>
-                    <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                      <Check size={14} weight="bold" />
-                    </span>
                   </div>
 
-                  {currentTier === 'Silver' && (
+                  {totalPoints >= 5000 ? (
+                    <span className="px-3 py-1 bg-emerald-500 text-white font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider flex items-center gap-1">
+                      <Check size={14} weight="bold" /> COMPLETED
+                    </span>
+                  ) : (
                     <span className="px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
                       ACTIVE
                     </span>
@@ -173,13 +220,14 @@ export default function RewardsPage() {
               </div>
             </div>
 
-            {/* GOLD TIER */}
+            {/* 2. GOLD TIER */}
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
-              currentTier === 'Gold'
+              activeLevel === 'Gold'
                 ? 'bg-white border-amber-500 ring-2 ring-amber-500/30 shadow-lg'
-                : 'bg-slate-100/90 border-slate-300 brightness-90 opacity-85'
+                : totalPoints >= 20000
+                ? 'bg-white border-slate-200'
+                : 'bg-slate-100/90 border-slate-300 brightness-95 opacity-85'
             }`}>
-              {/* Extra Big Wave Banner (Tier 2) */}
               <div className="h-44 relative p-6 flex flex-col justify-between overflow-hidden">
                 <img
                   src="/tier2-wave.svg"
@@ -195,9 +243,13 @@ export default function RewardsPage() {
                     </span>
                   </div>
 
-                  {totalPoints >= 5000 && currentTier === 'Gold' ? (
+                  {totalPoints >= 20000 ? (
+                    <span className="px-3 py-1 bg-emerald-500 text-white font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider flex items-center gap-1">
+                      <Check size={14} weight="bold" /> COMPLETED
+                    </span>
+                  ) : totalPoints >= 5000 ? (
                     <span className="px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
-                      ACTIVE
+                      ACTIVE UNLOCKED
                     </span>
                   ) : (
                     <span className="px-3.5 py-1.5 bg-black/80 text-slate-100 font-mono-num text-[11px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
@@ -212,27 +264,26 @@ export default function RewardsPage() {
                 </div>
               </div>
 
-              <div className="p-6 space-y-3 bg-slate-50/80">
-                <ul className="text-sm space-y-2.5 font-medium leading-relaxed text-slate-500">
+              <div className="p-6 space-y-3 bg-white">
+                <ul className="text-sm space-y-2.5 font-medium leading-relaxed text-slate-700">
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className="text-slate-400" weight="fill" />
-                    <span className="text-slate-600 font-medium">+15% Bonus (575 Pts / case)</span>
+                    <CheckCircle size={17} className={totalPoints >= 5000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <span className="font-semibold text-slate-900">+15% Bonus (575 Pts / case)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className="text-slate-400" weight="fill" />
+                    <CheckCircle size={17} className={totalPoints >= 5000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
                     <span>Dedicated Relationship Manager</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            {/* PLATINUM TIER */}
+            {/* 3. PLATINUM VIP TIER */}
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
-              currentTier === 'Platinum'
+              activeLevel === 'Platinum'
                 ? 'bg-white border-rose-500 ring-2 ring-rose-500/20 shadow-lg'
-                : 'bg-slate-100/90 border-slate-300 brightness-90 opacity-85'
+                : 'bg-slate-100/90 border-slate-300 brightness-95 opacity-85'
             }`}>
-              {/* Extra Big Wave Banner (Tier 3) */}
               <div className="h-44 relative p-6 flex flex-col justify-between overflow-hidden">
                 <img
                   src="/tier3-wave.svg"
@@ -244,17 +295,17 @@ export default function RewardsPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-display font-extrabold tracking-tight text-white flex items-center gap-1.5 drop-shadow-md">
                       <span>Platinum VIP</span>
-                      <Sparkle size={18} className="text-purple-300" weight="fill" />
+                      <Crown size={18} className="text-amber-300" weight="fill" />
                     </span>
                   </div>
 
-                  {totalPoints >= 20000 && currentTier === 'Platinum' ? (
-                    <span className="px-3 py-1 bg-purple-400 text-purple-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
-                      ACTIVE
+                  {totalPoints >= 20000 ? (
+                    <span className="px-3 py-1 bg-rose-500 text-white font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider flex items-center gap-1">
+                      <Sparkle size={14} weight="fill" /> ACTIVE VIP
                     </span>
                   ) : (
                     <span className="px-3.5 py-1.5 bg-black/80 text-slate-100 font-mono-num text-[11px] font-bold uppercase rounded-full flex items-center gap-1.5 border border-white/20 shadow-md">
-                      <LockKey size={14} weight="fill" className="text-purple-300" />
+                      <LockKey size={14} weight="fill" className="text-rose-400" />
                       <span>LOCKED</span>
                     </span>
                   )}
@@ -265,14 +316,14 @@ export default function RewardsPage() {
                 </div>
               </div>
 
-              <div className="p-6 space-y-3 bg-slate-50/80">
-                <ul className="text-sm space-y-2.5 font-medium leading-relaxed text-slate-500">
+              <div className="p-6 space-y-3 bg-white">
+                <ul className="text-sm space-y-2.5 font-medium leading-relaxed text-slate-700">
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className="text-slate-400" weight="fill" />
-                    <span className="text-slate-600 font-medium">+30% Bonus (650 Pts / case)</span>
+                    <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-rose-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <span className="font-semibold text-slate-900">+30% Bonus (650 Pts / case)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className="text-slate-400" weight="fill" />
+                    <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-rose-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
                     <span>Same-day automated payout</span>
                   </li>
                 </ul>
@@ -282,148 +333,83 @@ export default function RewardsPage() {
         </div>
       </Card>
 
-      {/* 3. LOWER SECTION: MAIN CONTENT (65%) & SIDEBAR (35%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* MAIN COLUMN (65%) */}
-        <div className="lg:col-span-8 space-y-6">
-          <Card variant="elevated" className="p-6 space-y-4 rounded-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="font-display font-bold text-base text-slate-900">
-                  Points Activity History
-                </h3>
-                <p className="text-xs text-slate-500 font-medium">
-                  Recent point accruals from referrals and gift voucher claims.
-                </p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-bold text-[10px]">
-                    <th className="py-3 px-2">Date</th>
-                    <th className="py-3 px-2">Type</th>
-                    <th className="py-3 px-2">Transaction Details</th>
-                    <th className="py-3 px-2 text-right">Points</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {referrals.filter((r) => r.status === 'completed').length === 0 && redemptions.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="py-8 text-center text-slate-400 font-medium">
-                        No transactions recorded yet. Completed referrals will log earnings here.
-                      </td>
-                    </tr>
-                  ) : (
-                    <>
-                      {referrals
-                        .filter((r) => r.status === 'completed')
-                        .map((r) => (
-                          <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
-                            <td className="py-3 px-2 font-mono-num text-slate-500">
-                              {new Date(r.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                            </td>
-                            <td className="py-3 px-2">
-                              <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[11px] rounded-sm">
-                                Referral
-                              </span>
-                            </td>
-                            <td className="py-3 px-2 font-medium text-slate-900">
-                              Referral Case Resolved: <span className="font-bold">{r.customerName}</span> ({r.id})
-                            </td>
-                            <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
-                              +{r.pointsEarned || 500} Pts
-                            </td>
-                          </tr>
-                        ))}
-
-                      {redemptions.map((rdm) => (
-                        <tr key={rdm.id} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="py-3 px-2 font-mono-num text-slate-500">
-                            {new Date(rdm.redeemedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                          </td>
-                          <td className="py-3 px-2">
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-semibold text-[11px] rounded-sm">
-                              Redemption
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 font-medium text-slate-900">
-                            Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
-                          </td>
-                          <td className="py-3 px-2 text-right font-mono-num font-bold text-slate-500">
-                            -{rdm.points} Pts
-                          </td>
-                        </tr>
-                      ))}
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </div>
-
-        {/* SIDEBAR (35%) */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="space-y-3">
-            <h3 className="font-display font-bold text-xs uppercase tracking-wider text-slate-400 font-mono-num">
-              Quick Metrics
+      {/* 3. POINTS ACTIVITY HISTORY LEDGER TABLE */}
+      <Card variant="elevated" className="p-6 space-y-4 rounded-2xl shadow-xs">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="font-display font-bold text-base text-slate-900">
+              Points Activity History
             </h3>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Total Earned */}
-              <Card variant="elevated" className="p-4 space-y-1.5 rounded-2xl">
-                <span className="text-[10px] uppercase font-bold text-slate-400 font-mono-num">
-                  Total Earned
-                </span>
-                <p className="font-mono-num font-bold text-xl text-slate-900">
-                  {totalEarnedFromRefs.toLocaleString()}
-                </p>
-                <span className="text-[11px] font-mono-num font-semibold text-emerald-600 block">
-                  +{totalEarnedFromRefs} Pts
-                </span>
-              </Card>
-
-              {/* Total Redeemed */}
-              <Card variant="elevated" className="p-4 space-y-1.5 rounded-2xl">
-                <span className="text-[10px] uppercase font-bold text-slate-400 font-mono-num">
-                  Total Redeemed
-                </span>
-                <p className="font-mono-num font-bold text-xl text-slate-900">
-                  {totalRedeemed.toLocaleString()}
-                </p>
-                <span className="text-[11px] font-mono-num font-semibold text-slate-500 block">
-                  -{totalRedeemed} Pts
-                </span>
-              </Card>
-
-              {/* Conversion Rate */}
-              <Card variant="elevated" className="p-4 space-y-1.5 rounded-2xl">
-                <span className="text-[10px] uppercase font-bold text-slate-400 font-mono-num">
-                  Conversion
-                </span>
-                <p className="font-mono-num font-bold text-base text-slate-900">
-                  10 Pts = ₹1
-                </p>
-                <p className="text-[10px] text-slate-400 font-medium">Instant Payout</p>
-              </Card>
-
-              {/* Payout Fee */}
-              <Card variant="elevated" className="p-4 space-y-1.5 rounded-2xl">
-                <span className="text-[10px] uppercase font-bold text-slate-400 font-mono-num">
-                  Handling Fee
-                </span>
-                <p className="font-mono-num font-bold text-base text-emerald-600">
-                  0% Free
-                </p>
-                <p className="text-[10px] text-slate-400 font-medium">Free Claims</p>
-              </Card>
-            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Recent point accruals from referrals and gift voucher claims.
+            </p>
           </div>
         </div>
-      </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-bold text-[10px]">
+                <th className="py-3 px-2">Date</th>
+                <th className="py-3 px-2">Type</th>
+                <th className="py-3 px-2">Transaction Details</th>
+                <th className="py-3 px-2 text-right">Points</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {referrals.filter((r) => r.status === 'completed').length === 0 && redemptions.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium">
+                    No transactions recorded yet. Completed referrals will log earnings here.
+                  </td>
+                </tr>
+              ) : (
+                <>
+                  {referrals
+                    .filter((r) => r.status === 'completed')
+                    .map((r) => (
+                      <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3 px-2 font-mono-num text-slate-500">
+                          {new Date(r.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+                        </td>
+                        <td className="py-3 px-2">
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[11px] rounded-sm">
+                            Referral
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 font-medium text-slate-900">
+                          Referral Case Resolved: <span className="font-bold">{r.customerName}</span> ({r.id})
+                        </td>
+                        <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
+                          +{r.pointsEarned || 500} Pts
+                        </td>
+                      </tr>
+                    ))}
+
+                  {redemptions.map((rdm) => (
+                    <tr key={rdm.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3 px-2 font-mono-num text-slate-500">
+                        {new Date(rdm.redeemedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-semibold text-[11px] rounded-sm">
+                          Redemption
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 font-medium text-slate-900">
+                        Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
+                      </td>
+                      <td className="py-3 px-2 text-right font-mono-num font-bold text-slate-500">
+                        -{rdm.points} Pts
+                      </td>
+                    </tr>
+                  ))}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }
-
