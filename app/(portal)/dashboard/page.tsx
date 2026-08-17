@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePartnerStore } from '@/lib/store';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { Modal } from '@/components/ui/Modal';
 import {
   Users,
   CheckCircle,
@@ -25,7 +25,9 @@ import {
   Lightning,
   Funnel,
   ShareNetwork,
-  Copy
+  Copy,
+  CaretRight,
+  QrCode
 } from '@phosphor-icons/react';
 
 // Chart.js Setup
@@ -65,6 +67,7 @@ export default function PartnerDashboard() {
   // Time range filter state & Chart Metric mode toggle
   const [timeRange, setTimeRange] = useState<'15d' | '30d' | '6m' | '1y'>('6m');
   const [chartMetricMode, setChartMetricMode] = useState<'both' | 'referrals' | 'points'>('both');
+  const [qrModalOpen, setQrModalOpen] = useState(false);
 
   // Interactive trend datasets dynamically aggregated from EVERY real partner referral log
   const trendData = useMemo(() => {
@@ -541,49 +544,29 @@ export default function PartnerDashboard() {
             </div>
           </div>
 
-          {/* Partner Unique Referral Link & Share Card */}
-          <Card variant="elevated" className="p-5 space-y-3.5 border border-slate-200/80 shadow-xs rounded-2xl">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <ShareNetwork size={16} className="text-[#1B2A72]" weight="bold" /> Your Referral Link
-              </span>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Active
-              </span>
+          {/* Instant Referral URL Card (Exact User Design) */}
+          <Card variant="elevated" className="p-6 space-y-4 border border-slate-200 shadow-xs rounded-2xl bg-white">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-[#1B2A72] flex items-center justify-center shrink-0">
+                <ShareNetwork size={20} weight="bold" className="text-[#1B2A72]" />
+              </div>
+              <h3 className="font-display font-bold text-base text-slate-900">
+                Instant Referral URL
+              </h3>
             </div>
 
             <p className="text-xs text-slate-500 leading-relaxed font-medium">
-              Share your unique referral link with clients to automatically credit leads and earn PrimePoints.
+              Share your direct client signup link or scan to open referral submission form.
             </p>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`}
-                className="w-full px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none select-all font-semibold"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`);
-                  alert('Referral link copied to clipboard!');
-                }}
-                className="px-3.5 py-2 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold text-xs rounded-xl transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <Copy size={15} weight="bold" /> Copy
-              </button>
-            </div>
-
-            <div className="pt-1 flex items-center justify-between border-t border-slate-100">
-              <Link
-                href="/refer"
-                className="text-xs font-bold text-[#E63329] hover:underline inline-flex items-center gap-1"
-              >
-                <span>Submit Lead Manually &rarr;</span>
-              </Link>
-              <span className="text-[10px] text-slate-400 font-mono">Code: {partner?.teamCode || 'REF-ACTIVE'}</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setQrModalOpen(true)}
+              className="w-full p-3.5 bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-slate-200 rounded-xl text-xs font-bold text-slate-800 flex items-center justify-between transition-colors cursor-pointer group shadow-2xs"
+            >
+              <span>Generate Client QR &amp; Link</span>
+              <CaretRight size={16} className="text-slate-500 group-hover:translate-x-1 transition-transform" />
+            </button>
           </Card>
         </div>
       </div>
@@ -671,6 +654,56 @@ export default function PartnerDashboard() {
           </table>
         </div>
       </Card>
+
+      {/* INSTANT CLIENT QR CODE & LINK MODAL */}
+      <Modal
+        isOpen={qrModalOpen}
+        onClose={() => setQrModalOpen(false)}
+        title="Generate Client QR & Direct Referral Link"
+      >
+        <div className="space-y-5 text-center py-2">
+          <p className="text-xs text-slate-600 max-w-sm mx-auto">
+            Scan this QR code or copy your direct client signup link to submit new referrals instantly with automatic partner code tracking.
+          </p>
+
+          <div className="w-52 h-52 mx-auto bg-white p-3 rounded-2xl border-2 border-dashed border-[#1B2A72]/30 flex flex-col items-center justify-center shadow-sm relative group">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                `https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`
+              )}`}
+              alt="Partner Client Referral QR Code"
+              className="w-44 h-44 object-contain rounded-xl"
+            />
+            <span className="text-[10px] font-bold text-[#1B2A72] bg-indigo-50 px-2 py-0.5 rounded-md mt-1 border border-indigo-200">
+              Code: {partner?.teamCode || partner?.id?.slice(0, 8) || 'REF-ACTIVE'}
+            </span>
+          </div>
+
+          <div className="space-y-1.5 text-left">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              Direct Referral Web Link
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`}
+                className="w-full px-3.5 py-2.5 text-xs font-mono font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none select-all"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`);
+                  alert('Referral link copied to clipboard!');
+                }}
+                className="px-4 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold text-xs rounded-xl transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Copy size={15} weight="bold" /> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
