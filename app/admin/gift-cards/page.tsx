@@ -103,10 +103,15 @@ export default function AdminGiftCardsPage() {
   const fetchRedemptions = async () => {
     try {
       const { supabase } = await import('@/lib/supabase');
-      const { data: dbRedemptions } = await supabase
+      let { data: dbRedemptions, error: redemptionsErr } = await supabase
         .from('redemptions')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (redemptionsErr && redemptionsErr.code === '42703') {
+        const fallback = await supabase.from('redemptions').select('*');
+        dbRedemptions = fallback.data;
+      }
 
       if (dbRedemptions) {
         // Fetch profiles to attach partner name & email
@@ -123,7 +128,7 @@ export default function AdminGiftCardsPage() {
             partner_phone: prof?.phone || 'N/A',
             brand_name: r.brand_name,
             denomination_inr: r.denomination_inr,
-            points_deducted: r.points_deducted,
+            points_deducted: r.points_burned || r.points_deducted || r.points_required || 0,
             voucher_code: r.voucher_code || '',
             status: (r.status || 'fulfilled') as 'pending' | 'fulfilled' | 'rejected',
             rejection_reason: r.rejection_reason || '',

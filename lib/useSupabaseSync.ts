@@ -151,20 +151,29 @@ export function useSupabaseSync() {
       }));
       setReferrals(mappedReferrals);
 
-      // Fetch redemptions
-      const { data: dbRedemptions } = await supabase
+      // Fetch redemptions with fallback if created_at column is missing
+      let { data: dbRedemptions, error: redemptionsError } = await supabase
         .from('redemptions')
         .select('*')
         .eq('partner_id', partnerId)
         .order('created_at', { ascending: false });
+
+      if (redemptionsError && redemptionsError.code === '42703') {
+        // Fallback: query without order if created_at column does not exist yet
+        const fallback = await supabase
+          .from('redemptions')
+          .select('*')
+          .eq('partner_id', partnerId);
+        dbRedemptions = fallback.data;
+      }
 
       setRedemptions(
         (dbRedemptions || []).map((rd) => ({
           id: rd.id,
           brand: rd.brand_name || '',
           denomination: rd.denomination_inr || 0,
-          points: rd.points_deducted || 0,
-          redeemedAt: rd.created_at,
+          points: rd.points_burned || rd.points_deducted || rd.points_required || 0,
+          redeemedAt: rd.created_at || rd.redeemed_at || new Date().toISOString(),
           voucherCode: rd.voucher_code || '',
         }))
       );

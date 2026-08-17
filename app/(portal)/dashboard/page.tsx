@@ -57,46 +57,101 @@ export default function DashboardPage() {
   // Time range filter state
   const [timeRange, setTimeRange] = useState<'15d' | '30d' | '6m' | '1y'>('6m');
 
-  // Interactive trend datasets computed from real partner referrals
+  // Interactive trend datasets dynamically aggregated from EVERY real partner referral log
   const trendData = useMemo(() => {
-    const hasData = referrals.length > 0;
-    const completedPts = totalPoints || 0;
+    const now = new Date();
 
-    switch (timeRange) {
-      case '15d':
-        return [
-          { label: '01 Aug', referrals: 0, points: 0 },
-          { label: '04 Aug', referrals: 0, points: 0 },
-          { label: '07 Aug', referrals: 0, points: 0 },
-          { label: '10 Aug', referrals: 0, points: 0 },
-          { label: 'Today', referrals: totalCount, points: completedPts },
-        ];
-      case '30d':
-        return [
-          { label: 'Week 1', referrals: 0, points: 0 },
-          { label: 'Week 2', referrals: 0, points: 0 },
-          { label: 'Week 3', referrals: 0, points: 0 },
-          { label: 'Week 4', referrals: totalCount, points: completedPts },
-        ];
-      case '1y':
-        return [
-          { label: 'Q1', referrals: 0, points: 0 },
-          { label: 'Q2', referrals: 0, points: 0 },
-          { label: 'Q3', referrals: 0, points: 0 },
-          { label: 'Q4', referrals: totalCount, points: completedPts },
-        ];
-      case '6m':
-      default:
-        return [
-          { label: 'Jul', referrals: 0, points: 0 },
-          { label: 'Aug', referrals: 0, points: 0 },
-          { label: 'Sep', referrals: 0, points: 0 },
-          { label: 'Oct', referrals: 0, points: 0 },
-          { label: 'Nov', referrals: 0, points: 0 },
-          { label: 'Current', referrals: totalCount, points: completedPts },
-        ];
+    if (timeRange === '6m') {
+      const monthsMap = new Map<string, { label: string; referrals: number; points: number }>();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthKey = d.toLocaleString('en-US', { month: 'short' });
+        monthsMap.set(monthKey, { label: monthKey, referrals: 0, points: 0 });
+      }
+
+      // Populate every real referral log into its exact month
+      referrals.forEach((r) => {
+        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
+        const mKey = refDate.toLocaleString('en-US', { month: 'short' });
+        if (monthsMap.has(mKey)) {
+          const existing = monthsMap.get(mKey)!;
+          existing.referrals += 1;
+          if (r.status === 'completed') {
+            existing.points += r.pointsEarned || 500;
+          }
+        }
+      });
+
+      return Array.from(monthsMap.values());
     }
-  }, [timeRange, totalCount, totalPoints, referrals]);
+
+    if (timeRange === '30d') {
+      const weeks = [
+        { label: 'Week 1', referrals: 0, points: 0 },
+        { label: 'Week 2', referrals: 0, points: 0 },
+        { label: 'Week 3', referrals: 0, points: 0 },
+        { label: 'Week 4', referrals: 0, points: 0 },
+      ];
+
+      referrals.forEach((r) => {
+        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
+        const diffDays = Math.floor((now.getTime() - refDate.getTime()) / (1000 * 3600 * 24));
+        if (diffDays <= 30) {
+          const weekIdx = Math.min(3, Math.floor(diffDays / 7));
+          const target = weeks[3 - weekIdx];
+          if (target) {
+            target.referrals += 1;
+            if (r.status === 'completed') target.points += r.pointsEarned || 500;
+          }
+        }
+      });
+
+      return weeks;
+    }
+
+    if (timeRange === '15d') {
+      const days = [
+        { label: '15d ago', referrals: 0, points: 0 },
+        { label: '10d ago', referrals: 0, points: 0 },
+        { label: '5d ago', referrals: 0, points: 0 },
+        { label: 'Today', referrals: 0, points: 0 },
+      ];
+
+      referrals.forEach((r) => {
+        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
+        const diffDays = Math.floor((now.getTime() - refDate.getTime()) / (1000 * 3600 * 24));
+        if (diffDays <= 15) {
+          const idx = diffDays === 0 ? 3 : diffDays <= 5 ? 2 : diffDays <= 10 ? 1 : 0;
+          const target = days[idx];
+          if (target) {
+            target.referrals += 1;
+            if (r.status === 'completed') target.points += r.pointsEarned || 500;
+          }
+        }
+      });
+
+      return days;
+    }
+
+    // 1y Default
+    const quarters = [
+      { label: 'Q1', referrals: 0, points: 0 },
+      { label: 'Q2', referrals: 0, points: 0 },
+      { label: 'Q3', referrals: 0, points: 0 },
+      { label: 'Q4', referrals: 0, points: 0 },
+    ];
+
+    referrals.forEach((r) => {
+      const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
+      const qIdx = Math.floor(refDate.getMonth() / 3);
+      if (quarters[qIdx]) {
+        quarters[qIdx].referrals += 1;
+        if (r.status === 'completed') quarters[qIdx].points += r.pointsEarned || 500;
+      }
+    });
+
+    return quarters;
+  }, [timeRange, referrals]);
 
   // Chart.js Data Configuration
   const chartJsData = useMemo(() => {

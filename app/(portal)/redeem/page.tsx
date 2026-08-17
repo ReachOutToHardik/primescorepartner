@@ -76,14 +76,24 @@ export default function RedeemPage() {
     try {
       const { supabase } = await import('@/lib/supabase');
 
-      // Insert redemption record
-      await supabase.from('redemptions').insert([{
+      // Insert redemption record with points_burned & points_deducted fail-safe schema matching
+      const insertPayload: Record<string, any> = {
         partner_id: partner.id,
         brand_name: selectedBrand.brand,
         denomination_inr: selectedDenom,
+        points_burned: pointsCost,
         points_deducted: pointsCost,
         voucher_code: voucherCode,
-      }]);
+        status: 'pending',
+      };
+
+      const { error: insertError } = await supabase.from('redemptions').insert([insertPayload]);
+
+      if (insertError && insertError.code === 'PGRST204') {
+        // If points_deducted column doesn't exist in Supabase schema cache, retry with points_burned
+        delete insertPayload.points_deducted;
+        await supabase.from('redemptions').insert([insertPayload]);
+      }
 
       // Deduct points from profile
       await supabase

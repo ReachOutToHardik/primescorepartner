@@ -31,7 +31,7 @@ const ADMIN_NAV = [
   { name: 'Leads & Fulfillment', href: '/admin/referrals', icon: ClipboardText },
   { name: 'Team & Network', href: '/admin/teams', icon: UsersThree },
   { name: 'Leaderboards & Analytics', href: '/admin/analytics', icon: ChartLine },
-  { name: 'Gift Card Inventory', href: '/admin/gift-cards', icon: Gift },
+  { name: 'Gift Cards & Vouchers', href: '/admin/gift-cards', icon: Gift },
   { name: 'Services Catalog', href: '/admin/services', icon: Wrench },
   { name: 'Reward Engine & Rates', href: '/admin/rewards-config', icon: Coins },
   { name: 'Send Notifications', href: '/admin/notifications', icon: Megaphone },
