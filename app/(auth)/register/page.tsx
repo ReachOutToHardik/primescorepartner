@@ -19,6 +19,8 @@ import {
   Cardholder,
   Camera,
   LockKey,
+  Eye,
+  EyeSlash,
 } from '@phosphor-icons/react';
 import { LogoLight } from '@/components/ui/LogoLight';
 import { CustomSelect } from '@/components/ui/CustomSelect';
@@ -38,6 +40,8 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profession, setProfession] = useState('Direct Selling Agent (DSA)');
   const [city, setCity] = useState('');
   const [stateName, setStateName] = useState('Maharashtra');
@@ -224,6 +228,7 @@ export default function RegisterPage() {
             name: name.trim(),
             email: email.trim().toLowerCase(),
             phone: phone.trim(),
+            password_hash: password.trim(),
             profession,
             city: city.trim(),
             state: stateName.trim(),
@@ -532,13 +537,19 @@ export default function RegisterPage() {
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="Min. 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono"
+                    className="w-full px-3.5 py-2.5 pr-10 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono"
                   />
-                  <LockKey size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
                 {errors.password && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.password}</p>}
               </div>
@@ -549,13 +560,19 @@ export default function RegisterPage() {
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Re-enter password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono"
+                    className="w-full px-3.5 py-2.5 pr-10 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono"
                   />
-                  <LockKey size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors cursor-pointer"
+                  >
+                    {showConfirmPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
                 {errors.confirmPassword && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.confirmPassword}</p>}
               </div>
