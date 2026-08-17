@@ -18,12 +18,15 @@ import {
   MapPin,
   Cardholder,
   Camera,
+  LockKey,
 } from '@phosphor-icons/react';
 import { LogoLight } from '@/components/ui/LogoLight';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 
 export default function RegisterPage() {
   const router = useRouter();
+
+  // Multi-step form step control
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form State Step 1
@@ -33,6 +36,8 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [profession, setProfession] = useState('Direct Selling Agent (DSA)');
   const [city, setCity] = useState('');
   const [stateName, setStateName] = useState('Maharashtra');
@@ -76,6 +81,8 @@ export default function RegisterPage() {
     if (!name.trim()) errs.name = 'Full name is required';
     if (!email.trim() || !email.includes('@')) errs.email = 'Valid email is required';
     if (!phone.trim() || phone.length < 10) errs.phone = 'Valid 10-digit phone is required';
+    if (!password.trim() || password.length < 6) errs.password = 'Password must be at least 6 characters long';
+    if (password !== confirmPassword) errs.confirmPassword = 'Passwords do not match';
     if (!city.trim()) errs.city = 'City is required';
 
     if (Object.keys(errs).length === 0) {
@@ -159,7 +166,7 @@ export default function RegisterPage() {
       let userId = '';
       const { data: authData } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
-        password: phone.trim(),
+        password: password.trim(),
         options: {
           data: { name, role: accountRole },
         },
@@ -517,6 +524,40 @@ export default function RegisterPage() {
                   <Phone size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
                 </div>
                 {errors.phone && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.phone}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
+                  Account Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="Min. 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono"
+                  />
+                  <LockKey size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                </div>
+                {errors.password && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.password}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="Re-enter password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono"
+                  />
+                  <LockKey size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                </div>
+                {errors.confirmPassword && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.confirmPassword}</p>}
               </div>
 
               <CustomSelect
