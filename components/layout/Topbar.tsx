@@ -31,16 +31,16 @@ const getPageMetaData = (pathname: string) => {
     return { title: 'Dashboard', subtitle: 'Overview & key referral metrics' };
   }
   if (pathname === '/refer') {
-    return { title: 'Refer Customer', subtitle: 'Submit a client for credit rectification or reports' };
+    return { title: 'Refer Client', subtitle: 'Submit a client for credit rectification or reports' };
   }
   if (pathname === '/referrals') {
     return { title: 'My Referrals', subtitle: 'Track client statuses, notes & earned points' };
   }
   if (pathname === '/rewards') {
-    return { title: 'PrimePoints Rewards', subtitle: 'View points history & tier benefits' };
+    return { title: 'Rewards Center', subtitle: 'View points history & tier benefits' };
   }
   if (pathname === '/redeem') {
-    return { title: 'Redeem Gifts', subtitle: 'Exchange PrimePoints for gift cards & rewards' };
+    return { title: 'Redeem Vouchers', subtitle: 'Exchange PrimePoints for gift cards & rewards' };
   }
   if (pathname === '/kyc') {
     return { title: 'KYC Verification', subtitle: 'Partner verification & identity status' };
@@ -146,18 +146,18 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       ];
 
   return (
-    <header className="sticky top-0 z-20 h-[72px] bg-white border-b border-[var(--border)] px-4 md:px-6 flex items-center justify-between shadow-xs">
+    <header className="sticky top-0 z-20 h-[72px] bg-white border-b border-[var(--border)] px-3 sm:px-6 flex items-center justify-between shadow-xs">
       {/* Left: Mobile Toggle & Page Title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial mr-2">
         <button
           onClick={onMenuClick}
-          className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          className="md:hidden p-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0"
           aria-label="Open navigation menu"
         >
           <List className="w-6 h-6" />
         </button>
 
-        <div className="flex flex-col min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-full">
+        <div className="flex flex-col min-w-0 flex-1">
           <h1 className="text-sm sm:text-lg md:text-xl font-bold font-display text-[var(--ink)] leading-snug truncate">
             {title}
           </h1>

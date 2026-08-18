@@ -121,28 +121,29 @@ export default function RedeemPage() {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Gift size={26} className="text-[#E63329]" weight="fill" />
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--ink)]">
-              Redeem Gift Cards & Vouchers
-            </h1>
+      {/* Hero Header Banner */}
+      <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="relative z-10 space-y-2">
+          <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
+            <Gift size={16} className="text-[#F5C518]" weight="fill" />
+            <span>Instant E-Voucher Exchange</span>
           </div>
-          <p className="text-xs sm:text-sm text-[var(--ink-muted)]">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            Redeem Gift Cards & Vouchers
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
             Convert your PrimePoints instantly into e-gift vouchers from India&apos;s top shopping & travel brands.
           </p>
         </div>
 
         {/* Available Points Pill */}
-        <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white px-5 py-2.5 rounded-full border border-white/10 shrink-0 flex items-center gap-3 shadow-md">
-          <Coins size={22} className="text-[#F5C518]" weight="fill" />
+        <div className="relative z-10 shrink-0 bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20 flex items-center gap-3 shadow-lg">
+          <Coins size={24} className="text-[#F5C518]" weight="fill" />
           <div>
             <div className="text-[10px] text-slate-300 font-bold uppercase tracking-wider font-mono-num">
               Points Available
             </div>
-            <div className="font-mono-num font-bold text-base text-white leading-none">
+            <div className="font-mono-num font-bold text-lg text-white leading-none">
               {totalPoints.toLocaleString()} Pts
             </div>
           </div>

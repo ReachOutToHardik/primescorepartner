@@ -73,27 +73,30 @@ export default function RewardsPage() {
 
   return (
     <div className="space-y-6 animate-fade-up">
-      {/* 1. HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <Coins size={26} className="text-amber-500" weight="fill" />
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-              PrimePoints & Rewards Center
-            </h1>
+      {/* Hero Header Banner */}
+      <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="relative z-10 space-y-2">
+          <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
+            <Coins size={16} className="text-[#F5C518]" weight="fill" />
+            <span>Partner Points & Tier Roadmap</span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            PrimePoints & Rewards Center
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
             Track your accumulated reward points balance, partner tier roadmap, and point activity logs.
           </p>
         </div>
 
-        <Link
-          href="/redeem"
-          className="px-5 py-2.5 bg-[#0F172A] hover:bg-[#1E293B] text-white font-display font-bold text-xs rounded-full transition-all inline-flex items-center justify-center gap-2 shadow-md hover:shadow-lg shrink-0"
-        >
-          <Gift size={16} weight="fill" />
-          <span>Redeem Points</span>
-        </Link>
+        <div className="relative z-10 shrink-0">
+          <Link
+            href="/redeem"
+            className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
+          >
+            <Gift size={16} weight="fill" />
+            <span>Redeem Points</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. FULL-WIDTH HERO BALANCE & TIER PROGRESSION BANNER (EXACT SCREENSHOT MATCH) */}

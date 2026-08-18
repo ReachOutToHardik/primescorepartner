@@ -167,28 +167,30 @@ export default function ReferralsPage() {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <ListChecks size={26} className="text-[#1B2A72]" weight="bold" />
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--ink)]">
-              All Client Referrals
-            </h1>
+      {/* Hero Header Banner */}
+      <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="relative z-10 space-y-2">
+          <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
+            <ListChecks size={16} className="text-[#F5C518]" weight="bold" />
+            <span>5-Stage Case Tracking</span>
           </div>
-          <p className="text-xs sm:text-sm text-[var(--ink-muted)]">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            All Client Referrals
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
             Search, filter, and track 5-stage bureau progression for all your referred clients.
           </p>
         </div>
 
-        {/* CSV Export Button */}
-        <button
-          onClick={handleExportCSV}
-          className="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-800 font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-2xs hover:shadow-xs"
-        >
-          <DownloadSimple size={16} weight="bold" />
-          <span>Export CSV Report</span>
-        </button>
+        <div className="relative z-10 shrink-0">
+          <button
+            onClick={handleExportCSV}
+            className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
+          >
+            <DownloadSimple size={16} weight="bold" />
+            <span>Export CSV Report</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Controls Bar */}
