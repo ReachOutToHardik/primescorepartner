@@ -109,7 +109,7 @@ export default function RewardsPage() {
               </span>
               <span className="font-display font-bold text-xl text-[#1B2A72]">PrimePoints</span>
               <span className="text-xs font-mono-num text-slate-500 font-semibold pl-1">
-                (&asymp; ₹{(totalPoints / 10).toLocaleString('en-IN')} Value)
+                (&asymp; ₹{(totalPoints / 4).toLocaleString('en-IN')} Value)
               </span>
             </div>
           </div>

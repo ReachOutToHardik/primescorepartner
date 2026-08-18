@@ -38,7 +38,7 @@ export default function RedeemPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleOpenRedeemModal = (card: typeof GIFT_CARDS[0], denom: number) => {
-    const pointsRequired = denom * 10;
+    const pointsRequired = denom * 4;
     if (totalPoints < pointsRequired) {
       alert(`Insufficient PrimePoints! You need ${pointsRequired} points for ₹${denom} voucher.`);
       return;
@@ -70,7 +70,7 @@ export default function RedeemPage() {
     setIsRedeeming(true);
     setErrorMsg('');
 
-    const pointsCost = selectedDenom * 10;
+    const pointsCost = selectedDenom * 4;
     const voucherCode = `${selectedBrand.brand.substring(0, 4).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
     try {
@@ -205,11 +205,11 @@ export default function RedeemPage() {
                   {/* Denomination Buttons Grid */}
                   <div className="space-y-2 pt-2">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono-num">
-                      Select Value (₹1 = 10 Pts)
+                      Select Value (₹1 = 4 Pts)
                     </span>
                     <div className="grid grid-cols-2 gap-2">
                       {card.denominations.map((denom) => {
-                        const ptsCost = denom * 10;
+                        const ptsCost = denom * 4;
                         const canAfford = totalPoints >= ptsCost;
 
                         return (
@@ -278,15 +278,15 @@ export default function RedeemPage() {
                   </div>
 
                   <div className="flex items-center gap-2 bg-[var(--surface)] p-2 border border-[var(--border)] rounded-xs">
-                    <span className="font-mono-num font-bold text-xs text-[#1B2A72] tracking-wider px-2">
+                    <code className="text-xs font-mono-num font-bold text-[#1B2A72] tracking-wider select-all">
                       {rdm.voucherCode}
-                    </span>
+                    </code>
                     <button
                       onClick={() => handleCopyCode(rdm.voucherCode)}
-                      className="px-2.5 py-1 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-semibold text-[11px] rounded-xs transition-colors flex items-center gap-1"
+                      className="p-1.5 hover:bg-white text-[var(--ink-muted)] hover:text-[var(--ink)] rounded transition-colors"
+                      title="Copy Code"
                     >
-                      <Copy size={12} />
-                      <span>{copiedCode ? 'Copied' : 'Copy'}</span>
+                      <Copy size={14} />
                     </button>
                   </div>
                 </div>
@@ -296,7 +296,7 @@ export default function RedeemPage() {
         </div>
       )}
 
-      {/* OTP SIMULATION REDEMPTION MODAL */}
+      {/* REDEMPTION CONFIRMATION & OTP MODAL */}
       {selectedBrand && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in"
@@ -333,13 +333,13 @@ export default function RedeemPage() {
                   <div className="flex justify-between">
                     <span className="text-[var(--ink-muted)]">PrimePoints Cost:</span>
                     <span className="font-mono-num font-bold text-[#E63329]">
-                      -{selectedDenom * 10} Pts
+                      -{selectedDenom * 4} Pts
                     </span>
                   </div>
                   <div className="flex justify-between border-t border-[var(--border)] pt-2">
                     <span className="text-[var(--ink-muted)]">Remaining Points Balance:</span>
                     <span className="font-mono-num font-bold text-[#3DAA4B]">
-                      {(totalPoints - selectedDenom * 10).toLocaleString()} Pts
+                      {(totalPoints - selectedDenom * 4).toLocaleString()} Pts
                     </span>
                   </div>
                 </div>

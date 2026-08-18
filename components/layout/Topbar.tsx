@@ -58,7 +58,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [unreadNotifs, setUnreadNotifs] = useState(2);
+  const [unreadNotifs, setUnreadNotifs] = useState(1);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -136,19 +136,12 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       }))
     : [
         {
-          id: '1',
-          title: 'Referral Completed!',
-          desc: 'Rajesh Kumar (REF-2024-001) completed successfully.',
-          points: '+500 pts',
-          time: '2 hours ago',
+          id: 'welcome-bonus',
+          title: 'Welcome to Primescore Partner!',
+          desc: 'You received 100 PrimePoints as your sign-up bonus! Start referring clients to earn more rewards.',
+          points: '+100 pts',
+          time: 'Just now',
           type: 'success',
-        },
-        {
-          id: '2',
-          title: 'KYC Verification Status',
-          desc: partner?.status === 'kyc_approved' ? 'Your partner account is active and verified.' : 'Your partner documents are under review.',
-          time: '1 day ago',
-          type: 'info',
         },
       ];
 

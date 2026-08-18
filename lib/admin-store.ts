@@ -117,7 +117,7 @@ const DEFAULT_REWARD_CONFIG: RewardEngineConfig = {
   enrollmentPoints: 100,
   conversionPoints: 500,
   teamLeaderOverridePercent: 10,
-  pointsPerInr: 10, // 10 Pts = ₹1 INR
+  pointsPerInr: 4, // 4 Pts = ₹1 INR
   payoutMode: 'points',
   minRedemptionPoints: 500,
   maxDailyRedemptionPoints: 10000,
