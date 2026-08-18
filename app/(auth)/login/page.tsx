@@ -267,18 +267,18 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Login Form (Unified Deep Navy Background on Mobile) */}
-      <div className="lg:col-span-7 flex flex-col justify-center items-center p-4 sm:p-8 lg:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)]">
-        <div className="w-full max-w-md space-y-6 bg-white p-6 sm:p-8 lg:p-0 rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none border border-white/10 lg:border-none">
+      {/* Right Side - Login Form (Seamless Deep Navy Background on Mobile) */}
+      <div className="lg:col-span-7 flex flex-col justify-center items-center p-6 sm:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)]">
+        <div className="w-full max-w-md space-y-6">
           {/* Header */}
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#1B2A72]/10 text-[#1B2A72] border border-[#1B2A72]/20 rounded-xs mb-3">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-white/10 text-white lg:bg-[#1B2A72]/10 lg:text-[#1B2A72] border border-white/20 lg:border-[#1B2A72]/20 rounded-xs mb-3">
               <ShieldCheck size={14} weight="bold" /> Secured Partner Portal
             </span>
-            <h2 className="font-display text-3xl font-bold text-[var(--ink)] tracking-tight">
+            <h2 className="font-display text-3xl font-bold text-white lg:text-[var(--ink)] tracking-tight">
               Sign in to your account
             </h2>
-            <p className="text-sm text-[var(--ink-muted)] mt-1">
+            <p className="text-sm text-slate-300 lg:text-[var(--ink-muted)] mt-1">
               Access your referral dashboard, track payouts, and redeem PrimePoints.
             </p>
           </div>
@@ -292,7 +292,7 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-200 lg:text-[var(--ink-2)] mb-1.5">
                 Email Address or Mobile Number
               </label>
               <div className="relative">
@@ -303,15 +303,15 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="username"
-                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:ring-1 focus:ring-[#1B2A72] text-[var(--ink)] placeholder:text-[var(--ink-subtle)]"
+                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#F5C518] lg:focus:border-[#1B2A72] focus:ring-1 text-slate-900 placeholder:text-slate-400 font-medium"
                 />
-                <User size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                <User size={18} className="absolute right-3 top-3 text-slate-400" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)]">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-200 lg:text-[var(--ink-2)]">
                   Password
                 </label>
                 <a
@@ -320,7 +320,7 @@ export default function LoginPage() {
                     e.preventDefault();
                     alert('Please contact support@primescore.in to reset your password.');
                   }}
-                  className="text-xs text-[#1B2A72] hover:underline font-semibold"
+                  className="text-xs text-[#F5C518] lg:text-[#1B2A72] hover:underline font-semibold"
                 >
                   Forgot Password?
                 </a>
@@ -333,12 +333,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
-                  className="w-full px-3.5 py-2.5 pr-10 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:ring-1 focus:ring-[#1B2A72] text-[var(--ink)]"
+                  className="w-full px-3.5 py-2.5 pr-10 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#F5C518] lg:focus:border-[#1B2A72] focus:ring-1 text-slate-900 font-medium"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors"
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
                 </button>
@@ -346,8 +346,8 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 cursor-pointer text-[var(--ink-2)]">
-                <input type="checkbox" className="rounded-xs border-[var(--border)] text-[#1B2A72]" defaultChecked />
+              <label className="flex items-center gap-2 cursor-pointer text-slate-200 lg:text-[var(--ink-2)]">
+                <input type="checkbox" className="rounded-xs border-slate-400 text-[#1B2A72]" defaultChecked />
                 <span>Remember me for 30 days</span>
               </label>
             </div>
@@ -355,7 +355,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-[var(--ink)] hover:bg-[#000000] disabled:opacity-60 disabled:cursor-not-allowed text-white font-display font-semibold text-sm rounded-xs transition-colors shadow-xs flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#1B2A72] lg:bg-[var(--ink)] hover:bg-[#152059] lg:hover:bg-[#000000] disabled:opacity-60 disabled:cursor-not-allowed text-white font-display font-semibold text-sm rounded-xs transition-colors shadow-xs flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -372,9 +372,9 @@ export default function LoginPage() {
           </form>
 
           {/* Footer Register Link */}
-          <div className="pt-4 border-t border-[var(--border)] text-center text-xs text-[var(--ink-muted)]">
+          <div className="pt-4 border-t border-white/15 lg:border-[var(--border)] text-center text-xs text-slate-300 lg:text-[var(--ink-muted)]">
             Don&apos;t have a partner account yet?{' '}
-            <Link href="/register" className="text-[#1B2A72] font-bold hover:underline">
+            <Link href="/register" className="text-[#F5C518] lg:text-[#1B2A72] font-bold hover:underline">
               Register as Partner &rarr;
             </Link>
           </div>
