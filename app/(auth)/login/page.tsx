@@ -142,7 +142,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#0F1A4E] lg:bg-[var(--surface)] text-[var(--ink)]">
       {/* Left Side - Deep Navy Hero */}
-      <div className="lg:col-span-5 bg-[#0F1A4E] text-white p-6 pb-2 lg:p-12 flex flex-col justify-start lg:justify-between relative overflow-hidden">
+      <div className="lg:col-span-5 bg-[#0F1A4E] text-white p-6 pb-0 lg:p-12 flex flex-col justify-start lg:justify-between relative overflow-hidden">
         {/* Background Graphic Accents */}
         <div className="absolute top-0 right-0 w-64 h-64 border border-white/10 rounded-full -mr-20 -mt-20 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 border border-white/10 rounded-full -ml-32 -mb-32 pointer-events-none" />
@@ -278,8 +278,8 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form (Seamless Deep Navy Background on Mobile) */}
-      <div className="lg:col-span-7 flex flex-col justify-between items-center px-6 pt-2 pb-6 sm:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)] min-h-screen">
-        <div className="w-full max-w-md my-auto space-y-3.5 sm:space-y-6">
+      <div className="lg:col-span-7 flex flex-col justify-start lg:justify-between items-center px-6 py-4 lg:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)] min-h-0 lg:min-h-screen">
+        <div className="w-full max-w-md lg:my-auto space-y-4 sm:space-y-6">
           {/* Header */}
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-white/10 text-white lg:bg-[#1B2A72]/10 lg:text-[#1B2A72] border border-white/20 lg:border-[#1B2A72]/20 rounded-xs mb-3">
