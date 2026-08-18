@@ -265,6 +265,16 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
+
+        {/* Desktop Left Hero Bottom Corner Footer */}
+        <div className="relative z-10 pt-4 hidden lg:block text-[11px] text-slate-300 font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
+          <p className="inline-flex items-center gap-1.5">
+            <span>&copy; 2026 Primescore. All rights reserved.</span>
+            <a href="mailto:info@primescore.in" className="text-slate-300 hover:text-white font-normal hover:underline">
+              info@primescore.in
+            </a>
+          </p>
+        </div>
       </div>
 
       {/* Right Side - Login Form (Seamless Deep Navy Background on Mobile) */}
@@ -380,11 +390,11 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Bottom Corner Footer (Placed at bottom left corner on desktop view) */}
-        <div className="w-full pt-4 text-center lg:text-left text-[10px] sm:text-xs text-slate-400 lg:text-[var(--ink-muted)] font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
-          <p className="inline-flex items-center justify-center lg:justify-start gap-1.5">
+        {/* Mobile Corner Footer (Visible on Mobile) */}
+        <div className="w-full pt-4 lg:hidden text-center text-[10px] sm:text-xs text-slate-400 font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
+          <p className="inline-flex items-center justify-center gap-1.5">
             <span>&copy; 2026 Primescore. All rights reserved.</span>
-            <a href="mailto:info@primescore.in" className="text-slate-300 lg:text-[#1B2A72] font-semibold hover:underline">
+            <a href="mailto:info@primescore.in" className="text-slate-300 font-semibold hover:underline">
               info@primescore.in
             </a>
           </p>
