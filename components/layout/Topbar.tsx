@@ -45,7 +45,7 @@ const getPageMetaData = (pathname: string) => {
   if (pathname === '/kyc') {
     return { title: 'KYC Verification', subtitle: 'Partner verification & identity status' };
   }
-  return { title: 'Partner Portal', subtitle: 'Welcome to PrimeScore Partner Network' };
+  return { title: 'Partner Portal', subtitle: 'Welcome to Primescore Partner' };
 };
 
 export default function Topbar({ onMenuClick }: TopbarProps) {

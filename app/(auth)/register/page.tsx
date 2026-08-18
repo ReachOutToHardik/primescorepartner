@@ -46,7 +46,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profession, setProfession] = useState('Direct Selling Agent (DSA)');
   const [city, setCity] = useState('');
-  const [stateName, setStateName] = useState('Maharashtra');
+  const [stateName, setStateName] = useState('Rajasthan');
 
   // Mandatory Non-Hackable Email OTP State & Rate Limiting
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -1243,7 +1243,7 @@ export default function RegisterPage() {
 
       {/* Footer */}
       <div className="text-center text-xs text-[var(--ink-subtle)] py-4">
-        &copy; {new Date().getFullYear()} PrimeScore Partner Network. All rights reserved.
+        &copy; {new Date().getFullYear()} Primescore. All rights reserved.
       </div>
     </div>
   );
