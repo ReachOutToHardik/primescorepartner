@@ -268,8 +268,8 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form (Seamless Deep Navy Background on Mobile) */}
-      <div className="lg:col-span-7 flex flex-col justify-start lg:justify-center items-center px-6 pt-2 pb-8 sm:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)]">
-        <div className="w-full max-w-md space-y-3.5 sm:space-y-6">
+      <div className="lg:col-span-7 flex flex-col justify-between items-center px-6 pt-2 pb-6 sm:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)] min-h-screen">
+        <div className="w-full max-w-md my-auto space-y-3.5 sm:space-y-6">
           {/* Header */}
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-white/10 text-white lg:bg-[#1B2A72]/10 lg:text-[#1B2A72] border border-white/20 lg:border-[#1B2A72]/20 rounded-xs mb-3">
@@ -378,16 +378,16 @@ export default function LoginPage() {
               Register as Partner &rarr;
             </Link>
           </div>
+        </div>
 
-          {/* Bottom Corner Footer */}
-          <div className="pt-2 text-center sm:text-left text-[10px] sm:text-xs text-slate-400 font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
-            <p className="inline-flex items-center justify-center sm:justify-start gap-1">
-              <span>&copy; 2026 Primescore. All rights reserved.</span>
-              <a href="mailto:info@primescore.in" className="text-slate-300 hover:text-white lg:text-[#1B2A72] font-normal hover:underline">
-                info@primescore.in
-              </a>
-            </p>
-          </div>
+        {/* Bottom Corner Footer (Placed at bottom left corner on desktop view) */}
+        <div className="w-full pt-4 text-center lg:text-left text-[10px] sm:text-xs text-slate-400 lg:text-[var(--ink-muted)] font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
+          <p className="inline-flex items-center justify-center lg:justify-start gap-1.5">
+            <span>&copy; 2026 Primescore. All rights reserved.</span>
+            <a href="mailto:info@primescore.in" className="text-slate-300 lg:text-[#1B2A72] font-semibold hover:underline">
+              info@primescore.in
+            </a>
+          </p>
         </div>
       </div>
     </div>
