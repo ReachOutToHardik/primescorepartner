@@ -299,7 +299,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   id="login-email"
-                  placeholder="arjun.mehta@example.com or 9876543210"
+                  placeholder="Email Address or Mobile Number"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="username"

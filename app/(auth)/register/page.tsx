@@ -752,7 +752,7 @@ export default function RegisterPage() {
                   <div className="relative flex-1">
                     <input
                       type="email"
-                      placeholder="arjun.mehta@example.com"
+                      placeholder="Enter your email address"
                       value={email}
                       disabled={isEmailVerified || otpStep === 'sent'}
                       onChange={(e) => {
