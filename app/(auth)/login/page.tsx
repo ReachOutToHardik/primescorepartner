@@ -142,7 +142,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#0F1A4E] lg:bg-[var(--surface)] text-[var(--ink)]">
       {/* Left Side - Deep Navy Hero */}
-      <div className="lg:col-span-5 bg-[#0F1A4E] text-white p-6 sm:p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden">
+      <div className="lg:col-span-5 bg-[#0F1A4E] text-white p-6 pb-2 lg:p-12 flex flex-col justify-start lg:justify-between relative overflow-hidden">
         {/* Background Graphic Accents */}
         <div className="absolute top-0 right-0 w-64 h-64 border border-white/10 rounded-full -mr-20 -mt-20 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 border border-white/10 rounded-full -ml-32 -mb-32 pointer-events-none" />
@@ -153,12 +153,12 @@ export default function LoginPage() {
             <img
               src="/logo.png"
               alt="PrimeScore Partner Network"
-              className="h-10 lg:h-11 object-contain"
+              className="h-9 lg:h-11 object-contain"
             />
           </div>
 
-          <div className="mt-6 lg:mt-12 space-y-3 lg:space-y-4">
-            <h1 className="font-display text-2xl lg:text-4xl font-bold leading-tight text-white">
+          <div className="mt-4 lg:mt-12 space-y-2 lg:space-y-4">
+            <h1 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold leading-tight text-white">
               Empower your clients. <br />
               <span className="text-[#F5C518]">Earn recurring rewards.</span>
             </h1>
@@ -268,14 +268,14 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form (Seamless Deep Navy Background on Mobile) */}
-      <div className="lg:col-span-7 flex flex-col justify-center items-center p-6 sm:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)]">
+      <div className="lg:col-span-7 flex flex-col justify-start lg:justify-center items-center px-6 pt-2 pb-8 sm:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)]">
         <div className="w-full max-w-md space-y-6">
           {/* Header */}
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-white/10 text-white lg:bg-[#1B2A72]/10 lg:text-[#1B2A72] border border-white/20 lg:border-[#1B2A72]/20 rounded-xs mb-3">
               <ShieldCheck size={14} weight="bold" /> Secured Partner Portal
             </span>
-            <h2 className="font-display text-3xl font-bold text-white lg:text-[var(--ink)] tracking-tight">
+            <h2 className="font-display text-2xl lg:text-3xl font-bold text-white lg:text-[var(--ink)] tracking-tight">
               Sign in to your account
             </h2>
             <p className="text-sm text-slate-300 lg:text-[var(--ink-muted)] mt-1">
@@ -377,6 +377,14 @@ export default function LoginPage() {
             <Link href="/register" className="text-[#F5C518] lg:text-[#1B2A72] font-bold hover:underline">
               Register as Partner &rarr;
             </Link>
+          </div>
+
+          {/* Bottom Corner Footer */}
+          <div className="pt-6 text-center sm:text-left text-[11px] text-slate-400 font-medium space-y-1">
+            <p>&copy; 2026 Primescore. All rights reserved.</p>
+            <p>
+              <a href="mailto:info@primescore.in" className="text-[#F5C518] lg:text-[#1B2A72] font-semibold hover:underline">info@primescore.in</a>
+            </p>
           </div>
         </div>
       </div>
