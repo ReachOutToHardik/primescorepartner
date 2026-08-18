@@ -125,7 +125,7 @@ export function useSupabaseSync() {
           joinedAt: profile.joined_at || profile.created_at,
           profilePhoto: profile.avatar_url || undefined,
         });
-        setTotalPoints(profile.prime_points || 0);
+        setTotalPoints(profile.prime_points ?? 100);
       }
 
       // Fetch partner's own referrals

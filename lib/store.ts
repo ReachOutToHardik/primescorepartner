@@ -113,7 +113,7 @@ export const usePartnerStore = create<PartnerStore>()(
       referrals: [],
       redemptions: [],
       teamMembers: [],
-      totalPoints: 0,
+      totalPoints: 100,
       tier: 'Silver',
       isAuthenticated: false,
 

@@ -344,55 +344,63 @@ export default function RewardsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {referrals.filter((r) => r.status === 'completed').length === 0 && redemptions.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-slate-400 font-medium">
-                    No transactions recorded yet. Completed referrals will log earnings here.
+              {/* Sign-Up Welcome Bonus Entry */}
+              <tr className="hover:bg-slate-50/60 transition-colors bg-amber-50/30">
+                <td className="py-3 px-2 font-mono-num text-slate-500">
+                  Account Registration
+                </td>
+                <td className="py-3 px-2">
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-semibold text-[11px] rounded-sm">
+                    Bonus
+                  </span>
+                </td>
+                <td className="py-3 px-2 font-medium text-slate-900">
+                  Partner Registration Sign-up Welcome Bonus
+                </td>
+                <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
+                  +100 Pts
+                </td>
+              </tr>
+
+              {referrals
+                .filter((r) => r.status === 'completed')
+                .map((r) => (
+                  <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3 px-2 font-mono-num text-slate-500">
+                      {new Date(r.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[11px] rounded-sm">
+                        Referral
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 font-medium text-slate-900">
+                      Referral Case Resolved: <span className="font-bold">{r.customerName}</span> ({r.id})
+                    </td>
+                    <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
+                      +{r.pointsEarned || 500} Pts
+                    </td>
+                  </tr>
+                ))}
+
+              {redemptions.map((rdm) => (
+                <tr key={rdm.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="py-3 px-2 font-mono-num text-slate-500">
+                    {new Date(rdm.redeemedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+                  </td>
+                  <td className="py-3 px-2">
+                    <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-semibold text-[11px] rounded-sm">
+                      Redemption
+                    </span>
+                  </td>
+                  <td className="py-3 px-2 font-medium text-slate-900">
+                    Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
+                  </td>
+                  <td className="py-3 px-2 text-right font-mono-num font-bold text-slate-500">
+                    -{rdm.points} Pts
                   </td>
                 </tr>
-              ) : (
-                <>
-                  {referrals
-                    .filter((r) => r.status === 'completed')
-                    .map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="py-3 px-2 font-mono-num text-slate-500">
-                          {new Date(r.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                        </td>
-                        <td className="py-3 px-2">
-                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[11px] rounded-sm">
-                            Referral
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 font-medium text-slate-900">
-                          Referral Case Resolved: <span className="font-bold">{r.customerName}</span> ({r.id})
-                        </td>
-                        <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
-                          +{r.pointsEarned || 500} Pts
-                        </td>
-                      </tr>
-                    ))}
-
-                  {redemptions.map((rdm) => (
-                    <tr key={rdm.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3 px-2 font-mono-num text-slate-500">
-                        {new Date(rdm.redeemedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-semibold text-[11px] rounded-sm">
-                          Redemption
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 font-medium text-slate-900">
-                        Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
-                      </td>
-                      <td className="py-3 px-2 text-right font-mono-num font-bold text-slate-500">
-                        -{rdm.points} Pts
-                      </td>
-                    </tr>
-                  ))}
-                </>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
