@@ -38,6 +38,7 @@ export function useSupabaseSync() {
         role: p.role,
         teamCode: p.team_code || '',
         joinedAt: p.joined_at || p.created_at,
+        isEmailVerified: p.is_email_verified !== false,
         profilePhoto: p.avatar_url || undefined,
         referredByLeaderId: p.referred_by_leader_id || undefined,
       }));

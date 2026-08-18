@@ -29,7 +29,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError('Please enter your registered email address.');
+      setError('Please enter your registered email address or mobile number.');
       return;
     }
     if (!password.trim()) {
@@ -42,21 +42,34 @@ export default function LoginPage() {
     try {
       const { supabase } = await import('@/lib/supabase');
 
-      // First check if profile exists in the profiles table
-      const { data: profile, error: profileErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', email.trim().toLowerCase())
-        .maybeSingle();
+      const identifier = email.trim().toLowerCase();
+      const isMobile = /^\d{10}$/.test(identifier);
+
+      let profileQuery = supabase.from('profiles').select('*');
+      if (isMobile) {
+        profileQuery = profileQuery.eq('phone', identifier);
+      } else {
+        profileQuery = profileQuery.eq('email', identifier);
+      }
+
+      // Check if profile exists in profiles table
+      const { data: profile, error: profileErr } = await profileQuery.maybeSingle();
 
       if (profileErr) {
-        setError('Unable to verify account credentials right now. Please try again or contact support@primescore.in.');
+        setError('Unable to verify account credentials right now. Please try again or contact info@primescore.in.');
         setIsLoading(false);
         return;
       }
 
       if (!profile) {
-        setError(`No account found for "${email.trim()}". Please check your email address or click "Register as Partner" below.`);
+        setError(`No account found for "${email.trim()}". Please check your details or click "Register as Partner" below.`);
+        setIsLoading(false);
+        return;
+      }
+
+      // Enforce email verification check
+      if (profile.is_email_verified === false) {
+        setError('Your partner account email is unverified. Please verify your email or contact info@primescore.in.');
         setIsLoading(false);
         return;
       }
@@ -69,14 +82,14 @@ export default function LoginPage() {
       }
 
       if (profile.status === 'kyc_rejected') {
-        setError('Your partner application was declined. Please contact support@primescore.in for assistance.');
+        setError('Your partner application was declined. Please contact info@primescore.in for assistance.');
         setIsLoading(false);
         return;
       }
 
       // Approved partner — attempt sign in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: profile.email || email.trim().toLowerCase(),
         password: password.trim(),
       });
 
@@ -94,6 +107,7 @@ export default function LoginPage() {
         role: profile.role,
         teamCode: profile.team_code || '',
         joinedAt: profile.joined_at || profile.created_at,
+        isEmailVerified: profile.is_email_verified !== false,
         profilePhoto: profile.avatar_url || undefined,
         referredByLeaderId: profile.referred_by_leader_id || undefined,
       };
@@ -126,9 +140,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[var(--surface)] text-[var(--ink)]">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#0F1A4E] lg:bg-[var(--surface)] text-[var(--ink)]">
       {/* Left Side - Deep Navy Hero */}
-      <div className="lg:col-span-5 bg-[#0F1A4E] text-white p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden">
+      <div className="lg:col-span-5 bg-[#0F1A4E] text-white p-6 sm:p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden">
         {/* Background Graphic Accents */}
         <div className="absolute top-0 right-0 w-64 h-64 border border-white/10 rounded-full -mr-20 -mt-20 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 border border-white/10 rounded-full -ml-32 -mb-32 pointer-events-none" />
@@ -139,23 +153,23 @@ export default function LoginPage() {
             <img
               src="/logo.png"
               alt="PrimeScore Partner Network"
-              className="h-11 object-contain"
+              className="h-10 lg:h-11 object-contain"
             />
           </div>
 
-          <div className="mt-12 space-y-4">
-            <h1 className="font-display text-3xl lg:text-4xl font-bold leading-tight text-white">
+          <div className="mt-6 lg:mt-12 space-y-3 lg:space-y-4">
+            <h1 className="font-display text-2xl lg:text-4xl font-bold leading-tight text-white">
               Empower your clients. <br />
               <span className="text-[#F5C518]">Earn recurring rewards.</span>
             </h1>
-            <p className="text-slate-300 text-sm lg:text-base leading-relaxed">
+            <p className="text-slate-300 text-xs lg:text-base leading-relaxed">
               India&apos;s leading credit rectification and bureau advisory referral platform for DSAs, CAs, Financial Advisors, and Consultants.
             </p>
           </div>
         </div>
 
-        {/* Key Partner Metrics Grid */}
-        <div className="relative z-10 my-8">
+        {/* Key Partner Metrics Grid (Hidden on Mobile) */}
+        <div className="relative z-10 my-8 hidden lg:block">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-[#1B2A72] border border-white/15 p-4 rounded-xs">
               <div className="flex items-center gap-2 text-[#F5C518] mb-1">
@@ -197,8 +211,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Testimonials marquee */}
-        <div className="relative z-10 -mx-8 lg:-mx-12 overflow-hidden py-2">
+        {/* Testimonials marquee (Hidden on Mobile) */}
+        <div className="relative z-10 -mx-8 lg:-mx-12 overflow-hidden py-2 hidden lg:block">
           <div className="flex gap-4 animate-marquee w-max px-4">
             <div className="w-[310px] bg-[#1B2A72] border border-white/10 p-3.5 rounded-xs flex gap-3 shrink-0 items-center">
               <img src="/partner1.jpg" alt="Sandip Sharma" className="w-14 h-14 rounded-xs object-cover border border-white/20 shrink-0" />
@@ -253,9 +267,9 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
-      <div className="lg:col-span-7 flex flex-col justify-center items-center p-6 sm:p-12">
-        <div className="w-full max-w-md space-y-6">
+      {/* Right Side - Login Form (Unified Deep Navy Background on Mobile) */}
+      <div className="lg:col-span-7 flex flex-col justify-center items-center p-4 sm:p-8 lg:p-12 bg-[#0F1A4E] lg:bg-[var(--surface)]">
+        <div className="w-full max-w-md space-y-6 bg-white p-6 sm:p-8 lg:p-0 rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none border border-white/10 lg:border-none">
           {/* Header */}
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#1B2A72]/10 text-[#1B2A72] border border-[#1B2A72]/20 rounded-xs mb-3">
@@ -279,16 +293,16 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1.5">
-                Email Address
+                Email Address or Mobile Number
               </label>
               <div className="relative">
                 <input
-                  type="email"
+                  type="text"
                   id="login-email"
-                  placeholder="arjun.mehta@example.com"
+                  placeholder="arjun.mehta@example.com or 9876543210"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
+                  autoComplete="username"
                   className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:ring-1 focus:ring-[#1B2A72] text-[var(--ink)] placeholder:text-[var(--ink-subtle)]"
                 />
                 <User size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />

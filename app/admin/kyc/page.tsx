@@ -174,54 +174,61 @@ export default function AdminKycListPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-[var(--surface-2)] border-b border-[var(--border)] text-xs text-[var(--ink-muted)] uppercase tracking-wider font-display">
-                  <tr>
-                    <th className="px-6 py-3.5">Partner Profile</th>
-                    <th className="px-6 py-3.5">Role & Team Linkage</th>
-                    <th className="px-6 py-3.5">Referred By (Leader)</th>
-                    <th className="px-6 py-3.5">PAN & Bank Status</th>
-                    <th className="px-6 py-3.5">Verification</th>
-                    <th className="px-6 py-3.5 text-right">Inspect Full Page</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)] font-mono-num">
-                  {paginatedList.map((partner) => (
-                    <tr 
-                      key={partner.id} 
-                      onClick={() => window.location.href = `/admin/kyc/${partner.id}`}
-                      className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
-                    >
-                      <td className="px-6 py-4 font-sans font-bold text-[var(--ink)] flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[var(--navy)] text-white flex items-center justify-center font-bold text-xs font-display shrink-0 shadow-2xs">
-                          {partner.name.substring(0, 1)}
-                        </div>
-                        <div>
-                          <div className="group-hover:text-[var(--navy)] transition-colors font-display text-sm">{partner.name}</div>
-                          <div className="text-xs font-normal text-[var(--ink-muted)] font-mono-num">{partner.email} • {partner.phone}</div>
-                        </div>
-                      </td>
+                    <tr>
+                      <th className="px-6 py-3.5">Partner Profile</th>
+                      <th className="px-6 py-3.5">Role & Team Linkage</th>
+                      <th className="px-6 py-3.5">Referred By (Leader)</th>
+                      <th className="px-6 py-3.5">Email Verified</th>
+                      <th className="px-6 py-3.5">PAN & Bank Status</th>
+                      <th className="px-6 py-3.5">Verification</th>
+                      <th className="px-6 py-3.5 text-right">Inspect Full Page</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)] font-mono-num">
+                    {paginatedList.map((partner) => (
+                      <tr 
+                        key={partner.id} 
+                        onClick={() => window.location.href = `/admin/kyc/${partner.id}`}
+                        className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                      >
+                        <td className="px-6 py-4 font-sans font-bold text-[var(--ink)] flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-[var(--navy)] text-white flex items-center justify-center font-bold text-xs font-display shrink-0 shadow-2xs">
+                            {partner.name.substring(0, 1)}
+                          </div>
+                          <div>
+                            <div className="group-hover:text-[var(--navy)] transition-colors font-display text-sm">{partner.name}</div>
+                            <div className="text-xs font-normal text-[var(--ink-muted)] font-mono-num">{partner.email} • {partner.phone}</div>
+                          </div>
+                        </td>
 
-                      <td className="px-6 py-4 font-sans text-xs">
-                        <Badge variant={partner.role === 'team_leader' ? 'amber' : 'gray'}>
-                          {partner.role === 'team_leader' ? 'Team Leader' : 'Individual DSA'}
-                        </Badge>
-                        <div className="text-[11px] font-mono text-[var(--ink-muted)] mt-1">{partner.teamCode}</div>
-                      </td>
+                        <td className="px-6 py-4 font-sans text-xs">
+                          <Badge variant={partner.role === 'team_leader' ? 'amber' : 'gray'}>
+                            {partner.role === 'team_leader' ? 'Team Leader' : 'Individual DSA'}
+                          </Badge>
+                          <div className="text-[11px] font-mono text-[var(--ink-muted)] mt-1">{partner.teamCode}</div>
+                        </td>
 
-                      <td className="px-6 py-4 font-sans text-xs" onClick={(e) => e.stopPropagation()}>
-                        {partner.role === 'team_leader' ? (
-                          <span className="text-amber-600 font-semibold flex items-center gap-1">
-                            <Crown size={14} weight="fill" /> Head Team Leader
-                          </span>
-                        ) : partner.referredByLeaderName ? (
-                          <Link href={`/admin/kyc/${partner.referredByLeaderId || 'demo'}`}>
-                            <span className="text-[var(--navy)] font-semibold hover:underline flex items-center gap-1">
-                              <User size={14} /> {partner.referredByLeaderName}
+                        <td className="px-6 py-4 font-sans text-xs" onClick={(e) => e.stopPropagation()}>
+                          {partner.role === 'team_leader' ? (
+                            <span className="text-amber-600 font-semibold flex items-center gap-1">
+                              <Crown size={14} weight="fill" /> Head Team Leader
                             </span>
-                          </Link>
-                        ) : (
-                          <span className="text-[var(--ink-subtle)] italic">Direct Platform Signup</span>
-                        )}
-                      </td>
+                          ) : partner.referredByLeaderName ? (
+                            <Link href={`/admin/kyc/${partner.referredByLeaderId || 'demo'}`}>
+                              <span className="text-[var(--navy)] font-semibold hover:underline flex items-center gap-1">
+                                <User size={14} /> {partner.referredByLeaderName}
+                              </span>
+                            </Link>
+                          ) : (
+                            <span className="text-[var(--ink-subtle)] italic">Direct Platform Signup</span>
+                          )}
+                        </td>
+
+                        <td className="px-6 py-4 font-sans text-xs">
+                          <Badge variant={partner.isEmailVerified !== false ? 'green' : 'red'}>
+                            {partner.isEmailVerified !== false ? 'VERIFIED ✓' : 'UNVERIFIED ✖'}
+                          </Badge>
+                        </td>
 
                       <td className="px-6 py-4 font-mono text-xs">
                         <div className="font-bold text-[var(--navy)]">{partner.pan || 'PAN-PENDING'}</div>

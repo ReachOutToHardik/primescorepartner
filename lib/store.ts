@@ -53,6 +53,7 @@ export interface Partner {
   role: PartnerRole;
   teamCode: string;
   joinedAt: string;
+  isEmailVerified?: boolean;
   profilePhoto?: string;
   referredByLeaderName?: string;
   referredByLeaderId?: string;
