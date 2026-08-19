@@ -412,6 +412,7 @@ export default function RegisterPage() {
       }
 
       // 5. Insert profile row (id = auth user id)
+      const registrationTime = new Date().toISOString();
       const { data: createdProfile, error: profileError } = await supabase
         .from('profiles')
         .insert([
@@ -430,8 +431,9 @@ export default function RegisterPage() {
             referred_by_leader_id: teamLeaderCode || null,
             avatar_url: avatarUrl || null,
             is_email_verified: true,
-            prime_points: 100,
-            lifetime_points_earned: 100,
+            prime_points: 0,
+            lifetime_points_earned: 0,
+            kyc_submitted_at: registrationTime,
           },
         ])
         .select('id')
@@ -444,21 +446,20 @@ export default function RegisterPage() {
         return;
       }
 
-      // Record 100 Pts Welcome Signup Bonus in point_transactions table
+      // Record Under Review initial notification in notifications table
       if (createdProfile?.id) {
         try {
-          await supabase.from('point_transactions').insert([
+          await supabase.from('notifications').insert([
             {
               partner_id: createdProfile.id,
-              transaction_type: 'signup_bonus',
-              points_change: 100,
-              balance_after: 100,
-              title: '🎁 Welcome Partner Registration Bonus',
-              reference_id: 'BONUS-100',
+              title: 'Application Under Review',
+              message: 'Your partner application is under verification. We\'ll send you an SMS when you are verified (takes 24 to 48 hours). After verification, you will receive your 100 PrimePoints sign-up bonus.',
+              type: 'info',
+              is_read: false,
             },
           ]);
-        } catch (txErr) {
-          console.error('Point transaction insert error:', txErr);
+        } catch (notifErr) {
+          console.warn('Initial notification insert warning:', notifErr);
         }
       }
 

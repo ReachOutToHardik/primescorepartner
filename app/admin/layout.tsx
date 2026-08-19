@@ -14,6 +14,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   React.useEffect(() => {
     setMounted(true);
+
+    // Enforce sessionStorage-only admin sessions.
+    // If the admin session key is NOT found in sessionStorage, force logout.
+    // This means closing the browser tab/window will require re-login.
+    const sessionKey = 'primescore-admin-store-v7';
+    const hasSession = typeof window !== 'undefined'
+      && window.sessionStorage.getItem(sessionKey) !== null;
+
+    if (!hasSession) {
+      // Clear any stale localStorage admin session and force logout state
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('primescore-admin-store-v7');
+        window.localStorage.removeItem('primescore-admin-store-v6');
+      }
+      useAdminStore.setState({ isAuthenticated: false });
+    }
   }, []);
 
   if (!mounted) {
@@ -49,10 +65,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button
               onClick={() => {
                 adminLogout();
-                if (typeof window !== 'undefined') {
-                  window.localStorage.removeItem('primescore-admin-store-v6');
-                  window.sessionStorage.clear();
-                }
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors cursor-pointer"
               title="Sign out of Admin HQ"

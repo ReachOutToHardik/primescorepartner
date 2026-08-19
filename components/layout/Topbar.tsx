@@ -134,14 +134,25 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: n.type,
       }))
-    : [
+    : partner?.status === 'kyc_approved'
+    ? [
         {
-          id: 'welcome-bonus',
-          title: 'Welcome to Primescore Partner!',
-          desc: 'You received 100 PrimePoints as your sign-up bonus! Start referring clients to earn more rewards.',
-          points: '+100 pts',
+          id: 'welcome-approved',
+          title: 'Welcome to Primescore Partner! 🎉',
+          desc: 'You\'re all set. Start referring clients to earn PrimePoints and redeem rewards.',
+          points: undefined,
           time: 'Just now',
           type: 'success',
+        },
+      ]
+    : [
+        {
+          id: 'under-review',
+          title: 'Application Under Review',
+          desc: 'Your partner account is being verified. You\'ll receive an SMS when approved (24–48 hrs). Your 100 PrimePoints bonus will be credited after verification.',
+          points: undefined,
+          time: 'Just now',
+          type: 'info',
         },
       ];
 

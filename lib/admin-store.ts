@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Partner, Referral, ReferralStatus, PartnerStatus } from './store';
 import { GIFT_CARDS, SERVICE_OPTIONS } from './mock-data';
 
@@ -163,6 +163,7 @@ interface AdminStore {
   toggleStaffStatus: (id: string) => void;
   createBroadcast: (b: Omit<BroadcastAnnouncement, 'id' | 'publishedAt'>) => void;
   toggleBroadcast: (id: string) => void;
+  issueAdminPoints: (partnerId: string, pointsAmount: number, reason: string) => Promise<void>;
 }
 
 export const useAdminStore = create<AdminStore>()(
@@ -188,15 +189,62 @@ export const useAdminStore = create<AdminStore>()(
         return false;
       },
 
-      adminLogout: () => set({ isAuthenticated: false }),
+      adminLogout: () => {
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('primescore-admin-store-v7');
+          window.sessionStorage.removeItem('primescore-admin-store-v6');
+          window.localStorage.removeItem('primescore-admin-store-v7');
+          window.localStorage.removeItem('primescore-admin-store-v6');
+        }
+        set({ isAuthenticated: false });
+      },
 
       approveKyc: async (partnerId) => {
         try {
           const { supabase } = await import('./supabase');
+          
+          // 1. Update status to kyc_approved & credit 100 Pts sign-up bonus
           await supabase
             .from('profiles')
-            .update({ status: 'kyc_approved', updated_at: new Date().toISOString() })
+            .update({
+              status: 'kyc_approved',
+              prime_points: 100,
+              lifetime_points_earned: 100,
+              updated_at: new Date().toISOString(),
+            })
             .eq('id', partnerId);
+
+          // 2. Log 100 Pts Welcome Sign-up Bonus transaction
+          try {
+            await supabase.from('point_transactions').insert([
+              {
+                partner_id: partnerId,
+                transaction_type: 'signup_bonus',
+                points_change: 100,
+                balance_after: 100,
+                title: '🎁 Welcome Sign-up Bonus (KYC Approved)',
+                reference_id: 'BONUS-100',
+              },
+            ]);
+          } catch (txErr) {
+            console.warn('Sign-up bonus transaction log warning:', txErr);
+          }
+
+          // 3. Send approval + 100 Pts notification to partner
+          try {
+            await supabase.from('notifications').insert([
+              {
+                partner_id: partnerId,
+                title: '🎉 KYC Verified & +100 Pts Sign-Up Bonus Credited!',
+                message: 'Your partner account is verified! You received your +100 PrimePoints sign-up bonus. Start submitting client referrals now!',
+                type: 'success',
+                points_badge: '+100 pts',
+                is_read: false,
+              },
+            ]);
+          } catch (notifErr) {
+            console.warn('Approval notification insert warning:', notifErr);
+          }
         } catch (err) {
           console.error('KYC approve error:', err);
         }
@@ -432,6 +480,71 @@ export const useAdminStore = create<AdminStore>()(
           };
         }),
 
+      issueAdminPoints: async (partnerId: string, pointsAmount: number, reason: string) => {
+        try {
+          const { supabase } = await import('./supabase');
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('prime_points, lifetime_points_earned')
+            .eq('id', partnerId)
+            .single();
+
+          const currentPts = profile?.prime_points || 0;
+          const currentLifetime = profile?.lifetime_points_earned || 0;
+          const newPts = Math.max(0, currentPts + pointsAmount);
+          const newLifetime = pointsAmount > 0 ? currentLifetime + pointsAmount : currentLifetime;
+
+          await supabase
+            .from('profiles')
+            .update({
+              prime_points: newPts,
+              lifetime_points_earned: newLifetime,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', partnerId);
+
+          const refId = `ADM-${Date.now()}`;
+          await supabase.from('point_transactions').insert([
+            {
+              partner_id: partnerId,
+              transaction_type: pointsAmount >= 0 ? 'admin_adjustment' : 'admin_deduction',
+              points_change: pointsAmount,
+              balance_after: newPts,
+              title: pointsAmount >= 0 ? `🛡️ Admin Bonus Credit: ${reason}` : `⚠️ Admin Point Adjustment: ${reason}`,
+              reference_id: refId,
+            },
+          ]);
+
+          await supabase.from('notifications').insert([
+            {
+              partner_id: partnerId,
+              title: pointsAmount >= 0 ? `🎁 +${pointsAmount} PrimePoints Credited by Admin` : `⚠️ ${pointsAmount} PrimePoints Adjusted by Admin`,
+              message: reason || 'Manual point adjustment by admin operations.',
+              type: pointsAmount >= 0 ? 'success' : 'warning',
+              points_badge: `${pointsAmount >= 0 ? '+' : ''}${pointsAmount} pts`,
+              is_read: false,
+            },
+          ]);
+        } catch (err) {
+          console.error('Issue admin points error:', err);
+        }
+
+        const state = get();
+        const target = state.partners.find((p) => p.id === partnerId);
+        const newLog: SystemAuditLog = {
+          id: `LOG-${Date.now()}`,
+          actorName: 'Super Admin',
+          actorRole: 'super_admin',
+          actionType: 'payout_settlement',
+          targetEntity: target?.name || partnerId,
+          details: `Admin issued point adjustment of ${pointsAmount > 0 ? '+' : ''}${pointsAmount} Pts. Reason: ${reason}`,
+          timestamp: new Date().toISOString(),
+        };
+        set((state) => ({
+          auditLogs: [newLog, ...state.auditLogs],
+        }));
+      },
+
       toggleBroadcast: (id) =>
         set((state) => ({
           broadcasts: state.broadcasts.map((b) =>
@@ -439,6 +552,11 @@ export const useAdminStore = create<AdminStore>()(
           ),
         })),
     }),
-    { name: 'primescore-admin-store-v6' }
+    {
+      name: 'primescore-admin-store-v7',
+      storage: typeof window !== 'undefined'
+        ? createJSONStorage(() => window.sessionStorage)
+        : undefined,
+    }
   )
 );

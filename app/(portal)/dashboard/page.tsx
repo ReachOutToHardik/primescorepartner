@@ -55,6 +55,8 @@ ChartJS.register(
   Filler
 );
 
+import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
+
 export default function PartnerDashboard() {
   const { partner, referrals, redemptions, totalPoints, tier } = usePartnerStore();
   const currentTier = tier || 'Gold';
@@ -68,118 +70,113 @@ export default function PartnerDashboard() {
   const [timeRange, setTimeRange] = useState<'15d' | '30d' | '6m' | '1y'>('6m');
   const [chartMetricMode, setChartMetricMode] = useState<'both' | 'referrals' | 'points'>('both');
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [kycModalOpen, setKycModalOpen] = useState(false);
 
   // Interactive trend datasets dynamically aggregated from EVERY real partner referral log
   const trendData = useMemo(() => {
     const now = new Date();
 
-    if (timeRange === '6m') {
-      const monthsMap = new Map<string, { label: string; referrals: number; points: number }>();
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthKey = d.toLocaleString('en-US', { month: 'short' });
-        monthsMap.set(monthKey, { label: monthKey, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
+    if (timeRange === '15d') {
+      const days: { key: string; label: string; referrals: number; points: number }[] = [];
+      for (let i = 14; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+        days.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
       }
 
       referrals.forEach((r) => {
-        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
-        const mKey = refDate.toLocaleString('en-US', { month: 'short' });
-        if (monthsMap.has(mKey)) {
-          const existing = monthsMap.get(mKey)!;
-          existing.referrals += 1;
-        }
-      });
-
-      return Array.from(monthsMap.values());
-    }
-
-    if (timeRange === '30d') {
-      const weeks = [
-        { label: 'Week 1', referrals: 0, points: 0 },
-        { label: 'Week 2', referrals: 0, points: 0 },
-        { label: 'Week 3', referrals: 0, points: 0 },
-        { label: 'Week 4', referrals: 0, points: totalPoints || 0 },
-      ];
-
-      referrals.forEach((r) => {
-        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
-        const diffDays = Math.floor((now.getTime() - refDate.getTime()) / (1000 * 3600 * 24));
-        if (diffDays <= 30) {
-          const weekIdx = Math.min(3, Math.floor(diffDays / 7));
-          const target = weeks[3 - weekIdx];
-          if (target) {
-            target.referrals += 1;
-          }
-        }
-      });
-
-      return weeks;
-    }
-
-    if (timeRange === '15d') {
-      const days = [
-        { label: '15d ago', referrals: 0, points: 0 },
-        { label: '10d ago', referrals: 0, points: 0 },
-        { label: '5d ago', referrals: 0, points: 0 },
-        { label: 'Today', referrals: 0, points: totalPoints || 0 },
-      ];
-
-      referrals.forEach((r) => {
-        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
-        const diffDays = Math.floor((now.getTime() - refDate.getTime()) / (1000 * 3600 * 24));
-        if (diffDays <= 15) {
-          const idx = diffDays === 0 ? 3 : diffDays <= 5 ? 2 : diffDays <= 10 ? 1 : 0;
-          const target = days[idx];
-          if (target) {
-            target.referrals += 1;
-          }
-        }
+        if (!r.createdAt) return;
+        const refDate = new Date(r.createdAt);
+        const refKey = refDate.toISOString().split('T')[0];
+        const match = days.find((day) => day.key === refKey);
+        if (match) match.referrals += 1;
       });
 
       return days;
     }
 
-    const quarters = [
-      { label: 'Q1', referrals: 0, points: 0 },
-      { label: 'Q2', referrals: 0, points: 0 },
-      { label: 'Q3', referrals: 0, points: 0 },
-      { label: 'Q4', referrals: 0, points: totalPoints || 0 },
-    ];
+    if (timeRange === '30d') {
+      const days: { key: string; label: string; referrals: number; points: number }[] = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+        days.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
+      }
+
+      referrals.forEach((r) => {
+        if (!r.createdAt) return;
+        const refDate = new Date(r.createdAt);
+        const refKey = refDate.toISOString().split('T')[0];
+        const match = days.find((day) => day.key === refKey);
+        if (match) match.referrals += 1;
+      });
+
+      return days;
+    }
+
+    if (timeRange === '6m') {
+      const months: { key: string; label: string; referrals: number; points: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        const label = d.toLocaleString('en-US', { month: 'short' });
+        months.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
+      }
+
+      referrals.forEach((r) => {
+        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
+        const refKey = `${refDate.getFullYear()}-${refDate.getMonth()}`;
+        const match = months.find((m) => m.key === refKey);
+        if (match) match.referrals += 1;
+      });
+
+      return months;
+    }
+
+    // 1 Year (All 12 months up to current month)
+    const months12: { key: string; label: string; referrals: number; points: number }[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const label = d.toLocaleString('en-US', { month: 'short' });
+      months12.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
+    }
 
     referrals.forEach((r) => {
       const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
-      const qIdx = Math.floor(refDate.getMonth() / 3);
-      if (quarters[qIdx]) {
-        quarters[qIdx].referrals += 1;
-      }
+      const refKey = `${refDate.getFullYear()}-${refDate.getMonth()}`;
+      const match = months12.find((m) => m.key === refKey);
+      if (match) match.referrals += 1;
     });
 
-    return quarters;
+    return months12;
   }, [timeRange, referrals, totalPoints]);
 
-  // Chart.js Dual Dataset Configuration
+  // Chart.js Dataset Configuration
   const chartJsData = useMemo(() => {
     const datasets: any[] = [];
 
     if (chartMetricMode === 'points' || chartMetricMode === 'both') {
       datasets.push({
         fill: true,
-        label: 'PrimePoints Earned (Pts)',
+        label: 'PrimePoints Earned',
         data: trendData.map((d) => d.points),
         borderColor: '#1B2A72',
         backgroundColor: (context: any) => {
           const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-          gradient.addColorStop(0, 'rgba(27, 42, 114, 0.25)');
+          const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+          gradient.addColorStop(0, 'rgba(27, 42, 114, 0.12)');
           gradient.addColorStop(1, 'rgba(27, 42, 114, 0.0)');
           return gradient;
         },
-        borderWidth: 2.5,
-        tension: 0.4,
+        borderWidth: 2,
+        tension: 0.3,
         pointBackgroundColor: '#1B2A72',
         pointBorderColor: '#FFFFFF',
         pointBorderWidth: 2,
-        pointRadius: 4,
+        pointRadius: trendData.length > 20 ? 2 : 4,
         pointHoverRadius: 6,
         yAxisID: 'y',
       });
@@ -187,23 +184,23 @@ export default function PartnerDashboard() {
 
     if (chartMetricMode === 'referrals' || chartMetricMode === 'both') {
       datasets.push({
-        fill: true,
-        label: 'Referral Leads Submitted',
+        fill: chartMetricMode === 'referrals',
+        label: 'Referrals Submitted',
         data: trendData.map((d) => d.referrals),
         borderColor: '#E63329',
         backgroundColor: (context: any) => {
           const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-          gradient.addColorStop(0, 'rgba(230, 51, 41, 0.2)');
+          const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+          gradient.addColorStop(0, 'rgba(230, 51, 41, 0.12)');
           gradient.addColorStop(1, 'rgba(230, 51, 41, 0.0)');
           return gradient;
         },
-        borderWidth: 2.5,
-        tension: 0.4,
+        borderWidth: 2,
+        tension: 0.3,
         pointBackgroundColor: '#E63329',
         pointBorderColor: '#FFFFFF',
         pointBorderWidth: 2,
-        pointRadius: 4,
+        pointRadius: trendData.length > 20 ? 2 : 4,
         pointHoverRadius: 6,
         yAxisID: chartMetricMode === 'both' ? 'y1' : 'y',
       });
@@ -217,6 +214,42 @@ export default function PartnerDashboard() {
 
   // Chart.js Options
   const chartJsOptions: any = useMemo(() => {
+    const scalesConfig: any = {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: 'Inter', size: 10, weight: '500' }, color: '#64748B', maxRotation: 45 },
+      },
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        beginAtZero: true,
+        ticks: {
+          font: { family: 'Inter', size: 10 },
+          color: '#64748B',
+          precision: 0,
+          stepSize: chartMetricMode === 'referrals' ? 1 : undefined,
+        },
+        grid: { color: 'rgba(241, 245, 249, 1)' },
+      },
+    };
+
+    if (chartMetricMode === 'both') {
+      scalesConfig.y1 = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        ticks: {
+          font: { family: 'Inter', size: 10 },
+          color: '#94A3B8',
+          precision: 0,
+          stepSize: 1,
+        },
+        grid: { display: false },
+      };
+    }
+
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -228,48 +261,33 @@ export default function PartnerDashboard() {
         legend: {
           display: true,
           position: 'top',
+          align: 'end',
           labels: {
             font: { family: 'Inter', size: 11, weight: '600' },
             usePointStyle: true,
             boxWidth: 8,
+            padding: 16,
           },
         },
         tooltip: {
           backgroundColor: '#0F1A4E',
-          padding: 12,
-          cornerRadius: 8,
+          padding: 10,
+          cornerRadius: 6,
+          titleFont: { family: 'Inter', size: 12, weight: '700' },
+          bodyFont: { family: 'Inter', size: 11 },
+          callbacks: {
+            label: function (context: any) {
+              const label = context.dataset.label || '';
+              const value = context.parsed.y;
+              if (label.includes('PrimePoints')) {
+                return ` ${label}: ${value} Pts`;
+              }
+              return ` ${label}: ${value} Case${value !== 1 ? 's' : ''}`;
+            },
+          },
         },
       },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { font: { family: 'Inter', size: 11 } },
-        },
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          beginAtZero: true,
-          min: 0,
-          ticks: {
-            font: { family: 'Inter', size: 11 },
-            precision: 0,
-          },
-          grid: { color: 'rgba(226, 232, 240, 0.6)' },
-        },
-        y1: chartMetricMode === 'both' ? {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          beginAtZero: true,
-          min: 0,
-          ticks: {
-            font: { family: 'Inter', size: 11 },
-            precision: 0,
-          },
-          grid: { drawOnChartArea: false },
-        } : undefined,
-      },
+      scales: scalesConfig,
     };
   }, [chartMetricMode]);
 
@@ -370,13 +388,23 @@ export default function PartnerDashboard() {
         </div>
 
         <div className="relative z-10 shrink-0">
-          <Link
-            href="/refer"
-            className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
-          >
-            <UserPlus size={18} weight="bold" />
-            <span>Submit Referral</span>
-          </Link>
+          {partner?.status === 'kyc_approved' ? (
+            <Link
+              href="/refer"
+              className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
+            >
+              <UserPlus size={18} weight="bold" />
+              <span>Submit Referral</span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => setKycModalOpen(true)}
+              className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+            >
+              <UserPlus size={18} weight="bold" />
+              <span>Submit Referral</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -476,30 +504,85 @@ export default function PartnerDashboard() {
       {/* Middle Section: Chart + PrimePoints Tier Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Referral & Earnings Trend Chart (8 cols) */}
-        <Card variant="elevated" className="lg:col-span-8 p-6 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Card variant="elevated" className="lg:col-span-8 p-6 space-y-5">
+          {/* Header & Controls Bar */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
               <h2 className="font-display text-lg font-bold text-slate-900">
-                Referral & Earnings Trend
+                Referral & Performance Analytics
               </h2>
               <p className="text-xs text-slate-500 font-medium">
-                Compare client referral volumes and accumulated reward points over time.
+                Track referral volume and earned reward points over selected period.
               </p>
             </div>
 
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as any)}
-              className="text-xs font-semibold px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer shadow-2xs"
-            >
-              <option value="15d">15 Days</option>
-              <option value="30d">30 Days</option>
-              <option value="6m">6 Months</option>
-              <option value="1y">1 Year</option>
-            </select>
+            {/* Date Range Pill Buttons */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+              {(
+                [
+                  { id: '15d', label: '15D' },
+                  { id: '30d', label: '30D' },
+                  { id: '6m', label: '6 Months' },
+                  { id: '1y', label: '1 Year' },
+                ] as const
+              ).map((range) => (
+                <button
+                  key={range.id}
+                  type="button"
+                  onClick={() => setTimeRange(range.id)}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    timeRange === range.id
+                      ? 'bg-[#1B2A72] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="h-64 w-full pt-4">
+          {/* Metric View Mode Toggles & Summary Metrics Strip */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            {/* View Mode Toggle Pills */}
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-slate-400 font-semibold text-[11px] uppercase mr-1">View:</span>
+              {(
+                [
+                  { id: 'both', label: 'Overview' },
+                  { id: 'referrals', label: 'Referrals' },
+                  { id: 'points', label: 'Points' },
+                ] as const
+              ).map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  onClick={() => setChartMetricMode(mode.id)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors ${
+                    chartMetricMode === mode.id
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Concise Period Stat Callout Pill */}
+            <div className="flex items-center gap-3 text-xs font-mono font-semibold bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
+              <span className="text-slate-600">
+                Total Referrals: <strong className="text-slate-900 font-bold">{totalCount}</strong>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span className="text-slate-600">
+                Points: <strong className="text-[#1B2A72] font-bold">+{totalPoints}</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Chart Canvas */}
+          <div className="h-64 w-full pt-2">
             <Line data={chartJsData} options={chartJsOptions} />
           </div>
         </Card>
@@ -704,6 +787,13 @@ export default function PartnerDashboard() {
           </div>
         </div>
       </Modal>
+
+      {/* KYC Under Review Alert Modal */}
+      <KycUnderReviewModal
+        isOpen={kycModalOpen}
+        onClose={() => setKycModalOpen(false)}
+        joinedAt={partner?.joinedAt}
+      />
     </div>
   );
 }

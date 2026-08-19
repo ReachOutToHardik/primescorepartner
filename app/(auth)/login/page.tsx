@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -74,18 +75,15 @@ export default function LoginPage() {
         return;
       }
 
-      // Check partner status before allowing access
-      if (profile.status === 'kyc_submitted' || profile.status === 'pending_kyc') {
-        setError('Your partner application has been submitted and is currently being verified by Primescore. Verification takes 2–4 business hours.');
-        setIsLoading(false);
-        return;
-      }
-
+      // Check partner status — kyc_rejected cannot enter
       if (profile.status === 'kyc_rejected') {
         setError('Your partner application was declined. Please contact info@primescore.in for assistance.');
         setIsLoading(false);
         return;
       }
+
+      // kyc_submitted and kyc_approved partners can both log in.
+      // kyc_submitted partners will see gated/blurred UI inside the portal.
 
       // Approved partner — attempt sign in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -112,7 +110,16 @@ export default function LoginPage() {
         referredByLeaderId: profile.referred_by_leader_id || undefined,
       };
 
-      if (!authError || profile.status === 'kyc_approved') {
+      if (!authError || profile.status === 'kyc_approved' || profile.status === 'kyc_submitted') {
+        // Write Remember Me preference BEFORE Supabase session is stored
+        // so the smart storage adapter knows which storage to use
+        if (typeof window !== 'undefined') {
+          if (rememberMe) {
+            window.localStorage.setItem('primescore-remember-me', 'true');
+          } else {
+            window.localStorage.removeItem('primescore-remember-me');
+          }
+        }
         usePartnerStore.setState({
           partner: loggedInPartner,
           isAuthenticated: true,
@@ -357,8 +364,14 @@ export default function LoginPage() {
 
             <div className="flex items-center justify-between text-xs">
               <label className="flex items-center gap-2 cursor-pointer text-slate-200 lg:text-[var(--ink-2)]">
-                <input type="checkbox" className="rounded-xs border-slate-400 text-[#1B2A72]" defaultChecked />
-                <span>Remember me for 30 days</span>
+                <input
+                  type="checkbox"
+                  id="remember-me"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded-xs border-slate-400 text-[#1B2A72] cursor-pointer"
+                />
+                <span>Remember me for 7 days</span>
               </label>
             </div>
 

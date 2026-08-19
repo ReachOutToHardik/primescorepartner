@@ -6,6 +6,8 @@ import { SERVICE_OPTIONS } from '@/lib/mock-data';
 import {
   UserPlus,
   CheckCircle,
+  Clock,
+  ShieldCheck,
   Copy,
   ShareNetwork,
   User,
@@ -21,6 +23,8 @@ import { Card } from '@/components/ui/Card';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+
+import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
 
 export default function ReferPage() {
   const { partner, setReferrals, referrals } = usePartnerStore();
@@ -40,12 +44,17 @@ export default function ReferPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [kycModalOpen, setKycModalOpen] = useState(false);
 
   // Generated Referral Link (use team code if available, else partner id)
   const referralCode = partner?.teamCode || partner?.id?.toUpperCase() || 'PARTNER';
   const referralUrl = `https://app.primescore.in/register?ref=${referralCode}`;
 
   const handleCopyLink = () => {
+    if (partner?.status !== 'kyc_approved') {
+      setKycModalOpen(true);
+      return;
+    }
     navigator.clipboard.writeText(referralUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
@@ -166,6 +175,10 @@ export default function ReferPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (partner?.status !== 'kyc_approved') {
+      setKycModalOpen(true);
+      return;
+    }
     const errs: Record<string, string> = {};
 
     if (!customerName.trim()) errs.name = 'Customer name is required';
@@ -249,6 +262,119 @@ export default function ReferPage() {
     }
   };
 
+  const isVerified = partner?.status === 'kyc_approved';
+
+  const formattedSubmitDate = partner?.kycSubmittedAt
+    ? new Date(partner.kycSubmittedAt).toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      })
+    : partner?.joinedAt
+    ? new Date(partner.joinedAt).toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      })
+    : null;
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // UNVERIFIED PARTNER STATE — Clean White Responsive Page (Desktop & Mobile)
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (!isVerified) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6 animate-fade-up py-2">
+        {/* Top Hero Banner */}
+        <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/10 border border-amber-400/30 text-amber-300 rounded-full text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>Referral Portal Locked</span>
+            </div>
+            <h1 className="font-display font-bold text-2xl sm:text-3xl text-white tracking-tight">
+              Partner Application Under Verification
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+              Your partner account is being reviewed. The referral submission features will unlock automatically once your account is verified.
+            </p>
+          </div>
+
+          <div className="shrink-0 self-start md:self-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/5 border border-white/15 flex flex-col items-center justify-center text-center">
+              <Clock size={28} className="text-amber-400 mb-1" weight="bold" />
+              <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider">Reviewing</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Responsive Details Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Key Verification Details */}
+          <Card variant="elevated" className="md:col-span-7 p-6 space-y-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <h3 className="font-display font-bold text-base text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
+              <span>Verification Status & SLA</span>
+              <span className="text-xs text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md font-semibold border border-amber-200">
+                24 – 48 Hours SLA
+              </span>
+            </h3>
+
+            <div className="divide-y divide-slate-100 text-xs">
+              {formattedSubmitDate && (
+                <div className="py-3 flex items-center justify-between gap-2">
+                  <span className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider">Submitted On</span>
+                  <span className="font-mono font-bold text-slate-900 text-right">{formattedSubmitDate}</span>
+                </div>
+              )}
+              <div className="py-3 flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider">Notification Method</span>
+                <span className="font-semibold text-slate-900 text-right">SMS to registered mobile</span>
+              </div>
+              <div className="py-3 flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider">Sign-Up Bonus</span>
+                <span className="font-bold text-emerald-600 text-right">100 PrimePoints (on approval)</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Action CTAs & Support */}
+          <Card variant="elevated" className="md:col-span-5 p-6 space-y-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div className="space-y-2">
+              <h3 className="font-display font-bold text-base text-slate-900">
+                What happens next?
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                Our verification team is cross-checking your details. Once verified, you will receive an SMS and your 100 PrimePoints welcome bonus will be credited.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <a
+                href="/kyc"
+                className="w-full py-3 px-4 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs text-center"
+              >
+                <ShieldCheck size={16} weight="bold" />
+                <span>Check Application Status</span>
+              </a>
+              <a
+                href="mailto:info@primescore.in"
+                className="w-full py-3 px-4 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 text-center"
+              >
+                <Envelope size={16} />
+                <span>Contact Support</span>
+              </a>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-up">
       {/* Hero Header Banner */}
@@ -257,6 +383,7 @@ export default function ReferPage() {
           <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
             <UserPlus size={16} className="text-[#F5C518]" weight="bold" />
             <span>Direct Client Referral</span>
+
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Submit New Client Referral
@@ -534,6 +661,14 @@ export default function ReferPage() {
           </div>
         </div>
       </div>
+
+
+      {/* KYC Under Review Alert Modal — keep for programmatic open from buttons */}
+      <KycUnderReviewModal
+        isOpen={kycModalOpen}
+        onClose={() => setKycModalOpen(false)}
+        joinedAt={partner?.kycSubmittedAt || partner?.joinedAt}
+      />
     </div>
   );
 }

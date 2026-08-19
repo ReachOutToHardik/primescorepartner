@@ -14,34 +14,58 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [isHydrated, setIsHydrated] = useState(false);
+  const [sessionVerified, setSessionVerified] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const partner = usePartnerStore((state) => state.partner);
+  const logout = usePartnerStore((state) => state.logout);
   const isAuthenticated = usePartnerStore((state) => state.isAuthenticated);
 
+  // Step 1: Hydrate
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Redirect unauthenticated users to login
+  // Step 2: After hydration, verify real Supabase session
   useEffect(() => {
-    if (isHydrated && !isAuthenticated && !partner) {
-      router.replace('/login');
-    }
-  }, [isHydrated, isAuthenticated, partner, router]);
+    if (!isHydrated) return;
+
+    const verifySession = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+          // No valid Supabase session — clear Zustand state and redirect
+          await logout();
+          router.replace('/login');
+          return;
+        }
+
+        setSessionVerified(true);
+      } catch (err) {
+        console.error('Session verification error:', err);
+        await logout();
+        router.replace('/login');
+      }
+    };
+
+    verifySession();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated]);
 
   // Close mobile sidebar on route change
   useEffect(() => {
     setMobileSidebarOpen(false);
   }, [pathname]);
 
-  if (!isHydrated) {
-    return <LoadingSpinner message="Loading Primescore Portal..." />;
+  // Show loading until both hydrated and session confirmed
+  if (!isHydrated || !sessionVerified) {
+    return <LoadingSpinner message="Verifying your session..." />;
   }
 
-  // Show loading while redirecting unauthenticated users
-  if (!isAuthenticated && !partner) {
+  // Extra safety: if zustand says not auth'd after session check, redirect
+  if (!isAuthenticated) {
     return <LoadingSpinner message="Redirecting to login..." />;
   }
 

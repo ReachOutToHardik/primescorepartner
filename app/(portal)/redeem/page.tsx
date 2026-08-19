@@ -19,11 +19,14 @@ import {
 import { Card } from '@/components/ui/Card';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 
+import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
+
 export default function RedeemPage() {
   const { partner, totalPoints, redemptions, redeemGiftCard } = usePartnerStore();
 
   const [activeTab, setActiveTab] = useState<'catalog' | 'history'>('catalog');
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [kycModalOpen, setKycModalOpen] = useState(false);
 
   // Selected Card for Redemption Modal
   const [selectedBrand, setSelectedBrand] = useState<typeof GIFT_CARDS[0] | null>(null);
@@ -38,6 +41,10 @@ export default function RedeemPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleOpenRedeemModal = (card: typeof GIFT_CARDS[0], denom: number) => {
+    if (partner?.status !== 'kyc_approved') {
+      setKycModalOpen(true);
+      return;
+    }
     const pointsRequired = denom * 4;
     if (totalPoints < pointsRequired) {
       alert(`Insufficient PrimePoints! You need ${pointsRequired} points for ₹${denom} voucher.`);
@@ -439,6 +446,13 @@ export default function RedeemPage() {
           </div>
         </div>
       )}
+
+      {/* KYC Under Review Alert Modal */}
+      <KycUnderReviewModal
+        isOpen={kycModalOpen}
+        onClose={() => setKycModalOpen(false)}
+        joinedAt={partner?.joinedAt}
+      />
     </div>
   );
 }

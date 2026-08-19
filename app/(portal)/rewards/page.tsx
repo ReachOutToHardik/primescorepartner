@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePartnerStore } from '@/lib/store';
 import {
@@ -19,9 +19,46 @@ import {
   ShieldCheck
 } from '@phosphor-icons/react';
 import { Card } from '@/components/ui/Card';
+import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
 
 export default function RewardsPage() {
-  const { totalPoints, referrals, redemptions } = usePartnerStore();
+  const { partner, totalPoints, referrals, redemptions } = usePartnerStore();
+  const [kycModalOpen, setKycModalOpen] = useState(false);
+  const [txFilter, setTxFilter] = useState<'all' | 'signup_bonus' | 'referral_earned' | 'voucher_redeemed'>('all');
+  const [pointTransactions, setPointTransactions] = useState<{
+    id: string;
+    transaction_type: string;
+    points_change: number;
+    balance_after: number;
+    title: string;
+    reference_id: string | null;
+    created_at: string;
+  }[]>([]);
+
+  const filteredPointTransactions = useMemo(() => {
+    if (txFilter === 'all') return pointTransactions;
+    return pointTransactions.filter((tx) => tx.transaction_type === txFilter);
+  }, [pointTransactions, txFilter]);
+
+  // Fetch real point transactions from Supabase
+  useEffect(() => {
+    if (!partner?.id) return;
+    const fetchTransactions = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data } = await supabase
+          .from('point_transactions')
+          .select('*')
+          .eq('partner_id', partner.id)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (data) setPointTransactions(data);
+      } catch (err) {
+        console.error('Point transactions fetch error:', err);
+      }
+    };
+    fetchTransactions();
+  }, [partner?.id]);
 
   // Dynamically compute effective active level based on totalPoints
   const activeLevel: 'Silver' | 'Gold' | 'Platinum' = useMemo(() => {
@@ -89,13 +126,23 @@ export default function RewardsPage() {
         </div>
 
         <div className="relative z-10 shrink-0">
-          <Link
-            href="/redeem"
-            className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
-          >
-            <Gift size={16} weight="fill" />
-            <span>Redeem Points</span>
-          </Link>
+          {partner?.status === 'kyc_approved' ? (
+            <Link
+              href="/redeem"
+              className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
+            >
+              <Gift size={16} weight="fill" />
+              <span>Redeem Points</span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => setKycModalOpen(true)}
+              className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+            >
+              <Gift size={16} weight="fill" />
+              <span>Redeem Points</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -323,16 +370,39 @@ export default function RewardsPage() {
         </div>
       </Card>
 
-      {/* 3. POINTS ACTIVITY HISTORY LEDGER TABLE */}
-      <Card variant="elevated" className="p-6 space-y-4 rounded-2xl shadow-xs">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      {/* 3. POINTS ACTIVITY HISTORY LEDGER TABLE & TRANSACTION CATEGORY TABS */}
+      <Card variant="elevated" className="p-6 space-y-5 rounded-2xl shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <h3 className="font-display font-bold text-base text-slate-900">
-              Points Activity History
+              Points Activity Ledger & Audit History
             </h3>
             <p className="text-xs text-slate-500 font-medium">
-              Recent point accruals from referrals and gift voucher claims.
+              Detailed breakdown of sign-up bonuses, referral rewards, admin credits, and voucher claims.
             </p>
+          </div>
+
+          {/* Transaction Category Filter Tabs */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0 text-xs font-semibold">
+            {[
+              { id: 'all', label: 'All Transactions' },
+              { id: 'signup_bonus', label: 'Sign-Up Bonus' },
+              { id: 'referral_earned', label: 'Referrals' },
+              { id: 'voucher_redeemed', label: 'Redemptions' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setTxFilter(tab.id as any)}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  txFilter === tab.id
+                    ? 'bg-[#1B2A72] text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -344,70 +414,118 @@ export default function RewardsPage() {
                 <th className="py-3 px-2">Type</th>
                 <th className="py-3 px-2">Transaction Details</th>
                 <th className="py-3 px-2 text-right">Points</th>
+                <th className="py-3 px-2 text-right">Balance After</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {/* Sign-Up Welcome Bonus Entry */}
-              <tr className="hover:bg-slate-50/60 transition-colors bg-amber-50/30">
-                <td className="py-3 px-2 font-mono-num text-slate-500">
-                  Account Registration
-                </td>
-                <td className="py-3 px-2">
-                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-semibold text-[11px] rounded-sm">
-                    Bonus
-                  </span>
-                </td>
-                <td className="py-3 px-2 font-medium text-slate-900">
-                  Partner Registration Sign-up Welcome Bonus
-                </td>
-                <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
-                  +100 Pts
-                </td>
-              </tr>
-
-              {referrals
-                .filter((r) => r.status === 'completed')
-                .map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
+              {filteredPointTransactions.length > 0 ? (
+                filteredPointTransactions.map((tx) => (
+                  <tr key={tx.id} className={`hover:bg-slate-50/60 transition-colors ${tx.points_change > 0 ? 'bg-emerald-50/20' : 'bg-slate-50/30'}`}>
                     <td className="py-3 px-2 font-mono-num text-slate-500">
-                      {new Date(r.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+                      {new Date(tx.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
                     </td>
                     <td className="py-3 px-2">
-                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[11px] rounded-sm">
-                        Referral
+                      <span className={`px-2 py-0.5 font-semibold text-[11px] rounded-sm ${
+                        tx.transaction_type === 'signup_bonus' ? 'bg-amber-100 text-amber-800' :
+                        tx.transaction_type === 'voucher_redeemed' ? 'bg-slate-100 text-slate-600' :
+                        'bg-emerald-50 text-emerald-700'
+                      }`}>
+                        {tx.transaction_type === 'signup_bonus' ? 'Sign-Up Bonus' :
+                         tx.transaction_type === 'voucher_redeemed' ? 'Redemption' :
+                         tx.transaction_type === 'referral_earned' ? 'Referral' :
+                         tx.transaction_type === 'enrolled_earned' ? 'Enrollment' :
+                         tx.transaction_type === 'team_override' ? 'Team Override' :
+                         tx.transaction_type}
                       </span>
                     </td>
-                    <td className="py-3 px-2 font-medium text-slate-900">
-                      Referral Case Resolved: <span className="font-bold">{r.customerName}</span> ({r.id})
+                    <td className="py-3 px-2 font-medium text-slate-900">{tx.title}</td>
+                    <td className={`py-3 px-2 text-right font-mono-num font-bold ${
+                      tx.points_change > 0 ? 'text-emerald-600' : 'text-slate-500'
+                    }`}>
+                      {tx.points_change > 0 ? '+' : ''}{tx.points_change} Pts
                     </td>
-                    <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
-                      +{r.pointsEarned || 500} Pts
+                    <td className="py-3 px-2 text-right font-mono-num text-slate-500">
+                      {tx.balance_after.toLocaleString()} Pts
                     </td>
                   </tr>
-                ))}
-
-              {redemptions.map((rdm) => (
-                <tr key={rdm.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="py-3 px-2 font-mono-num text-slate-500">
-                    {new Date(rdm.redeemedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                  </td>
-                  <td className="py-3 px-2">
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-semibold text-[11px] rounded-sm">
-                      Redemption
-                    </span>
-                  </td>
-                  <td className="py-3 px-2 font-medium text-slate-900">
-                    Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
-                  </td>
-                  <td className="py-3 px-2 text-right font-mono-num font-bold text-slate-500">
-                    -{rdm.points} Pts
-                  </td>
-                </tr>
-              ))}
+                ))
+              ) : (
+                // Fallback: derive from referrals + redemptions if no DB transactions match filter
+                <>
+                  {(txFilter === 'all' || txFilter === 'signup_bonus') && (
+                    <tr className="hover:bg-slate-50/60 transition-colors bg-amber-50/30">
+                      <td className="py-3 px-2 font-mono-num text-slate-500">
+                        {partner?.joinedAt
+                          ? new Date(partner.joinedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })
+                          : 'Registration'}
+                      </td>
+                      <td className="py-3 px-2">
+                        {partner?.status === 'kyc_approved' ? (
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-semibold text-[11px] rounded-sm">Bonus Credited</span>
+                        ) : (
+                          <span className="px-2 py-0.5 bg-amber-100 text-amber-900 font-semibold text-[11px] rounded-sm">Pending Verification</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 font-medium text-slate-900">
+                        Partner Registration Sign-Up Welcome Bonus{' '}
+                        {partner?.status !== 'kyc_approved' && (
+                          <span className="text-[11px] text-amber-700 font-semibold">(Unlocked upon KYC Approval)</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600" colSpan={2}>
+                        {partner?.status === 'kyc_approved' ? '+100 Pts' : '100 Pts (Locked)'}
+                      </td>
+                    </tr>
+                  )}
+                  {(txFilter === 'all' || txFilter === 'referral_earned') &&
+                    referrals
+                      .filter((r) => r.status === 'completed')
+                      .map((r) => (
+                        <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="py-3 px-2 font-mono-num text-slate-500">
+                            {new Date(r.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+                          </td>
+                          <td className="py-3 px-2">
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[11px] rounded-sm">Referral</span>
+                          </td>
+                          <td className="py-3 px-2 font-medium text-slate-900">
+                            Referral Case Resolved: <span className="font-bold">{r.customerName}</span> ({r.id})
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600" colSpan={2}>
+                            +{r.pointsEarned || 500} Pts
+                          </td>
+                        </tr>
+                      ))}
+                  {(txFilter === 'all' || txFilter === 'voucher_redeemed') &&
+                    redemptions.map((rdm) => (
+                      <tr key={rdm.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3 px-2 font-mono-num text-slate-500">
+                          {new Date(rdm.redeemedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+                        </td>
+                        <td className="py-3 px-2">
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-semibold text-[11px] rounded-sm">Redemption</span>
+                        </td>
+                        <td className="py-3 px-2 font-medium text-slate-900">
+                          Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
+                        </td>
+                        <td className="py-3 px-2 text-right font-mono-num font-bold text-slate-500" colSpan={2}>
+                          -{rdm.points} Pts
+                        </td>
+                      </tr>
+                    ))}
+                </>
+              )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      {/* KYC Under Review Alert Modal */}
+      <KycUnderReviewModal
+        isOpen={kycModalOpen}
+        onClose={() => setKycModalOpen(false)}
+        joinedAt={partner?.kycSubmittedAt || partner?.joinedAt}
+      />
     </div>
   );
 }

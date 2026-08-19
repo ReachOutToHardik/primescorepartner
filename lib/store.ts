@@ -53,6 +53,7 @@ export interface Partner {
   role: PartnerRole;
   teamCode: string;
   joinedAt: string;
+  kycSubmittedAt?: string;
   isEmailVerified?: boolean;
   profilePhoto?: string;
   referredByLeaderName?: string;
@@ -113,7 +114,7 @@ export const usePartnerStore = create<PartnerStore>()(
       referrals: [],
       redemptions: [],
       teamMembers: [],
-      totalPoints: 100,
+      totalPoints: 0,
       tier: 'Silver',
       isAuthenticated: false,
 
@@ -239,8 +240,25 @@ export const usePartnerStore = create<PartnerStore>()(
           console.error('Signout error:', e);
         }
         if (typeof window !== 'undefined') {
-          window.localStorage.removeItem('primescore-partner-store-v9');
-          window.sessionStorage.clear();
+          // Clear all Zustand store keys (current + legacy versions)
+          const keysToRemove = [
+            'primescore-partner-store-v10',
+            'primescore-partner-store-v9',
+            'primescore-partner-store-v8',
+            'primescore-auth-session',
+            'primescore-remember-me',
+          ];
+          keysToRemove.forEach((k) => {
+            window.localStorage.removeItem(k);
+            window.sessionStorage.removeItem(k);
+          });
+          // Clear any supabase auth tokens
+          Object.keys(window.localStorage)
+            .filter((k) => k.startsWith('sb-'))
+            .forEach((k) => window.localStorage.removeItem(k));
+          Object.keys(window.sessionStorage)
+            .filter((k) => k.startsWith('sb-'))
+            .forEach((k) => window.sessionStorage.removeItem(k));
         }
         set({
           partner: null,
@@ -254,7 +272,7 @@ export const usePartnerStore = create<PartnerStore>()(
       },
     }),
     {
-      name: 'primescore-partner-store-v9',
+      name: 'primescore-partner-store-v10',
     }
   )
 );

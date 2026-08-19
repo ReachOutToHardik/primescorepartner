@@ -3,10 +3,40 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://duehdrdffguwvipgqywh.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1ZWhkcmRmZmd1d3ZpcGdxeXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MTgxMjYsImV4cCI6MjEwMjI5NDEyNn0.htI8EmajgVsejbwSUAuhuL4qUtYIiyebR-67O4gv_jw';
 
+// Custom storage adapter that reads the Remember Me flag.
+// If the partner chose "Remember Me (7 days)" → use localStorage.
+// Otherwise → sessionStorage so session dies when the tab closes.
+const smartStorage = typeof window !== 'undefined'
+  ? {
+      getItem: (key: string): string | null => {
+        // Always check localStorage first (for remember-me sessions)
+        const lsVal = window.localStorage.getItem(key);
+        if (lsVal) return lsVal;
+        return window.sessionStorage.getItem(key);
+      },
+      setItem: (key: string, value: string): void => {
+        const rememberMe = window.localStorage.getItem('primescore-remember-me') === 'true';
+        if (rememberMe) {
+          window.localStorage.setItem(key, value);
+        } else {
+          window.sessionStorage.setItem(key, value);
+          // Also ensure localStorage doesn't have a stale entry
+          window.localStorage.removeItem(key);
+        }
+      },
+      removeItem: (key: string): void => {
+        window.localStorage.removeItem(key);
+        window.sessionStorage.removeItem(key);
+      },
+    }
+  : undefined;
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    storage: smartStorage,
+    storageKey: 'primescore-auth-session',
   },
   realtime: {
     params: {
@@ -33,8 +63,11 @@ export type Database = {
           team_code: string | null;
           referred_by_leader_id: string | null;
           prime_points: number;
+          lifetime_points_earned: number;
           tier: string;
           avatar_url: string | null;
+          is_email_verified: boolean;
+          kyc_submitted_at: string | null;
           joined_at: string;
           created_at: string;
           updated_at: string;
@@ -54,6 +87,30 @@ export type Database = {
           partner_points_earned: number;
           created_at: string;
           updated_at: string;
+        };
+      };
+      notifications: {
+        Row: {
+          id: string;
+          partner_id: string | null;
+          title: string;
+          message: string;
+          type: string;
+          points_badge: string | null;
+          is_read: boolean;
+          created_at: string;
+        };
+      };
+      point_transactions: {
+        Row: {
+          id: string;
+          partner_id: string;
+          transaction_type: string;
+          points_change: number;
+          balance_after: number;
+          title: string;
+          reference_id: string | null;
+          created_at: string;
         };
       };
     };

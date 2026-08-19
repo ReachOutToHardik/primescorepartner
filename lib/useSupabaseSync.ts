@@ -123,9 +123,10 @@ export function useSupabaseSync() {
           role: profile.role,
           teamCode: profile.team_code || '',
           joinedAt: profile.joined_at || profile.created_at,
+          kycSubmittedAt: profile.kyc_submitted_at || profile.joined_at || profile.created_at,
           profilePhoto: profile.avatar_url || undefined,
         });
-        setTotalPoints(profile.prime_points ?? 100);
+        setTotalPoints(profile.prime_points || 0);
       }
 
       // Fetch partner's own referrals
