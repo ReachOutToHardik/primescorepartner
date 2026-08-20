@@ -27,6 +27,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
+import { FileCogIcon } from '@/components/ui/file-cog';
 
 export default function ReferPage() {
   const { partner, setReferrals, referrals } = usePartnerStore();
@@ -295,17 +296,12 @@ export default function ReferPage() {
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-up py-2">
         {/* Top Hero Banner */}
         <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl relative overflow-hidden">
-          {/* Top Right Animated Moving Icon */}
-          <div className="absolute top-5 right-5 sm:top-6 sm:right-6 flex items-center justify-center">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center relative shadow-inner">
-              <span className="absolute inset-0 rounded-2xl bg-amber-400/20 animate-ping opacity-60" style={{ animationDuration: '3s' }} />
-              <HourglassHigh size={22} className="text-amber-400 animate-spin relative z-10" style={{ animationDuration: '8s' }} weight="bold" />
-            </div>
-          </div>
+          {/* Top Right Animated Moving Icon (File-Cog Lucide Animated) */}
+          <FileCogIcon className="text-[#F5C518] absolute top-5 right-5 sm:top-6 sm:right-6" isLooping={true} />
 
           <div className="space-y-2.5 pr-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/10 border border-amber-400/30 text-amber-300 rounded-full text-xs font-semibold">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F5C518]/10 border border-[#F5C518]/30 text-[#F5C518] rounded-full text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[#F5C518]" />
               <span>Referral Portal Locked</span>
             </div>
             <h1 className="font-display font-bold text-2xl sm:text-3xl text-white tracking-tight">
@@ -382,7 +378,7 @@ export default function ReferPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       {/* Hero Header Banner */}
-      <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
             <UserPlus size={16} className="text-[#F5C518]" weight="bold" />
@@ -549,7 +545,7 @@ export default function ReferPage() {
         {/* Right 5 cols: Instant Link & QR Code Generator */}
         <div className="lg:col-span-5 space-y-6">
           {/* Instant Link Card */}
-          <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 rounded-2xl border border-white/10 shadow-xl space-y-5">
+          <div className="bg-[#0F1A4E] text-white p-6 rounded-2xl border border-white/10 shadow-xl space-y-5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
                 <ShareNetwork size={24} className="text-[#F5C518]" weight="bold" />

@@ -170,7 +170,7 @@ export default function ReferralsPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       {/* Hero Header Banner */}
-      <div className="bg-gradient-to-br from-[#1B2A72] to-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
             <ListChecks size={16} className="text-[#F5C518]" weight="bold" />
