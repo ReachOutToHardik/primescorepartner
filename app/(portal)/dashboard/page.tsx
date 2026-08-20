@@ -656,23 +656,24 @@ export default function PartnerDashboard() {
 
       {/* Itemized PrimePoints Transaction Passbook & Audit Ledger Table */}
       <Card variant="elevated" className="p-6 space-y-4 rounded-2xl shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div>
-            <h2 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Receipt size={22} className="text-[#1B2A72]" /> Itemized PrimePoints Transaction Passbook
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="min-w-0">
+            <h2 className="font-display text-[13px] sm:text-lg font-bold text-slate-900 flex items-center gap-1.5 whitespace-nowrap overflow-hidden">
+              <Receipt size={20} className="text-[#1B2A72] shrink-0" />
+              <span className="truncate">Itemized PrimePoints Transaction Passbook</span>
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Complete chronological audit log of all points earned from client referrals, team overrides, and redeemed gift vouchers.
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Complete chronological ledger of all points earned from client referrals, team overrides, and redeemed gift vouchers.
             </p>
           </div>
 
-          <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 shrink-0">
-            {passbookLedger.length} Total Activity Log(s)
+          <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 shrink-0 self-start sm:self-auto">
+            Total Transactions: {passbookLedger.length}
           </span>
         </div>
 
         {/* ── Mobile Card Stack (shown below md) ── */}
-        <div className="md:hidden space-y-2">
+        <div className="md:hidden space-y-2.5">
           {passbookLedger.length === 0 ? (
             <p className="py-8 text-center text-xs text-slate-400 font-medium">
               No points transactions yet. Submit referrals or redeem vouchers to see activity here.
@@ -681,7 +682,7 @@ export default function PartnerDashboard() {
             passbookLedger.map((tx) => (
               <div
                 key={tx.id}
-                className="bg-white border border-slate-100 rounded-xl p-3.5 space-y-2.5 shadow-2xs"
+                className="bg-white border border-slate-100 rounded-xl p-3.5 space-y-3 shadow-2xs"
               >
                 {/* Row 1: Badge + Date */}
                 <div className="flex items-center justify-between gap-2">
@@ -708,24 +709,19 @@ export default function PartnerDashboard() {
                 {/* Row 2: Title */}
                 <p className="text-xs font-semibold text-slate-900 leading-snug">{tx.title}</p>
 
-                {/* Row 3: Ref ID */}
-                <p className="text-[10px] text-slate-400 font-mono truncate">
-                  Ref: {tx.referenceId}
-                </p>
-
-                {/* Row 4: Points + Balance */}
-                <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                  <div className="text-center">
-                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Points</p>
+                {/* Row 3: Points Change + Running Balance */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  <div className="text-left">
+                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Points Change</p>
                     <p className={`font-mono font-bold text-sm ${
                       tx.amount > 0 ? 'text-emerald-600' : tx.amount < 0 ? 'text-red-500' : 'text-slate-400'
                     }`}>
-                      {tx.amount > 0 ? `+${tx.amount.toLocaleString()}` : tx.amount < 0 ? `${tx.amount.toLocaleString()}` : '0'}
+                      {tx.amount > 0 ? `+${tx.amount.toLocaleString()} Pts` : tx.amount < 0 ? `${tx.amount.toLocaleString()} Pts` : '0 Pts'}
                     </p>
                   </div>
                   <div className="w-px h-8 bg-slate-100" />
-                  <div className="text-center">
-                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Balance</p>
+                  <div className="text-right">
+                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Running Balance</p>
                     <p className="font-mono font-bold text-sm text-slate-900">
                       {tx.runningBalance.toLocaleString()} Pts
                     </p>
