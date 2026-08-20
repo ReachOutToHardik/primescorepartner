@@ -306,6 +306,22 @@ export default function PartnerDashboard() {
       runningBalance: number;
     }[] = [];
 
+    // 1. Sign-Up Bonus Entry (if verified or bonus credited)
+    if (partner?.status === 'kyc_approved' || (partner?.primePoints && partner.primePoints >= 100)) {
+      const d = partner?.joinedAt ? new Date(partner.joinedAt) : new Date(Date.now() - 86400000);
+      transactions.push({
+        id: `tx-signup-bonus-${partner?.id || 'partner'}`,
+        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        rawDate: d,
+        category: 'earned_referral',
+        title: '🎁 Welcome Sign-up Bonus (KYC Approved)',
+        referenceId: 'BONUS-100',
+        amount: 100,
+        runningBalance: 100,
+      });
+    }
+
+    // 2. Referral Activity Entries
     referrals.forEach((r) => {
       const d = r.createdAt ? new Date(r.createdAt) : new Date();
       if (r.status === 'completed') {
@@ -344,6 +360,7 @@ export default function PartnerDashboard() {
       }
     });
 
+    // 3. Voucher Redemption Entries
     redemptions.forEach((rdm) => {
       const d = rdm.redeemedAt ? new Date(rdm.redeemedAt) : new Date();
       transactions.push({
@@ -358,6 +375,7 @@ export default function PartnerDashboard() {
       });
     });
 
+    // Sort chronologically ascending to compute accurate running balance accumulator
     transactions.sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime());
 
     let currBalance = 0;
@@ -366,8 +384,9 @@ export default function PartnerDashboard() {
       tx.runningBalance = Math.max(0, currBalance);
     });
 
+    // Return in reverse chronological order (newest activity first)
     return transactions.reverse();
-  }, [referrals, redemptions]);
+  }, [referrals, redemptions, partner]);
 
   // Recent 5 referrals
   const recentReferrals = useMemo(() => referrals.slice(0, 5), [referrals]);
