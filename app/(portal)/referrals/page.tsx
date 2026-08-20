@@ -21,6 +21,7 @@ import {
   ArrowRight,
 } from '@phosphor-icons/react';
 import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function ReferralsPage() {
@@ -467,37 +468,15 @@ export default function ReferralsPage() {
               </div>
             </div>
 
-            {/* Stage Simulation Test Control */}
-            <div className="pt-6 border-t border-[var(--border)] mt-6 space-y-3">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--ink-subtle)] block">
-                Simulate Status Stage Transition (Demo Test)
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => {
-                    updateReferralStatus(selectedReferral.id, 'in_progress');
-                    setSelectedReferral({ ...selectedReferral, status: 'in_progress' });
-                  }}
-                  className="py-1.5 px-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold rounded-xs border border-amber-300"
-                >
-                  Set In Progress
-                </button>
-                <button
-                  onClick={() => {
-                    updateReferralStatus(selectedReferral.id, 'completed');
-                    setSelectedReferral({ ...selectedReferral, status: 'completed', pointsEarned: 500 });
-                  }}
-                  className="py-1.5 px-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[10px] font-bold rounded-xs border border-emerald-300"
-                >
-                  Set Completed (+500 Pts)
-                </button>
-                <button
-                  onClick={() => setSelectedReferral(null)}
-                  className="py-1.5 px-2 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--ink)] text-[10px] font-bold rounded-xs border border-[var(--border)]"
-                >
-                  Close Modal
-                </button>
-              </div>
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-[var(--border)] mt-6 flex justify-end">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setSelectedReferral(null)}
+              >
+                Close Details
+              </Button>
             </div>
           </div>
         </div>
