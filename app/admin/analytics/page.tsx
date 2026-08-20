@@ -110,7 +110,7 @@ export default function AdminAnalyticsPage() {
       // 2. Fetch profiles to map partner names
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, email, partner_team_code, status, created_at');
+        .select('id, name, email, partner_team_code, status, created_at');
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
@@ -146,7 +146,7 @@ export default function AdminAnalyticsPage() {
                 const prof = profileMap.get(tx.partner_id);
                 return {
                   ...tx,
-                  partner_name: prof?.full_name || 'Partner User',
+                  partner_name: prof?.name || 'Partner User',
                   partner_email: prof?.email || 'N/A',
                   partner_code: prof?.partner_team_code || tx.partner_id?.slice(0, 8),
                 };
@@ -165,7 +165,7 @@ export default function AdminAnalyticsPage() {
           const prof = profileMap.get(tx.partner_id);
           return {
             ...tx,
-            partner_name: prof?.full_name || 'Partner User',
+            partner_name: prof?.name || 'Partner User',
             partner_email: prof?.email || 'N/A',
             partner_code: prof?.partner_team_code || tx.partner_id?.slice(0, 8),
           };

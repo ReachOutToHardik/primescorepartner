@@ -224,64 +224,77 @@ export function useSupabaseSync() {
   }
 
   useEffect(() => {
-    // Always sync admin data (used by admin layout)
-    syncAdminData();
+    // ─── Guard: verify a live Supabase session before touching any DB table ──
+    // Without this check, syncAdminData() fires on every page load — including
+    // the login page — leaking all table reads to unauthenticated requests.
+    const runSync = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return; // No session → bail out, make zero DB calls
 
-    // Sync partner-specific data if logged in
-    if (partner?.id) {
-      syncPartnerData(partner.id);
-    }
+      // Sync admin data (profiles + referrals + system_config)
+      syncAdminData();
 
-    // ─── Realtime: profiles table ────────────────────────────────────────────
-    const profilesChannel = supabase
-      .channel('realtime-profiles')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'profiles' },
-        (payload) => {
-          // Refresh admin list
-          syncAdminData();
-          // If it's our own profile, update partner state
-          if (partner?.id && payload.new && (payload.new as { id?: string }).id === partner.id) {
-            syncPartnerData(partner.id);
+      // Sync partner-specific data if a partner is stored in state
+      if (partner?.id) {
+        syncPartnerData(partner.id);
+      }
+    };
+
+    runSync();
+
+    // ─── Realtime: only subscribe when a session actually exists ─────────────
+    let profilesChannel: ReturnType<typeof supabase.channel> | null = null;
+    let referralsChannel: ReturnType<typeof supabase.channel> | null = null;
+    let redemptionsChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return; // No session → skip all realtime subscriptions
+
+      // ─── Realtime: profiles table ──────────────────────────────────────────
+      profilesChannel = supabase
+        .channel('realtime-profiles')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'profiles' },
+          (payload) => {
+            syncAdminData();
+            if (partner?.id && payload.new && (payload.new as { id?: string }).id === partner.id) {
+              syncPartnerData(partner.id);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    // ─── Realtime: referrals table ───────────────────────────────────────────
-    const referralsChannel = supabase
-      .channel('realtime-referrals')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'referrals' },
-        () => {
-          syncAdminData();
-          if (partner?.id) {
-            syncPartnerData(partner.id);
+      // ─── Realtime: referrals table ─────────────────────────────────────────
+      referralsChannel = supabase
+        .channel('realtime-referrals')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'referrals' },
+          () => {
+            syncAdminData();
+            if (partner?.id) syncPartnerData(partner.id);
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    // ─── Realtime: redemptions table ─────────────────────────────────────────
-    const redemptionsChannel = supabase
-      .channel('realtime-redemptions')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'redemptions' },
-        () => {
-          if (partner?.id) {
-            syncPartnerData(partner.id);
+      // ─── Realtime: redemptions table ───────────────────────────────────────
+      redemptionsChannel = supabase
+        .channel('realtime-redemptions')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'redemptions' },
+          () => {
+            if (partner?.id) syncPartnerData(partner.id);
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    });
 
     return () => {
-      supabase.removeChannel(profilesChannel);
-      supabase.removeChannel(referralsChannel);
-      supabase.removeChannel(redemptionsChannel);
+      if (profilesChannel) supabase.removeChannel(profilesChannel);
+      if (referralsChannel) supabase.removeChannel(referralsChannel);
+      if (redemptionsChannel) supabase.removeChannel(redemptionsChannel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partner?.id]);
