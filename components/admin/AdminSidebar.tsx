@@ -27,15 +27,15 @@ import {
 
 const ADMIN_NAV = [
   { name: 'Dashboard', href: '/admin', icon: SquaresFour },
-  { name: 'KYC Directory', href: '/admin/kyc', icon: ShieldCheck },
-  { name: 'Leads & Fulfillment', href: '/admin/referrals', icon: ClipboardText },
-  { name: 'Team & Network', href: '/admin/teams', icon: UsersThree },
-  { name: 'Leaderboards & Analytics', href: '/admin/analytics', icon: ChartLine },
-  { name: 'Gift Cards & Vouchers', href: '/admin/gift-cards', icon: Gift },
-  { name: 'Services Catalog', href: '/admin/services', icon: Wrench },
-  { name: 'Reward Engine & Rates', href: '/admin/rewards-config', icon: Coins },
-  { name: 'Send Notifications', href: '/admin/notifications', icon: Megaphone },
-  { name: 'System Settings & Audit', href: '/admin/settings', icon: Gear },
+  { name: 'Partner Approvals', href: '/admin/kyc', icon: ShieldCheck },
+  { name: 'All Referrals', href: '/admin/referrals', icon: ClipboardText },
+  { name: 'Partner Teams', href: '/admin/teams', icon: UsersThree },
+  { name: 'Analytics & Transactions', href: '/admin/analytics', icon: ChartLine },
+  { name: 'Gift Vouchers', href: '/admin/gift-cards', icon: Gift },
+  { name: 'Services List', href: '/admin/services', icon: Wrench },
+  { name: 'Points & Reward Rates', href: '/admin/rewards-config', icon: Coins },
+  { name: 'Send Announcements', href: '/admin/notifications', icon: Megaphone },
+  { name: 'Settings & Logs', href: '/admin/settings', icon: Gear },
 ];
 
 export default function AdminSidebar() {
@@ -110,7 +110,7 @@ export default function AdminSidebar() {
 
         {/* Section Label */}
         <div className="px-4 pt-4 pb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase font-mono-num">
-          {!isCollapsed ? 'Admin Controls' : '•••'}
+          {!isCollapsed ? 'Main Menu' : '•••'}
         </div>
 
         {/* Navigation Items */}
