@@ -595,11 +595,11 @@ export default function PartnerDashboard() {
             <div className="grid grid-cols-4 sm:flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto shrink-0">
               {(
                 [
-                  { id: '15d', label: '15D' },
-                  { id: '30d', label: '30D' },
+                  { id: '15d', label: '15D', fullLabel: '15 Days' },
+                  { id: '30d', label: '30D', fullLabel: '30 Days' },
                   { id: '6m', label: '6M', fullLabel: '6 Months' },
                   { id: '1y', label: '1Y', fullLabel: '1 Year' },
-                ] as const
+                ] as { id: '15d' | '30d' | '6m' | '1y'; label: string; fullLabel: string }[]
               ).map((range) => (
                 <button
                   key={range.id}

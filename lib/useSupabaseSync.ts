@@ -19,7 +19,7 @@ export function useSupabaseSync() {
       useAdminStore.setState({ isLoadingData: true });
       const { data: dbProfiles, error: profileErr } = await supabase
         .from('profiles')
-        .select('id, name, email, phone, profession, city, state, status, role, team_code, created_at, joined_at, is_email_verified, avatar_url, referred_by_leader_id, prime_points, kyc_submitted_at')
+        .select('id, name, email, phone, profession, city, state, pan, status, role, team_code, created_at, joined_at, is_email_verified, avatar_url, referred_by_leader_id, prime_points, kyc_submitted_at')
         .order('created_at', { ascending: false });
 
       if (profileErr) {

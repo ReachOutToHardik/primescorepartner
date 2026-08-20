@@ -58,6 +58,7 @@ export interface Partner {
   profilePhoto?: string;
   referredByLeaderName?: string;
   referredByLeaderId?: string;
+  primePoints?: number;
 }
 
 export interface Referral {
