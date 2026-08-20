@@ -518,37 +518,38 @@ export default function PartnerDashboard() {
               </p>
             </div>
 
-            {/* Date Range Pill Buttons */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+            {/* Date Range Pill Buttons (Equal 4-col grid on mobile for perfect symmetry) */}
+            <div className="grid grid-cols-4 sm:flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto shrink-0">
               {(
                 [
                   { id: '15d', label: '15D' },
                   { id: '30d', label: '30D' },
-                  { id: '6m', label: '6 Months' },
-                  { id: '1y', label: '1 Year' },
+                  { id: '6m', label: '6M', fullLabel: '6 Months' },
+                  { id: '1y', label: '1Y', fullLabel: '1 Year' },
                 ] as const
               ).map((range) => (
                 <button
                   key={range.id}
                   type="button"
                   onClick={() => setTimeRange(range.id)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                  className={`px-2 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                     timeRange === range.id
                       ? 'bg-[#1B2A72] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  {range.label}
+                  <span className="sm:hidden">{range.label}</span>
+                  <span className="hidden sm:inline">{range.fullLabel || range.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Metric View Mode Toggles & Summary Metrics Strip */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-            {/* View Mode Toggle Pills */}
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-slate-400 font-semibold text-[11px] uppercase mr-1">View:</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+            {/* View Mode Toggle Segmented Control */}
+            <div className="flex items-center gap-1 text-xs bg-slate-100/70 p-1 rounded-lg w-full sm:w-auto">
+              <span className="text-slate-400 font-semibold text-[10px] uppercase px-1 hidden sm:inline">View:</span>
               {(
                 [
                   { id: 'both', label: 'Overview' },
@@ -560,10 +561,10 @@ export default function PartnerDashboard() {
                   key={mode.id}
                   type="button"
                   onClick={() => setChartMetricMode(mode.id)}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors ${
+                  className={`flex-1 sm:flex-none px-3 py-1 text-xs font-semibold rounded-md transition-colors text-center ${
                     chartMetricMode === mode.id
-                      ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-slate-900 text-white shadow-2xs'
+                      : 'text-slate-600 hover:bg-white/80'
                   }`}
                 >
                   {mode.label}
@@ -571,8 +572,8 @@ export default function PartnerDashboard() {
               ))}
             </div>
 
-            {/* Concise Period Stat Callout Pill */}
-            <div className="flex items-center gap-3 text-xs font-mono font-semibold bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
+            {/* Concise Period Stat Callout Strip */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 text-xs font-mono font-semibold bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-lg w-full sm:w-auto">
               <span className="text-slate-600">
                 Total Referrals: <strong className="text-slate-900 font-bold">{totalCount}</strong>
               </span>
