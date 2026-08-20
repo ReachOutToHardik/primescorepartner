@@ -307,7 +307,7 @@ export default function ReferPage() {
             </p>
           </div>
 
-          <div className="shrink-0 self-start md:self-center">
+          <div className="shrink-0 self-center md:self-center w-full md:w-auto flex justify-center md:justify-end">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/5 border border-white/15 flex flex-col items-center justify-center text-center">
               <Clock size={28} className="text-amber-400 mb-1" weight="bold" />
               <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider">Reviewing</span>

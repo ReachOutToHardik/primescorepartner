@@ -250,7 +250,14 @@ export default function ReferralsPage() {
               className="p-4 space-y-3 active:bg-slate-50 transition-all cursor-pointer"
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono-num font-bold text-xs text-[#1B2A72]">{ref.id}</span>
+                <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 font-mono-num">
+                  <Clock size={14} className="text-slate-400" />
+                  {new Date(ref.createdAt).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </span>
                 {getStatusBadge(ref.status)}
               </div>
 
@@ -276,7 +283,6 @@ export default function ReferralsPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 uppercase tracking-wider font-bold">
-                <th className="p-4">Ref ID</th>
                 <th className="p-4">Client Details</th>
                 <th className="p-4">Location</th>
                 <th className="p-4">Service Requested</th>
@@ -289,7 +295,7 @@ export default function ReferralsPage() {
             <tbody className="divide-y divide-slate-100">
               {filteredReferrals.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-4">
+                  <td colSpan={7} className="p-4">
                     <EmptyState
                       title={searchQuery || statusFilter !== 'all' ? 'No Matching Referrals' : 'No Client Referrals Yet'}
                       description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your search keywords or status filter options.' : `Start submitting client referral leads to earn ${conversionPoints} PrimePoints per completed case.`}
@@ -306,7 +312,6 @@ export default function ReferralsPage() {
                     onClick={() => setSelectedReferral(ref)}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                   >
-                    <td className="p-4 font-mono-num font-bold text-[#1B2A72]">{ref.id}</td>
                     <td className="p-4">
                       <div className="font-bold text-slate-900">{ref.customerName}</div>
                       <div className="text-[11px] font-mono-num text-slate-500">
@@ -317,7 +322,11 @@ export default function ReferralsPage() {
                     <td className="p-4 font-bold text-slate-900">{ref.service}</td>
                     <td className="p-4">{getStatusBadge(ref.status)}</td>
                     <td className="p-4 font-mono-num text-slate-500 font-medium">
-                      {new Date(ref.createdAt).toLocaleDateString()}
+                      {new Date(ref.createdAt).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
                     </td>
                     <td className="p-4 text-right font-mono-num font-bold text-emerald-600">
                       {ref.pointsEarned > 0 ? `+${ref.pointsEarned} Pts` : '0 Pts'}
@@ -349,8 +358,9 @@ export default function ReferralsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
                 <div>
-                  <span className="text-[10px] font-mono-num uppercase tracking-wider font-bold text-[#1B2A72]">
-                    {selectedReferral.id}
+                  <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 font-mono-num">
+                    <Clock size={14} className="text-slate-400" />
+                    Submitted On: {new Date(selectedReferral.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </span>
                   <h2 className="font-display text-xl font-bold text-[var(--ink)]">
                     {selectedReferral.customerName}
