@@ -383,30 +383,176 @@ export default function RewardsPage() {
           </div>
 
           {/* Transaction Category Filter Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0 text-xs font-semibold">
+          <div className="grid grid-cols-4 sm:flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto text-center text-xs font-semibold shrink-0">
             {[
-              { id: 'all', label: 'All Transactions' },
-              { id: 'signup_bonus', label: 'Sign-Up Bonus' },
-              { id: 'referral_earned', label: 'Referrals' },
-              { id: 'voucher_redeemed', label: 'Redemptions' },
+              { id: 'all', label: 'All', fullLabel: 'All Transactions' },
+              { id: 'signup_bonus', label: 'Bonus', fullLabel: 'Sign-Up Bonus' },
+              { id: 'referral_earned', label: 'Referrals', fullLabel: 'Referrals' },
+              { id: 'voucher_redeemed', label: 'Redeem', fullLabel: 'Redemptions' },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setTxFilter(tab.id as any)}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-2 sm:px-3 py-1.5 rounded-lg transition-all text-center ${
                   txFilter === tab.id
                     ? 'bg-[#1B2A72] text-white shadow-xs font-bold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
-                {tab.label}
+                <span className="sm:hidden">{tab.label}</span>
+                <span className="hidden sm:inline">{tab.fullLabel}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* ── Mobile Card Stack (shown below md) ── */}
+        <div className="md:hidden space-y-2.5">
+          {filteredPointTransactions.length > 0 ? (
+            filteredPointTransactions.map((tx) => (
+              <div key={tx.id} className="bg-white border border-slate-100 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`px-2 py-0.5 font-bold text-[10px] uppercase rounded-md border ${
+                    tx.transaction_type === 'signup_bonus' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                    tx.transaction_type === 'voucher_redeemed' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                    'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>
+                    {tx.transaction_type === 'signup_bonus' ? 'Sign-Up Bonus' :
+                     tx.transaction_type === 'voucher_redeemed' ? 'Redemption' :
+                     tx.transaction_type === 'referral_earned' ? 'Referral' :
+                     tx.transaction_type === 'enrolled_earned' ? 'Enrollment' :
+                     tx.transaction_type}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium font-mono-num">
+                    {new Date(tx.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+                  </span>
+                </div>
+
+                <p className="text-xs font-semibold text-slate-900 leading-snug">{tx.title}</p>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 font-mono-num">
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Points Change</p>
+                    <p className={`font-bold text-sm ${
+                      tx.points_change > 0 ? 'text-emerald-600' : 'text-slate-500'
+                    }`}>
+                      {tx.points_change > 0 ? '+' : ''}{tx.points_change} Pts
+                    </p>
+                  </div>
+                  <div className="w-px h-8 bg-slate-100" />
+                  <div className="text-right">
+                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Running Balance</p>
+                    <p className="font-bold text-sm text-slate-900">
+                      {tx.balance_after.toLocaleString()} Pts
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="space-y-2.5">
+              {(txFilter === 'all' || txFilter === 'signup_bonus') && (
+                <div className="bg-white border border-amber-100 bg-amber-50/20 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+                  <div className="flex items-center justify-between gap-2">
+                    {partner?.status === 'kyc_approved' ? (
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold text-[10px] uppercase rounded-md border border-emerald-200">Bonus Credited</span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-900 font-bold text-[10px] uppercase rounded-md border border-amber-200">Pending Verification</span>
+                    )}
+                    <span className="text-[10px] text-slate-400 font-medium font-mono-num">
+                      {partner?.joinedAt ? new Date(partner.joinedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : 'Registration'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs font-semibold text-slate-900 leading-snug">
+                    Partner Registration Sign-Up Welcome Bonus{' '}
+                    {partner?.status !== 'kyc_approved' && (
+                      <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">(Unlocked upon KYC Approval)</span>
+                    )}
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 font-mono-num">
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Points Change</p>
+                      <p className="font-bold text-sm text-emerald-600">
+                        {partner?.status === 'kyc_approved' ? '+100 Pts' : '100 Pts (Locked)'}
+                      </p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div className="text-right">
+                      <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Running Balance</p>
+                      <p className="font-bold text-sm text-slate-900">
+                        {partner?.status === 'kyc_approved' ? '100 Pts' : '0 Pts'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(txFilter === 'all' || txFilter === 'referral_earned') &&
+                referrals
+                  .filter((r) => r.status === 'completed')
+                  .map((r) => (
+                    <div key={r.id} className="bg-white border border-slate-100 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold text-[10px] uppercase rounded-md border border-emerald-200">Referral</span>
+                        <span className="text-[10px] text-slate-400 font-medium font-mono-num">
+                          {new Date(r.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+                        </span>
+                      </div>
+
+                      <p className="text-xs font-semibold text-slate-900 leading-snug">
+                        Referral Case Resolved: <span className="font-bold">{r.customerName}</span>
+                      </p>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 font-mono-num">
+                        <div>
+                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Points Change</p>
+                          <p className="font-bold text-sm text-emerald-600">+{r.pointsEarned || 500} Pts</p>
+                        </div>
+                        <div className="w-px h-8 bg-slate-100" />
+                        <div className="text-right">
+                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Running Balance</p>
+                          <p className="font-bold text-sm text-slate-900">Points Credited</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+              {(txFilter === 'all' || txFilter === 'voucher_redeemed') &&
+                redemptions.map((rdm) => (
+                  <div key={rdm.id} className="bg-white border border-slate-100 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-bold text-[10px] uppercase rounded-md border border-slate-200">Redemption</span>
+                      <span className="text-[10px] text-slate-400 font-medium font-mono-num">
+                        {new Date(rdm.redeemedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <p className="text-xs font-semibold text-slate-900 leading-snug">
+                      Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
+                    </p>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 font-mono-num">
+                      <div>
+                        <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Points Change</p>
+                        <p className="font-bold text-sm text-slate-500">-{rdm.points} Pts</p>
+                      </div>
+                      <div className="w-px h-8 bg-slate-100" />
+                      <div className="text-right">
+                        <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5 font-sans">Running Balance</p>
+                        <p className="font-bold text-sm text-slate-900">Voucher Deducted</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Desktop Table (shown md and above) ── */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-bold text-[10px]">
@@ -489,7 +635,7 @@ export default function RewardsPage() {
                             <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[11px] rounded-sm">Referral</span>
                           </td>
                           <td className="py-3 px-2 font-medium text-slate-900">
-                            Referral Case Resolved: <span className="font-bold">{r.customerName}</span> ({r.id})
+                            Referral Case Resolved: <span className="font-bold">{r.customerName}</span>
                           </td>
                           <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600" colSpan={2}>
                             +{r.pointsEarned || 500} Pts
