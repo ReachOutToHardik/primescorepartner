@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { usePartnerStore, Referral, ReferralStatus } from '@/lib/store';
+import { useAdminStore } from '@/lib/admin-store';
 import {
   ListChecks,
   MagnifyingGlass,
@@ -24,6 +25,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function ReferralsPage() {
   const { referrals, updateReferralStatus } = usePartnerStore();
+  const conversionPoints = useAdminStore((s) => s.rewardConfig.conversionPoints);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -233,7 +235,7 @@ export default function ReferralsPage() {
           <Card variant="default" className="p-2">
             <EmptyState
               title={searchQuery || statusFilter !== 'all' ? 'No Matching Referrals' : 'No Client Referrals Yet'}
-              description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your search keywords or status filter options.' : 'Start submitting client referral leads to earn 500 PrimePoints per completed case.'}
+              description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your search keywords or status filter options.' : `Start submitting client referral leads to earn ${conversionPoints} PrimePoints per completed case.`}
               actionText="Submit New Referral"
               actionHref="/refer"
               icon={searchQuery ? 'search' : 'user'}
@@ -290,7 +292,7 @@ export default function ReferralsPage() {
                   <td colSpan={8} className="p-4">
                     <EmptyState
                       title={searchQuery || statusFilter !== 'all' ? 'No Matching Referrals' : 'No Client Referrals Yet'}
-                      description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your search keywords or status filter options.' : 'Start submitting client referral leads to earn 500 PrimePoints per completed case.'}
+                      description={searchQuery || statusFilter !== 'all' ? 'Try adjusting your search keywords or status filter options.' : `Start submitting client referral leads to earn ${conversionPoints} PrimePoints per completed case.`}
                       actionText="Submit New Referral"
                       actionHref="/refer"
                       icon={searchQuery ? 'search' : 'user'}

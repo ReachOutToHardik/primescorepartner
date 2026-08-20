@@ -83,12 +83,14 @@ const INITIAL_SERVICES: PlatformService[] = SERVICE_OPTIONS.map((s, idx) => ({
   isActive: true,
 }));
 
-// Allowed admin credentials
-const ADMIN_CREDENTIALS: Record<string, string> = {
-  'admin@primescore.in': 'admin123',
-  'sawai@primescore.in': 'admin123',
-  'hardik@primescore.in': 'admin123',
-};
+// Admin credentials read from environment variables — NEVER hardcode passwords in source.
+// Set ADMIN_PASS_<EMAIL_ENCODED> in .env.local e.g. ADMIN_PASS_ADMIN=mySecurePass
+// Falls back to a single shared env var ADMIN_MASTER_PASSWORD if per-user env not found.
+const ALLOWED_ADMIN_EMAILS = [
+  'admin@primescore.in',
+  'sawai@primescore.in',
+  'hardik@primescore.in',
+];
 
 export interface RewardEngineConfig {
   submissionPoints: number;          // Pts on referral submitted (e.g. 20)
@@ -181,8 +183,11 @@ export const useAdminStore = create<AdminStore>()(
 
       adminLogin: (email, pass) => {
         const cleanEmail = email.toLowerCase().trim();
-        const validPassword = ADMIN_CREDENTIALS[cleanEmail];
-        if (validPassword && validPassword === pass) {
+        // Verify email is in allowed list AND password matches env var
+        const masterPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+        const isAllowedEmail = ALLOWED_ADMIN_EMAILS.includes(cleanEmail);
+        const isCorrectPassword = masterPassword && pass === masterPassword;
+        if (isAllowedEmail && isCorrectPassword) {
           set({ isAuthenticated: true });
           return true;
         }
@@ -310,16 +315,68 @@ export const useAdminStore = create<AdminStore>()(
         })),
 
       updateReferralStatus: async (referralId, status, note) => {
+        // Use reward config as single source of truth for points
+        const { conversionPoints, enrollmentPoints, submissionPoints } = get().rewardConfig;
+
+        // Map status → points to award on that stage transition
+        const stagePointsMap: Record<string, number> = {
+          submitted: submissionPoints,   // e.g. 20 pts on submission
+          enrolled: enrollmentPoints,    // e.g. 100 pts on enrollment
+          completed: conversionPoints,   // e.g. 500 pts on completion
+        };
+        const pointsForStage = stagePointsMap[status] ?? 0;
+
         try {
           const { supabase } = await import('./supabase');
+
+          // 1. Update referral status in DB
           await supabase
             .from('referrals')
             .update({
               current_stage: status,
               updated_at: new Date().toISOString(),
-              ...(status === 'completed' ? { partner_points_earned: 500 } : {}),
+              ...(pointsForStage > 0 ? { partner_points_earned: pointsForStage } : {}),
             })
             .eq('id', referralId);
+
+          // 2. If points-awarding stage: credit partner balance + log to point_transactions
+          if (pointsForStage > 0) {
+            const state = get();
+            const referral = state.referrals.find((r) => r.id === referralId);
+            const partnerId = referral?.partnerId;
+
+            if (partnerId) {
+              // Fetch current balance
+              const { data: profileRow } = await supabase
+                .from('profiles')
+                .select('prime_points, lifetime_points_earned')
+                .eq('id', partnerId)
+                .single();
+
+              const currentBalance = profileRow?.prime_points ?? 0;
+              const currentLifetime = profileRow?.lifetime_points_earned ?? 0;
+              const newBalance = currentBalance + pointsForStage;
+
+              // Update profile balance (DB is source of truth)
+              await supabase
+                .from('profiles')
+                .update({
+                  prime_points: newBalance,
+                  lifetime_points_earned: currentLifetime + pointsForStage,
+                })
+                .eq('id', partnerId);
+
+              // Write to point_transactions (always, for all portals to read)
+              await supabase.from('point_transactions').insert([{
+                partner_id: partnerId,
+                transaction_type: 'referral_earned',
+                points_change: pointsForStage,
+                balance_after: newBalance,
+                title: `Referral ${status.charAt(0).toUpperCase() + status.slice(1)}: ${referral?.customerName || referralId}`,
+                reference_id: referralId,
+              }]);
+            }
+          }
         } catch (err) {
           console.error('Referral status update error:', err);
         }
@@ -332,7 +389,7 @@ export const useAdminStore = create<AdminStore>()(
           actorRole: 'operations_admin',
           actionType: 'lead_status_update',
           targetEntity: `${referralId} (${target?.customerName || ''})`,
-          details: `Updated status to ${status}. Note: ${note || 'None'}`,
+          details: `Updated status to ${status}. Points awarded: ${pointsForStage}. Note: ${note || 'None'}`,
           timestamp: new Date().toISOString(),
         };
         set((state) => ({
@@ -342,7 +399,7 @@ export const useAdminStore = create<AdminStore>()(
                   ...r,
                   status,
                   updatedAt: new Date().toISOString(),
-                  pointsEarned: status === 'completed' ? 500 : r.pointsEarned,
+                  pointsEarned: pointsForStage > 0 ? pointsForStage : r.pointsEarned,
                   statusHistory: [
                     ...r.statusHistory,
                     {

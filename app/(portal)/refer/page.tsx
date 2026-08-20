@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { usePartnerStore, Referral } from '@/lib/store';
+import { useAdminStore } from '@/lib/admin-store';
 import { SERVICE_OPTIONS } from '@/lib/mock-data';
 import {
   UserPlus,
@@ -28,6 +29,7 @@ import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
 
 export default function ReferPage() {
   const { partner, setReferrals, referrals } = usePartnerStore();
+  const conversionPoints = useAdminStore((s) => s.rewardConfig.conversionPoints);
   const qrCardRef = useRef<HTMLDivElement>(null);
 
   // Referral Form State
@@ -389,7 +391,7 @@ export default function ReferPage() {
             Submit New Client Referral
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Submit customer details directly or share your unique referral link to earn 500 PrimePoints per completed case.
+            Submit customer details directly or share your unique referral link to earn {conversionPoints} PrimePoints per completed case.
           </p>
         </div>
 
