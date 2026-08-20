@@ -46,94 +46,93 @@ export default function LoginPage() {
       const identifier = email.trim().toLowerCase();
       const isMobile = /^\d{10}$/.test(identifier);
 
-      let profileQuery = supabase.from('profiles').select('*');
+      // ─── Step 1: Resolve email from mobile if needed ────────────────────────
+      // Only query the DB to convert a phone number to an email address.
+      // We fetch ONLY the email field — no PII, no profile data exposed.
+      let resolvedEmail = identifier;
       if (isMobile) {
-        profileQuery = profileQuery.eq('phone', identifier);
-      } else {
-        profileQuery = profileQuery.eq('email', identifier);
+        const { data: phoneRow, error: phoneErr } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('phone', identifier)
+          .maybeSingle();
+
+        if (phoneErr || !phoneRow?.email) {
+          setError('No account found for this mobile number. Please check your details or register below.');
+          setIsLoading(false);
+          return;
+        }
+        resolvedEmail = phoneRow.email;
       }
 
-      // Check if profile exists in profiles table
-      const { data: profile, error: profileErr } = await profileQuery.maybeSingle();
+      // ─── Step 2: Authenticate with Supabase Auth — password verified here ──
+      // Profile data is NEVER fetched before this succeeds.
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: resolvedEmail,
+        password: password.trim(),
+      });
 
-      if (profileErr) {
-        setError('Unable to verify account credentials right now. Please try again or contact info@primescore.in.');
+      if (authError || !authData.user) {
+        // Generic message — don't reveal whether the account exists
+        setError('Incorrect email/mobile or password. Please try again.');
         setIsLoading(false);
         return;
       }
 
-      if (!profile) {
-        setError(`No account found for "${email.trim()}". Please check your details or click "Register as Partner" below.`);
+      // ─── Step 3: Auth passed — NOW safe to fetch the profile ───────────────
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (profileErr || !profile) {
+        setError('Account verified but profile not found. Please contact info@primescore.in.');
         setIsLoading(false);
         return;
       }
 
-      // Enforce email verification check
-      if (profile.is_email_verified === false) {
-        setError('Your partner account email is unverified. Please verify your email or contact info@primescore.in.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Check partner status — kyc_rejected cannot enter
+      // Enforce status checks after auth
       if (profile.status === 'kyc_rejected') {
+        await supabase.auth.signOut();
         setError('Your partner application was declined. Please contact info@primescore.in for assistance.');
         setIsLoading(false);
         return;
       }
 
-      // kyc_submitted and kyc_approved partners can both log in.
-      // kyc_submitted partners will see gated/blurred UI inside the portal.
+      // Write Remember Me preference before session is stored
+      if (typeof window !== 'undefined') {
+        if (rememberMe) {
+          window.localStorage.setItem('primescore-remember-me', 'true');
+        } else {
+          window.localStorage.removeItem('primescore-remember-me');
+        }
+      }
 
-      // Approved partner — attempt sign in with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: profile.email || email.trim().toLowerCase(),
-        password: password.trim(),
+      usePartnerStore.setState({
+        partner: {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone || '',
+          profession: profile.profession || '',
+          city: profile.city || '',
+          state: profile.state || '',
+          pan: profile.pan || '',
+          status: profile.status,
+          role: profile.role,
+          teamCode: profile.team_code || '',
+          joinedAt: profile.joined_at || profile.created_at,
+          kycSubmittedAt: profile.kyc_submitted_at || profile.created_at,
+          isEmailVerified: profile.is_email_verified !== false,
+          profilePhoto: profile.avatar_url || undefined,
+          referredByLeaderId: profile.referred_by_leader_id || undefined,
+        },
+        isAuthenticated: true,
       });
 
-      // If auth passes OR profile is approved (SQL seeded partner test account), grant portal access
-      const loggedInPartner = {
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone || '',
-        profession: profile.profession || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        pan: profile.pan || '',
-        status: profile.status,
-        role: profile.role,
-        teamCode: profile.team_code || '',
-        joinedAt: profile.joined_at || profile.created_at,
-        isEmailVerified: profile.is_email_verified !== false,
-        profilePhoto: profile.avatar_url || undefined,
-        referredByLeaderId: profile.referred_by_leader_id || undefined,
-      };
-
-      if (!authError || profile.status === 'kyc_approved' || profile.status === 'kyc_submitted') {
-        // Write Remember Me preference BEFORE Supabase session is stored
-        // so the smart storage adapter knows which storage to use
-        if (typeof window !== 'undefined') {
-          if (rememberMe) {
-            window.localStorage.setItem('primescore-remember-me', 'true');
-          } else {
-            window.localStorage.removeItem('primescore-remember-me');
-          }
-        }
-        usePartnerStore.setState({
-          partner: loggedInPartner,
-          isAuthenticated: true,
-        });
-        setIsNavigating(true);
-        router.push('/dashboard');
-        return;
-      }
-
-      if (authError) {
-        setError('Incorrect password. Please double-check your password and try again.');
-        setIsLoading(false);
-        return;
-      }
+      setIsNavigating(true);
+      router.push('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       setError('An unexpected error occurred. Please try again.');
