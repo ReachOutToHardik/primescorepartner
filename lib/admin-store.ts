@@ -146,6 +146,7 @@ interface AdminStore {
   broadcasts: BroadcastAnnouncement[];
   rewardConfig: RewardEngineConfig;
   isAuthenticated: boolean;
+  isLoadingData: boolean;
 
   // Actions
   adminLogin: (email: string, pass: string) => boolean;
@@ -180,6 +181,7 @@ export const useAdminStore = create<AdminStore>()(
       broadcasts: [],
       rewardConfig: DEFAULT_REWARD_CONFIG,
       isAuthenticated: false,
+      isLoadingData: false,
 
       adminLogin: (email, pass) => {
         const cleanEmail = email.toLowerCase().trim();

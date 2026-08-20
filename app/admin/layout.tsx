@@ -9,7 +9,7 @@ import { SignOut } from '@phosphor-icons/react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   useSupabaseSync();
-  const { isAuthenticated, adminLogout } = useAdminStore();
+  const { isAuthenticated, adminLogout, isLoadingData } = useAdminStore();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -56,6 +56,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <h2 className="font-display font-bold text-sm text-[var(--navy-deep)] tracking-tight">
               Primescore Operations HQ
             </h2>
+            {isLoadingData && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 text-[#1B2A72] text-[11px] font-bold rounded-full animate-pulse">
+                <div className="w-3 h-3 border-2 border-[#1B2A72] border-t-transparent rounded-full animate-spin" />
+                <span>Syncing DB...</span>
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

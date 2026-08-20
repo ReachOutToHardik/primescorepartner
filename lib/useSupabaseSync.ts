@@ -16,6 +16,7 @@ export function useSupabaseSync() {
   // ─── Admin: fetch all profiles + referrals from Supabase ────────────────────
   async function syncAdminData() {
     try {
+      useAdminStore.setState({ isLoadingData: true });
       const { data: dbProfiles, error: profileErr } = await supabase
         .from('profiles')
         .select('id, name, email, phone, profession, city, state, status, role, team_code, created_at, joined_at, is_email_verified, avatar_url, referred_by_leader_id, prime_points, kyc_submitted_at')
@@ -94,6 +95,8 @@ export function useSupabaseSync() {
       }
     } catch (err) {
       console.error('Admin Supabase sync error:', err);
+    } finally {
+      useAdminStore.setState({ isLoadingData: false });
     }
   }
 
@@ -224,12 +227,12 @@ export function useSupabaseSync() {
   }
 
   useEffect(() => {
-    // ─── Guard: verify a live Supabase session before touching any DB table ──
-    // Without this check, syncAdminData() fires on every page load — including
-    // the login page — leaking all table reads to unauthenticated requests.
+    // ─── Guard: verify a live Supabase session or admin auth before touching any DB table ──
     const runSync = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return; // No session → bail out, make zero DB calls
+      const isAdminAuthenticated = useAdminStore.getState().isAuthenticated;
+
+      if (!session && !isAdminAuthenticated) return; // Unauthenticated public requests bail out
 
       // Sync admin data (profiles + referrals + system_config)
       syncAdminData();
@@ -242,13 +245,16 @@ export function useSupabaseSync() {
 
     runSync();
 
-    // ─── Realtime: only subscribe when a session actually exists ─────────────
+    // ─── Realtime: subscribe if session exists or admin is authenticated ─────
     let profilesChannel: ReturnType<typeof supabase.channel> | null = null;
     let referralsChannel: ReturnType<typeof supabase.channel> | null = null;
     let redemptionsChannel: ReturnType<typeof supabase.channel> | null = null;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) return; // No session → skip all realtime subscriptions
+    const setupRealtime = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const isAdminAuthenticated = useAdminStore.getState().isAuthenticated;
+
+      if (!session && !isAdminAuthenticated) return; // Skip realtime for unauthenticated users
 
       const subId = Math.random().toString(36).substring(2, 7);
 
@@ -291,7 +297,9 @@ export function useSupabaseSync() {
           }
         )
         .subscribe();
-    });
+    };
+
+    setupRealtime();
 
     return () => {
       if (profilesChannel) supabase.removeChannel(profilesChannel);
