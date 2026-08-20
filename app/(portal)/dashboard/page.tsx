@@ -73,6 +73,35 @@ export default function PartnerDashboard() {
   const [chartMetricMode, setChartMetricMode] = useState<'both' | 'referrals' | 'points'>('both');
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
+  const [pointTransactions, setPointTransactions] = useState<{
+    id: string;
+    transaction_type: string;
+    points_change: number;
+    balance_after: number;
+    title: string;
+    reference_id: string | null;
+    created_at: string;
+  }[]>([]);
+
+  // Fetch real point_transactions from DB table (Single Source of Truth)
+  useEffect(() => {
+    if (!partner?.id) return;
+    const fetchTransactions = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data } = await supabase
+          .from('point_transactions')
+          .select('*')
+          .eq('partner_id', partner.id)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (data) setPointTransactions(data);
+      } catch (err) {
+        console.warn('Point transactions fetch error:', err);
+      }
+    };
+    fetchTransactions();
+  }, [partner?.id]);
 
   // Interactive trend datasets dynamically aggregated from EVERY real partner referral log
   const trendData = useMemo(() => {
@@ -295,6 +324,31 @@ export default function PartnerDashboard() {
 
   // Chronologically sorted transaction ledger for IN / OUT activity
   const passbookLedger = useMemo(() => {
+    // If real point_transactions exist in DB, map directly from database table (Single Source of Truth)
+    if (pointTransactions.length > 0) {
+      return pointTransactions.map((tx) => {
+        const d = tx.created_at ? new Date(tx.created_at) : new Date();
+        const categoryMap: Record<string, 'earned_referral' | 'earned_enrolled' | 'submitted' | 'redeemed_voucher'> = {
+          signup_bonus: 'earned_referral',
+          referral_earned: 'earned_referral',
+          enrolled_earned: 'earned_enrolled',
+          voucher_redeemed: 'redeemed_voucher',
+        };
+
+        return {
+          id: tx.id,
+          date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          rawDate: d,
+          category: categoryMap[tx.transaction_type] || 'submitted',
+          title: tx.title,
+          referenceId: tx.reference_id || tx.id,
+          amount: tx.points_change,
+          runningBalance: tx.balance_after,
+        };
+      });
+    }
+
+    // Fallback: Compute dynamically via mathematical accumulator formula (Previous Balance + Added Points)
     const transactions: {
       id: string;
       date: string;
@@ -386,7 +440,7 @@ export default function PartnerDashboard() {
 
     // Return in reverse chronological order (newest activity first)
     return transactions.reverse();
-  }, [referrals, redemptions, partner]);
+  }, [referrals, redemptions, partner, pointTransactions]);
 
   // Recent 5 referrals
   const recentReferrals = useMemo(() => referrals.slice(0, 5), [referrals]);
