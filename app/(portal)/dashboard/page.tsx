@@ -83,6 +83,28 @@ export default function PartnerDashboard() {
     created_at: string;
   }[]>([]);
 
+  const [pointsPerInr, setPointsPerInr] = useState(4);
+
+  // Fetch dynamic reward conversion rate from Supabase system_config
+  useEffect(() => {
+    const fetchRewardConfig = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data } = await supabase
+          .from('system_config')
+          .select('points_per_inr')
+          .eq('id', 'global_reward_config')
+          .single();
+        if (data?.points_per_inr) {
+          setPointsPerInr(Number(data.points_per_inr));
+        }
+      } catch (err) {
+        console.warn('Config fetch note:', err);
+      }
+    };
+    fetchRewardConfig();
+  }, []);
+
   // Fetch real point_transactions from DB table (Single Source of Truth)
   useEffect(() => {
     if (!partner?.id) return;
@@ -568,7 +590,7 @@ export default function PartnerDashboard() {
                 {totalPoints.toLocaleString()}
               </span>
               <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
-                (≈ ₹{(totalPoints / 10).toLocaleString('en-IN')})
+                (≈ ₹{Math.round(totalPoints / (pointsPerInr || 4)).toLocaleString('en-IN')})
               </span>
             </div>
             <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">Instant Gift Vouchers</p>
@@ -578,15 +600,14 @@ export default function PartnerDashboard() {
 
       {/* Middle Section: Chart + PrimePoints Tier Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Referral & Earnings Trend Chart (8 cols) */}
-        <Card variant="elevated" className="lg:col-span-8 p-6 space-y-5">
-          {/* Header & Controls Bar */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        {/* Left 8 cols: Referral & Performance Analytics Chart */}
+        <Card variant="elevated" className="lg:col-span-8 p-6 space-y-4 border border-slate-200 shadow-xs rounded-2xl bg-white">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-              <h2 className="font-display text-lg font-bold text-slate-900">
+              <h2 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
                 Referral & Performance Analytics
               </h2>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
                 Track referral volume and earned reward points over selected period.
               </p>
             </div>
@@ -634,10 +655,10 @@ export default function PartnerDashboard() {
                   key={mode.id}
                   type="button"
                   onClick={() => setChartMetricMode(mode.id)}
-                  className={`flex-1 sm:flex-none px-3 py-1 text-xs font-semibold rounded-md transition-colors text-center ${
+                  className={`flex-1 sm:flex-initial px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
                     chartMetricMode === mode.id
                       ? 'bg-slate-900 text-white shadow-2xs'
-                      : 'text-slate-600 hover:bg-white/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                   }`}
                 >
                   {mode.label}
@@ -645,15 +666,11 @@ export default function PartnerDashboard() {
               ))}
             </div>
 
-            {/* Concise Period Stat Callout Strip */}
-            <div className="flex items-center justify-between sm:justify-end gap-3 text-xs font-mono font-semibold bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-lg w-full sm:w-auto">
-              <span className="text-slate-600">
-                Total Referrals: <strong className="text-slate-900 font-bold">{totalCount}</strong>
-              </span>
+            {/* Total Metric Count Highlights */}
+            <div className="flex items-center gap-3 text-xs font-mono-num font-semibold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/60 self-end sm:self-auto">
+              <span>Total Referrals: <strong className="text-slate-900">{totalCount}</strong></span>
               <span className="text-slate-300">|</span>
-              <span className="text-slate-600">
-                Points: <strong className="text-[#1B2A72] font-bold">+{totalPoints}</strong>
-              </span>
+              <span>Points: <strong className="text-[#1B2A72]">+{totalPoints.toLocaleString()}</strong></span>
             </div>
           </div>
 
@@ -681,7 +698,7 @@ export default function PartnerDashboard() {
                 {totalPoints.toLocaleString()} Pts
               </span>
               <p className="text-xs text-[#F5C518] font-bold mt-1 font-mono-num">
-                &asymp; ₹{(totalPoints / 10).toLocaleString('en-IN')} INR Payout Equivalent
+                &asymp; ₹{Math.round(totalPoints / (pointsPerInr || 4)).toLocaleString('en-IN')} INR Payout Equivalent
               </p>
             </div>
 

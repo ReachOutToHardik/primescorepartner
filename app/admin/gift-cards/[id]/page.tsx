@@ -24,7 +24,7 @@ export default function AdminGiftCardDetailPage({ params }: { params: { id: stri
 
   // Financial Analytics for Brand Gift Card
   const totalPointsRedeemed = 125000; // Total PrimePoints converted for this brand
-  const totalRupeesExpense = totalPointsRedeemed / 10; // 10 Pts = ₹1 INR (₹12,500 INR)
+  const totalRupeesExpense = totalPointsRedeemed / 4; // 4 Pts = ₹1 INR
   const totalVouchersIssued = 48;
   const activeStockCount = 14;
 
