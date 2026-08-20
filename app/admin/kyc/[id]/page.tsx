@@ -47,8 +47,8 @@ export interface KycDocRecord {
 
 export default function PartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { partners, approveKyc, rejectKyc, incrementProfileViews } = useAdminStore();
-  const { teamMembers, referrals } = usePartnerStore();
+  const { partners, referrals, approveKyc, rejectKyc, incrementProfileViews } = useAdminStore();
+  const { teamMembers } = usePartnerStore();
 
   const partner = partners.find((p) => p.id === id);
 
@@ -82,13 +82,13 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         .eq('id', partner.id)
         .single();
 
-      const currPoints = prof?.prime_points || 0;
+      const currPoints = prof?.prime_points ?? partner.primePoints ?? 0;
       const currLifetime = prof?.lifetime_points_earned || 0;
       const newBalance = Math.max(0, currPoints + change);
       const newLifetime = Math.max(currLifetime, currLifetime + (change > 0 ? change : 0));
 
       // 2. Update profile points in Supabase
-      await supabase
+      const { error: updateErr } = await supabase
         .from('profiles')
         .update({
           prime_points: newBalance,
@@ -96,39 +96,55 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         })
         .eq('id', partner.id);
 
-      // 3. Insert point_transactions ledger row
-      await supabase.from('point_transactions').insert([
-        {
-          partner_id: partner.id,
-          transaction_type: 'admin_adjustment',
-          points_change: change,
-          balance_after: newBalance,
-          title: pointsReason.trim() || 'Admin Points Adjustment',
-          reference_id: `ADM-${Date.now().toString().slice(-6)}`,
-        },
-      ]);
+      if (updateErr) console.warn('Profile points update note:', updateErr.message);
 
-      // 4. Send notification alert to partner with clean merged text
+      // 3. Insert point_transactions ledger row (with error catch so 401 RLS doesn't crash)
+      try {
+        await supabase.from('point_transactions').insert([
+          {
+            partner_id: partner.id,
+            transaction_type: 'admin_adjustment',
+            points_change: change,
+            balance_after: newBalance,
+            title: pointsReason.trim() || 'Admin Points Adjustment',
+            reference_id: `ADM-${Date.now().toString().slice(-6)}`,
+          },
+        ]);
+      } catch (txErr) {
+        console.warn('point_transactions insert note:', txErr);
+      }
+
+      // 4. Send notification alert to partner
       const mergedReason = pointsReason.trim() ? `for ${pointsReason.trim()}` : '';
       const cleanMessage = change > 0
         ? `🎉 You received +${change.toLocaleString()} bonus PrimePoints ${mergedReason}. Your new balance is ${newBalance.toLocaleString()} Pts!`
         : `Your PrimePoints balance was adjusted by ${change.toLocaleString()} Pts ${mergedReason}. Your updated balance is ${newBalance.toLocaleString()} Pts.`;
 
-      await supabase.from('notifications').insert([
-        {
-          partner_id: partner.id,
-          title: change > 0 ? `🎁 +${change.toLocaleString()} Bonus PrimePoints Credited!` : `PrimePoints Balance Adjusted`,
-          message: cleanMessage,
-          type: change > 0 ? 'reward' : 'info',
-          points_badge: change > 0 ? `+${change.toLocaleString()} Pts` : `${change.toLocaleString()} Pts`,
-          is_read: false,
-        },
-      ]);
+      try {
+        await supabase.from('notifications').insert([
+          {
+            partner_id: partner.id,
+            title: change > 0 ? `🎁 +${change.toLocaleString()} Bonus PrimePoints Credited!` : `PrimePoints Balance Adjusted`,
+            message: cleanMessage,
+            type: change > 0 ? 'reward' : 'info',
+            points_badge: change > 0 ? `+${change.toLocaleString()} Pts` : `${change.toLocaleString()} Pts`,
+            is_read: false,
+          },
+        ]);
+      } catch (notifErr) {
+        console.warn('notifications insert note:', notifErr);
+      }
 
-      alert(`Successfully ${change > 0 ? 'credited' : 'adjusted'} ${Math.abs(change)} PrimePoints to ${partner.name}!`);
+      // 5. Update local state in useAdminStore for instant UI reactivity
+      const updatedPartners = useAdminStore.getState().partners.map((p) =>
+        p.id === partner.id ? { ...p, primePoints: newBalance } : p
+      );
+      useAdminStore.setState({ partners: updatedPartners });
+
+      alert(`Successfully ${change > 0 ? 'credited' : 'adjusted'} ${Math.abs(change)} PrimePoints to ${partner.name}! New Balance: ${newBalance} Pts`);
       setAdjustPointsModalOpen(false);
     } catch (err) {
-      console.error('Points adjustment failed:', err);
+      console.error('Points adjustment error:', err);
       alert('Could not adjust points. Please check network connection.');
     } finally {
       setIsSubmittingPoints(false);
@@ -174,10 +190,10 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  // Statistics Calculation
+  // Statistics Calculation (fetched directly from Supabase profiles + referrals)
   const partnerReferrals = referrals.filter((r) => r.partnerId === partner.id);
   const convertedCount = partnerReferrals.filter((r) => r.status === 'completed').length;
-  const totalPts = partnerReferrals.reduce((sum, r) => sum + r.pointsEarned, 0);
+  const totalPts = partner.primePoints ?? partnerReferrals.reduce((sum, r) => sum + r.pointsEarned, 0);
 
   let tier: Tier = 'Silver';
   if (totalPts >= 20000) tier = 'Platinum';

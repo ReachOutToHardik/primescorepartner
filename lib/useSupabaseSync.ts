@@ -42,6 +42,7 @@ export function useSupabaseSync() {
         isEmailVerified: p.is_email_verified !== false,
         profilePhoto: p.avatar_url || undefined,
         referredByLeaderId: p.referred_by_leader_id || undefined,
+        primePoints: p.prime_points || 0,
       }));
       useAdminStore.setState({ partners: mappedAdminPartners });
 
