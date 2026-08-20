@@ -18,6 +18,7 @@ import {
   FileText,
   DownloadSimple,
   CaretDown,
+  HourglassHigh,
 } from '@phosphor-icons/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Card } from '@/components/ui/Card';
@@ -293,8 +294,16 @@ export default function ReferPage() {
     return (
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-up py-2">
         {/* Top Hero Banner */}
-        <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2.5">
+        <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl relative overflow-hidden">
+          {/* Top Right Animated Moving Icon */}
+          <div className="absolute top-5 right-5 sm:top-6 sm:right-6 flex items-center justify-center">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center relative shadow-inner">
+              <span className="absolute inset-0 rounded-2xl bg-amber-400/20 animate-ping opacity-60" style={{ animationDuration: '3s' }} />
+              <HourglassHigh size={22} className="text-amber-400 animate-spin relative z-10" style={{ animationDuration: '8s' }} weight="bold" />
+            </div>
+          </div>
+
+          <div className="space-y-2.5 pr-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/10 border border-amber-400/30 text-amber-300 rounded-full text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <span>Referral Portal Locked</span>
@@ -305,13 +314,6 @@ export default function ReferPage() {
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
               Your partner account is being reviewed. The referral submission features will unlock automatically once your account is verified.
             </p>
-          </div>
-
-          <div className="shrink-0 self-center md:self-center w-full md:w-auto flex justify-center md:justify-end">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/5 border border-white/15 flex flex-col items-center justify-center text-center">
-              <Clock size={28} className="text-amber-400 mb-1" weight="bold" />
-              <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider">Reviewing</span>
-            </div>
           </div>
         </div>
 
