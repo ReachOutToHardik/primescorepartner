@@ -317,7 +317,7 @@ export default function PartnerDashboard() {
         title: '🎁 Welcome Sign-up Bonus (KYC Approved)',
         referenceId: 'BONUS-100',
         amount: 100,
-        runningBalance: 100,
+        runningBalance: 0,
       });
     }
 
