@@ -110,7 +110,7 @@ export default function AdminAnalyticsPage() {
       // 2. Fetch profiles to map partner names
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, name, email, partner_team_code, status, created_at');
+        .select('id, name, email, team_code, status, created_at');
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
@@ -125,7 +125,7 @@ export default function AdminAnalyticsPage() {
               points_change: 100,
               balance_after: 100,
               title: '🎁 Welcome Sign-Up Bonus (KYC Verified)',
-              reference_id: `BONUS-${p.partner_team_code || p.id.slice(0, 6)}`,
+              reference_id: `BONUS-${p.team_code || p.id.slice(0, 6)}`,
               created_at: p.created_at || new Date().toISOString(),
             });
           }
@@ -148,7 +148,7 @@ export default function AdminAnalyticsPage() {
                   ...tx,
                   partner_name: prof?.name || 'Partner User',
                   partner_email: prof?.email || 'N/A',
-                  partner_code: prof?.partner_team_code || tx.partner_id?.slice(0, 8),
+                  partner_code: prof?.team_code || tx.partner_id?.slice(0, 8),
                 };
               });
               setDbTransactions(enriched);
@@ -167,7 +167,7 @@ export default function AdminAnalyticsPage() {
             ...tx,
             partner_name: prof?.name || 'Partner User',
             partner_email: prof?.email || 'N/A',
-            partner_code: prof?.partner_team_code || tx.partner_id?.slice(0, 8),
+            partner_code: prof?.team_code || tx.partner_id?.slice(0, 8),
           };
         });
         setDbTransactions(enriched);
