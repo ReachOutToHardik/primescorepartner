@@ -27,7 +27,8 @@ import {
   ShareNetwork,
   Copy,
   CaretRight,
-  QrCode
+  QrCode,
+  LockKey
 } from '@phosphor-icons/react';
 
 // Chart.js Setup
@@ -644,10 +645,23 @@ export default function PartnerDashboard() {
 
             <button
               type="button"
-              onClick={() => setQrModalOpen(true)}
+              onClick={() => {
+                if (partner?.status !== 'kyc_approved') {
+                  setKycModalOpen(true);
+                } else {
+                  setQrModalOpen(true);
+                }
+              }}
               className="w-full p-3.5 bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-slate-200 rounded-xl text-xs font-bold text-slate-800 flex items-center justify-between transition-colors cursor-pointer group shadow-2xs"
             >
-              <span>Generate Client QR &amp; Link</span>
+              <span className="flex items-center gap-2">
+                <span>Generate Client QR &amp; Link</span>
+                {partner?.status !== 'kyc_approved' && (
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md flex items-center gap-1 border border-amber-200">
+                    <LockKey size={12} weight="bold" /> Locked
+                  </span>
+                )}
+              </span>
               <CaretRight size={16} className="text-slate-500 group-hover:translate-x-1 transition-transform" />
             </button>
           </Card>
