@@ -104,11 +104,11 @@ export default function RewardsConfigPage() {
           <div className="flex items-center gap-2 mb-1">
             <Coins size={28} className="text-[#F5C518]" weight="fill" />
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--navy-deep)]">
-              Reward Engine & Financial Rates Control
+              Reward Points & Rates Settings
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[var(--ink-muted)]">
-            Configure partner point rewards for lead stages, Points-to-INR conversion rates, team leader overrides, and tier multipliers.
+            Set point rewards per lead stage, point-to-rupee conversion rates, team leader bonuses, and tier multipliers.
           </p>
         </div>
 
@@ -118,14 +118,14 @@ export default function RewardsConfigPage() {
             className="px-4 py-2.5 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--ink-2)] text-xs font-semibold rounded-xl border border-[var(--border)] transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowClockwise size={16} />
-            <span>Reset Changes</span>
+            <span>Reset</span>
           </button>
           <button
             onClick={handleSaveConfig}
             className="px-5 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white text-xs font-bold font-display rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <FloppyDisk size={18} weight="bold" />
-            <span>Save Reward Rules</span>
+            <span>Save Settings</span>
           </button>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function RewardsConfigPage() {
       {saveSuccess && (
         <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-2 animate-shake">
           <CheckCircle size={20} className="text-emerald-600 shrink-0" weight="fill" />
-          <span>Success! Reward engine rules and points conversion rates have been updated live across all portal calculations.</span>
+          <span>Success! Reward settings and point conversion rates have been updated live across the portal.</span>
         </div>
       )}
 
@@ -142,7 +142,7 @@ export default function RewardsConfigPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4 border-l-4 border-amber-400 bg-gradient-to-br from-amber-500/5 to-transparent">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1">
-            <span>Points-to-INR Rate</span>
+            <span>Points Value</span>
             <CurrencyInr size={18} className="text-amber-600" />
           </div>
           <p className="text-xl font-bold font-mono-num text-[var(--navy-deep)]">
@@ -153,7 +153,7 @@ export default function RewardsConfigPage() {
 
         <Card className="p-4 border-l-4 border-emerald-500 bg-gradient-to-br from-emerald-500/5 to-transparent">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1">
-            <span>Completed Case Bonus</span>
+            <span>Completed Lead Points</span>
             <Trophy size={18} className="text-emerald-600" />
           </div>
           <p className="text-xl font-bold font-mono-num text-emerald-700">
@@ -164,22 +164,22 @@ export default function RewardsConfigPage() {
 
         <Card className="p-4 border-l-4 border-indigo-500 bg-gradient-to-br from-indigo-500/5 to-transparent">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1">
-            <span>Team Leader Override</span>
+            <span>Team Leader Bonus</span>
             <UsersThree size={18} className="text-indigo-600" />
           </div>
           <p className="text-xl font-bold font-mono-num text-indigo-700">
             {formData.teamLeaderOverridePercent}% Cut
           </p>
-          <p className="text-[11px] text-slate-500 mt-1">+{Math.round(formData.conversionPoints * (formData.teamLeaderOverridePercent / 100))} Pts per sub-agent case</p>
+          <p className="text-[11px] text-slate-500 mt-1">+{Math.round(formData.conversionPoints * (formData.teamLeaderOverridePercent / 100))} Pts per completed lead by team</p>
         </Card>
 
         <Card className="p-4 border-l-4 border-blue-500 bg-gradient-to-br from-blue-500/5 to-transparent">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1">
-            <span>Payout Settlement Mode</span>
+            <span>Payout Option</span>
             <SlidersHorizontal size={18} className="text-blue-600" />
           </div>
           <p className="text-lg font-bold font-display text-[var(--navy-deep)] capitalize">
-            {formData.payoutMode === 'points' ? '🎁 Points (Vouchers)' : formData.payoutMode === 'cash' ? '💵 Direct Bank Cash' : '⚡ Dual Hybrid Mode'}
+            {formData.payoutMode === 'points' ? '🎁 Gift Vouchers' : formData.payoutMode === 'cash' ? '💵 Direct Bank Transfer' : '⚡ Both Options'}
           </p>
           <p className="text-[11px] text-slate-500 mt-1">Min threshold: {formData.minRedemptionPoints} Pts (₹{formData.minRedemptionPoints / formData.pointsPerInr})</p>
         </Card>
@@ -194,14 +194,14 @@ export default function RewardsConfigPage() {
             <div className="flex items-center gap-2 border-b border-[var(--border)] pb-3">
               <Trophy size={22} className="text-[#1B2A72]" weight="fill" />
               <h2 className="font-display font-bold text-lg text-[var(--navy-deep)]">
-                Stage-Wise Referral Point Bounties
+                Points Earned Per Lead Stage
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  1. Referral Submitted
+                  1. Lead Submitted
                 </label>
                 <div className="relative">
                   <input
@@ -213,12 +213,12 @@ export default function RewardsConfigPage() {
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">Pts</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Cash: ₹{formData.submissionPoints / formData.pointsPerInr}</p>
+                <p className="text-[11px] text-slate-400 mt-1">Cash Value: ₹{formData.submissionPoints / formData.pointsPerInr}</p>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  2. Client Enrolled
+                  2. Customer Enrolled
                 </label>
                 <div className="relative">
                   <input
@@ -230,12 +230,12 @@ export default function RewardsConfigPage() {
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">Pts</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Cash: ₹{formData.enrollmentPoints / formData.pointsPerInr}</p>
+                <p className="text-[11px] text-slate-400 mt-1">Cash Value: ₹{formData.enrollmentPoints / formData.pointsPerInr}</p>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  3. Case Completed
+                  3. Lead Completed
                 </label>
                 <div className="relative">
                   <input
@@ -247,13 +247,13 @@ export default function RewardsConfigPage() {
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">Pts</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Cash: ₹{formData.conversionPoints / formData.pointsPerInr}</p>
+                <p className="text-[11px] text-slate-400 mt-1">Cash Value: ₹{formData.conversionPoints / formData.pointsPerInr}</p>
               </div>
             </div>
 
             <div className="pt-3 border-t border-[var(--border)]">
               <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                Team Leader Override Cut (%)
+                Team Leader Bonus (%)
               </label>
               <div className="flex items-center gap-3">
                 <div className="relative max-w-xs flex-1">
@@ -272,7 +272,7 @@ export default function RewardsConfigPage() {
                   <span className="font-bold font-mono-num text-indigo-700">
                     +{Math.round(formData.conversionPoints * (formData.teamLeaderOverridePercent / 100))} Pts
                   </span>
-                  &nbsp;(₹{Math.round(formData.conversionPoints * (formData.teamLeaderOverridePercent / 100)) / formData.pointsPerInr}) credited to Team Leader per sub-agent completion.
+                  &nbsp;(₹{Math.round(formData.conversionPoints * (formData.teamLeaderOverridePercent / 100)) / formData.pointsPerInr}) paid to Team Leader for each lead completed by their team.
                 </div>
               </div>
             </div>
@@ -283,14 +283,14 @@ export default function RewardsConfigPage() {
             <div className="flex items-center gap-2 border-b border-[var(--border)] pb-3">
               <CurrencyInr size={22} className="text-emerald-600" weight="bold" />
               <h2 className="font-display font-bold text-lg text-[var(--navy-deep)]">
-                Points Conversion & Redemption Limits
+                Points Value & Claim Limits
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Points per ₹1.00 INR
+                  Points per ₹1
                 </label>
                 <div className="relative">
                   <input
@@ -302,28 +302,28 @@ export default function RewardsConfigPage() {
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">Pts / ₹1</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Higher number means points are worth less INR.</p>
+                <p className="text-[11px] text-slate-400 mt-1">Higher number means more points needed for ₹1.</p>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Payout System Mode
+                  Payout Type
                 </label>
                 <select
                   value={formData.payoutMode}
                   onChange={(e) => handleChange('payoutMode', e.target.value)}
                   className="w-full px-3 py-2 text-sm font-semibold bg-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[#1B2A72] outline-none"
                 >
-                  <option value="points">🎁 PrimePoints (Gift Card Vouchers)</option>
-                  <option value="cash">💵 Direct INR Cash Bank Settlement</option>
-                  <option value="hybrid">⚡ Dual Hybrid (Partner Choice)</option>
+                  <option value="points">🎁 Gift Vouchers</option>
+                  <option value="cash">💵 Direct Bank Transfer</option>
+                  <option value="hybrid">⚡ Both Options (Partner Choice)</option>
                 </select>
-                <p className="text-[11px] text-slate-400 mt-1">Controls payout options visible to partners.</p>
+                <p className="text-[11px] text-slate-400 mt-1">Payout options shown to partners.</p>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Min Redemption Threshold (Points)
+                  Minimum Claim Amount (Points)
                 </label>
                 <div className="relative">
                   <input
@@ -336,12 +336,12 @@ export default function RewardsConfigPage() {
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">Pts</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Min balance to request voucher (₹{formData.minRedemptionPoints / formData.pointsPerInr})</p>
+                <p className="text-[11px] text-slate-400 mt-1">Minimum balance to request voucher (₹{formData.minRedemptionPoints / formData.pointsPerInr})</p>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Max Daily Redemption Cap (Points)
+                  Maximum Daily Claim Limit (Points)
                 </label>
                 <div className="relative">
                   <input
@@ -354,7 +354,7 @@ export default function RewardsConfigPage() {
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">Pts / Day</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Max daily redemption per partner (₹{formData.maxDailyRedemptionPoints / formData.pointsPerInr})</p>
+                <p className="text-[11px] text-slate-400 mt-1">Maximum daily claim per partner (₹{formData.maxDailyRedemptionPoints / formData.pointsPerInr})</p>
               </div>
             </div>
           </Card>
@@ -364,13 +364,13 @@ export default function RewardsConfigPage() {
             <div className="flex items-center gap-2 border-b border-[var(--border)] pb-3">
               <Percent size={22} className="text-amber-500" weight="bold" />
               <h2 className="font-display font-bold text-lg text-[var(--navy-deep)]">
-                Tier & Profession Multipliers
+                Tier & Profession Bonus Rates
               </h2>
             </div>
 
             {/* Tier Multipliers */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Partner Tier Boosts</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tier Multipliers</h3>
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                   <span className="text-xs font-bold text-slate-700">Silver Tier</span>
@@ -424,7 +424,7 @@ export default function RewardsConfigPage() {
 
             {/* Profession Multipliers */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Profession-Specific Multipliers</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Profession Multipliers</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-1">
                   <span className="text-[11px] font-bold text-slate-600">DSA Agent</span>
@@ -487,7 +487,7 @@ export default function RewardsConfigPage() {
               <div className="flex items-center gap-2">
                 <Wrench size={22} className="text-indigo-600" weight="fill" />
                 <h2 className="font-display font-bold text-lg text-[var(--navy-deep)]">
-                  Per-Service Point Payout Matrix
+                  Points Earned By Service
                 </h2>
               </div>
               <span className="text-xs text-slate-500 font-semibold">{services.length} Active Services</span>
@@ -499,8 +499,8 @@ export default function RewardsConfigPage() {
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
                     <th className="p-3">Service Name</th>
                     <th className="p-3">Category</th>
-                    <th className="p-3 text-right">Points Reward</th>
-                    <th className="p-3 text-right">Cash Value (INR)</th>
+                    <th className="p-3 text-right">Points Earned</th>
+                    <th className="p-3 text-right">Rupee Value</th>
                     <th className="p-3 text-center">Status</th>
                     <th className="p-3 text-center">Action</th>
                   </tr>
@@ -547,12 +547,12 @@ export default function RewardsConfigPage() {
             <div className="flex items-center gap-2 border-b border-white/15 pb-3">
               <Calculator size={24} className="text-[#F5C518]" weight="fill" />
               <h2 className="font-display font-bold text-lg text-white">
-                Live Earnings Simulator
+                Earnings Calculator
               </h2>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Test how much a partner earns under the configured points and rate rules.
+              Calculate how much a partner earns based on current reward rules.
             </p>
 
             <div className="space-y-4 text-xs">
