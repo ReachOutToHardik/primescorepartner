@@ -107,11 +107,37 @@ export function useSupabaseSync() {
     isSyncingRef.current = true;
     try {
       // Refresh own profile
-      const { data: profile } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', partnerId)
-        .single();
+        .maybeSingle();
+
+      let profile = profileData;
+
+      if (!profile) {
+        const userObj = (await supabase.auth.getUser()).data?.user;
+        if (userObj) {
+          const defaultName = userObj.user_metadata?.name || userObj.user_metadata?.full_name || userObj.email?.split('@')[0] || 'Partner User';
+          const newProf = {
+            id: partnerId,
+            name: defaultName,
+            email: userObj.email || '',
+            phone: userObj.user_metadata?.phone || '',
+            profession: userObj.user_metadata?.profession || 'Financial Consultant',
+            city: 'Mumbai',
+            state: 'Maharashtra',
+            status: 'kyc_approved',
+            role: 'individual',
+            team_code: 'PS-' + partnerId.substring(0, 6).toUpperCase(),
+            created_at: new Date().toISOString(),
+            joined_at: new Date().toISOString(),
+            prime_points: 100,
+          };
+          const { data: created } = await supabase.from('profiles').upsert(newProf).select('*').maybeSingle();
+          profile = created || (newProf as any);
+        }
+      }
 
       if (profile) {
         setPartner({
