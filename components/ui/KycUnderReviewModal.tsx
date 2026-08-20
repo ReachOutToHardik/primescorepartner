@@ -84,18 +84,18 @@ export function KycUnderReviewModal({ isOpen, onClose, joinedAt }: KycUnderRevie
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
+        <div className="pt-2 flex flex-row items-center gap-2.5">
           <Link
             href="/kyc"
             onClick={onClose}
-            className="w-full py-2.5 px-4 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-md"
+            className="flex-1 py-2.5 px-3 sm:px-4 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md truncate"
           >
-            <span>Check Application Status</span>
-            <ArrowRight size={14} weight="bold" />
+            <span className="truncate">Check Application Status</span>
+            <ArrowRight size={14} weight="bold" className="shrink-0" />
           </Link>
           <button
             onClick={onClose}
-            className="w-full sm:w-auto py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-semibold text-xs rounded-xl transition-colors"
+            className="shrink-0 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-semibold text-xs rounded-xl transition-colors cursor-pointer"
           >
             Got it
           </button>
