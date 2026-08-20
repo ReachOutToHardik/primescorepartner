@@ -671,7 +671,73 @@ export default function PartnerDashboard() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* ── Mobile Card Stack (shown below md) ── */}
+        <div className="md:hidden space-y-2">
+          {passbookLedger.length === 0 ? (
+            <p className="py-8 text-center text-xs text-slate-400 font-medium">
+              No points transactions yet. Submit referrals or redeem vouchers to see activity here.
+            </p>
+          ) : (
+            passbookLedger.map((tx) => (
+              <div
+                key={tx.id}
+                className="bg-white border border-slate-100 rounded-xl p-3.5 space-y-2.5 shadow-2xs"
+              >
+                {/* Row 1: Badge + Date */}
+                <div className="flex items-center justify-between gap-2">
+                  {tx.category === 'earned_referral' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold text-[10px] uppercase rounded-md border border-emerald-200">
+                      <ArrowUpRight size={11} /> Earned
+                    </span>
+                  ) : tx.category === 'earned_enrolled' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 font-bold text-[10px] uppercase rounded-md border border-blue-200">
+                      <ArrowUpRight size={11} /> Enrolled
+                    </span>
+                  ) : tx.category === 'redeemed_voucher' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 font-bold text-[10px] uppercase rounded-md border border-red-200">
+                      <ArrowDownRight size={11} /> Redeemed
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 font-bold text-[10px] uppercase rounded-md border border-slate-200">
+                      Submitted
+                    </span>
+                  )}
+                  <span className="text-[10px] text-slate-400 font-medium">{tx.date}</span>
+                </div>
+
+                {/* Row 2: Title */}
+                <p className="text-xs font-semibold text-slate-900 leading-snug">{tx.title}</p>
+
+                {/* Row 3: Ref ID */}
+                <p className="text-[10px] text-slate-400 font-mono truncate">
+                  Ref: {tx.referenceId}
+                </p>
+
+                {/* Row 4: Points + Balance */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                  <div className="text-center">
+                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Points</p>
+                    <p className={`font-mono font-bold text-sm ${
+                      tx.amount > 0 ? 'text-emerald-600' : tx.amount < 0 ? 'text-red-500' : 'text-slate-400'
+                    }`}>
+                      {tx.amount > 0 ? `+${tx.amount.toLocaleString()}` : tx.amount < 0 ? `${tx.amount.toLocaleString()}` : '0'}
+                    </p>
+                  </div>
+                  <div className="w-px h-8 bg-slate-100" />
+                  <div className="text-center">
+                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Balance</p>
+                    <p className="font-mono font-bold text-sm text-slate-900">
+                      {tx.runningBalance.toLocaleString()} Pts
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* ── Desktop Table (shown md and above) ── */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
@@ -692,9 +758,7 @@ export default function PartnerDashboard() {
               ) : (
                 passbookLedger.map((tx) => (
                   <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 text-slate-500 font-sans">
-                      {tx.date}
-                    </td>
+                    <td className="py-3.5 px-4 text-slate-500 font-sans whitespace-nowrap">{tx.date}</td>
 
                     <td className="py-3.5 px-4">
                       {tx.category === 'earned_referral' ? (
@@ -736,6 +800,7 @@ export default function PartnerDashboard() {
             </tbody>
           </table>
         </div>
+
       </Card>
 
       {/* INSTANT CLIENT QR CODE & LINK MODAL */}

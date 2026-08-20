@@ -250,9 +250,11 @@ export function useSupabaseSync() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return; // No session → skip all realtime subscriptions
 
+      const subId = Math.random().toString(36).substring(2, 7);
+
       // ─── Realtime: profiles table ──────────────────────────────────────────
       profilesChannel = supabase
-        .channel('realtime-profiles')
+        .channel(`realtime-profiles-${subId}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'profiles' },
@@ -267,7 +269,7 @@ export function useSupabaseSync() {
 
       // ─── Realtime: referrals table ─────────────────────────────────────────
       referralsChannel = supabase
-        .channel('realtime-referrals')
+        .channel(`realtime-referrals-${subId}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'referrals' },
@@ -280,7 +282,7 @@ export function useSupabaseSync() {
 
       // ─── Realtime: redemptions table ───────────────────────────────────────
       redemptionsChannel = supabase
-        .channel('realtime-redemptions')
+        .channel(`realtime-redemptions-${subId}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'redemptions' },
