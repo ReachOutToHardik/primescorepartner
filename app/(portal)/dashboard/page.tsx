@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePartnerStore } from '@/lib/store';
 import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   Users,
   CheckCircle,
@@ -817,22 +818,35 @@ export default function PartnerDashboard() {
       <Modal
         isOpen={qrModalOpen}
         onClose={() => setQrModalOpen(false)}
-        title="Generate Client QR & Direct Referral Link"
+        title={
+          <span className="text-[13px] sm:text-base font-bold text-slate-900 whitespace-nowrap block truncate">
+            Generate Client QR &amp; Direct Referral Link
+          </span>
+        }
       >
         <div className="space-y-5 text-center py-2">
           <p className="text-xs text-slate-600 max-w-sm mx-auto">
             Scan this QR code or copy your direct client signup link to submit new referrals instantly with automatic partner code tracking.
           </p>
 
-          <div className="w-52 h-52 mx-auto bg-white p-3 rounded-2xl border-2 border-dashed border-[#1B2A72]/30 flex flex-col items-center justify-center shadow-sm relative group">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                `https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`
-              )}`}
-              alt="Partner Client Referral QR Code"
-              className="w-44 h-44 object-contain rounded-xl"
+          <div className="w-56 p-4 mx-auto bg-white rounded-2xl border-2 border-dashed border-[#1B2A72]/30 flex flex-col items-center justify-center gap-2.5 shadow-sm relative group">
+            <QRCodeSVG
+              value={`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`}
+              size={170}
+              bgColor={"#FFFFFF"}
+              fgColor={"#0F1A4E"}
+              level={"H"}
+              includeMargin={false}
+              imageSettings={{
+                src: "/qr-logo.png",
+                x: undefined,
+                y: undefined,
+                height: 40,
+                width: 40,
+                excavate: true,
+              }}
             />
-            <span className="text-[10px] font-bold text-[#1B2A72] bg-indigo-50 px-2 py-0.5 rounded-md mt-1 border border-indigo-200">
+            <span className="text-[10px] font-bold text-[#1B2A72] bg-indigo-50 px-2.5 py-1 rounded-md mt-1 border border-indigo-200 font-mono-num uppercase">
               Code: {partner?.teamCode || partner?.id?.slice(0, 8) || 'REF-ACTIVE'}
             </span>
           </div>
