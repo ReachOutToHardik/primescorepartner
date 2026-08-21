@@ -219,33 +219,35 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
         </Card>
       </div>
 
-      {/* Audit & Status Trail Timeline */}
-      <Card className="p-6 space-y-4">
-        <h3 className="font-display font-bold text-base text-[var(--navy-deep)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-[var(--navy)]" /> Audit & Case Progress History Trail
-        </h3>
-        <div className="space-y-3 bg-[var(--surface-2)] p-4 rounded-xl border border-[var(--border)]">
-          {refCase.statusHistory.map((h, i) => (
-            <div key={i} className="text-xs flex items-start gap-3 border-l-2 border-[var(--navy)] pl-4 py-1.5">
-              <div>
-                <div className="font-bold text-[var(--ink)] font-sans capitalize text-sm">{h.status.replace('_', ' ')}</div>
-                <div className="text-[11px] text-[var(--ink-muted)] font-mono">{new Date(h.date).toLocaleString()}</div>
-                {h.note && <div className="text-xs text-[var(--ink-2)] font-sans mt-1 bg-white p-2 rounded-lg border border-[var(--border)]">{h.note}</div>}
+      {/* Case Activity History Log (Only rendered if logs exist) */}
+      {refCase.statusHistory && refCase.statusHistory.length > 0 && (
+        <Card className="p-6 space-y-4">
+          <h3 className="font-display font-bold text-base text-[var(--navy-deep)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--navy)]" /> Activity & Update Log
+          </h3>
+          <div className="space-y-3 bg-[var(--surface-2)] p-4 rounded-xl border border-[var(--border)]">
+            {refCase.statusHistory.map((h, i) => (
+              <div key={i} className="text-xs flex items-start gap-3 border-l-2 border-[var(--navy)] pl-4 py-1.5">
+                <div>
+                  <div className="font-bold text-[var(--ink)] font-sans capitalize text-sm">{h.status.replace('_', ' ')}</div>
+                  <div className="text-[11px] text-[var(--ink-muted)] font-mono">{new Date(h.date).toLocaleString()}</div>
+                  {h.note && <div className="text-xs text-[var(--ink-2)] font-sans mt-1 bg-white p-2 rounded-lg border border-[var(--border)]">{h.note}</div>}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      )}
 
-      {/* Interactive Pipeline Stage Flow Stepper with Undo/Revert/Edit */}
+      {/* Lead Progress Tracker */}
       <Card className="p-6 space-y-6 border-l-4 border-[#1B2A72]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <h3 className="font-display font-bold text-base text-[var(--navy-deep)] flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-[var(--navy)]" /> Interactive Referral Pipeline Flow
+              <Wrench className="w-5 h-5 text-[var(--navy)]" /> Lead Progress Tracker
             </h3>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Advance stages, undo/revert to previous steps, edit step notes, or reject referral.
+              Update lead status step-by-step, move back if needed, add notes, or cancel lead.
             </p>
           </div>
           
