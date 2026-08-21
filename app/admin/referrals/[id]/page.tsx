@@ -32,6 +32,46 @@ const ALL_STATUSES: { key: ReferralStatus; label: string }[] = [
   { key: 'rejected', label: 'Rejected Case' },
 ];
 
+const PIPELINE_STAGES: {
+  key: ReferralStatus;
+  stepNum: number;
+  title: string;
+  desc: string;
+  pointsText?: string;
+}[] = [
+  {
+    key: 'submitted',
+    stepNum: 1,
+    title: '1. Lead Submitted',
+    desc: 'Client referral lead registered into Primescore system.',
+  },
+  {
+    key: 'received',
+    stepNum: 2,
+    title: '2. Received & Assigned',
+    desc: 'Assigned to senior credit rectification advisor.',
+  },
+  {
+    key: 'enrolled',
+    stepNum: 3,
+    title: '3. Client Enrolled',
+    desc: 'Customer onboarded & credit repair package selected.',
+  },
+  {
+    key: 'in_progress',
+    stepNum: 4,
+    title: '4. Disputes In Progress',
+    desc: 'Official disputes filed across credit bureaus (CIBIL, Experian, etc.).',
+  },
+  {
+    key: 'completed',
+    stepNum: 5,
+    title: '5. Case Completed & Rewarded',
+    desc: 'Rectification complete & partner awarded +500 PrimePoints.',
+    pointsText: '+500 Pts Credited',
+  },
+];
+
 export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -194,45 +234,144 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
         </div>
       </Card>
 
-      {/* Full Page Case Update Form */}
-      <Card className="p-6 space-y-4 border-l-4 border-[var(--navy)]">
-        <h3 className="font-display font-bold text-base text-[var(--navy-deep)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
-          <Wrench className="w-5 h-5 text-[var(--navy)]" /> Transition Pipeline & Add Fulfillment Note
-        </h3>
-
-        <div className="space-y-4">
+      {/* Interactive Pipeline Stage Flow Stepper */}
+      <Card className="p-6 space-y-6 border-l-4 border-[#1B2A72]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <label className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide">
-              Select Pipeline Stage
-            </label>
-            <select
-              value={newStatus}
-              onChange={(e) => setNewStatus(e.target.value as ReferralStatus)}
-              className="w-full p-3 border border-[var(--border-strong)] rounded-xl text-sm font-medium focus:ring-2 focus:ring-[var(--navy)] outline-none bg-white mt-1 font-body"
+            <h3 className="font-display font-bold text-base text-[var(--navy-deep)] flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-[var(--navy)]" /> Interactive Referral Pipeline Flow
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Click &apos;Mark Step Done&apos; on each stage to advance the case flow, skip steps, or reject referral.
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (confirm('Are you sure you want to mark this case as Rejected/Canceled?')) {
+                  updateReferralStatus(refCase.id, 'rejected', statusNote || 'Case rejected by operations team.');
+                  setSavedSuccess(true);
+                  setTimeout(() => setSavedSuccess(false), 4000);
+                }
+              }}
+              className="text-red-600 border-red-200 hover:bg-red-50 text-xs font-bold"
             >
-              {ALL_STATUSES.map((s) => (
-                <option key={s.key} value={s.key}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+              Reject / Remove Case ✖
+            </Button>
           </div>
+        </div>
 
-          <div>
-            <label className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide">
-              Fulfillment Note / Dispute Settlement Update
-            </label>
-            <textarea
-              value={statusNote}
-              onChange={(e) => setStatusNote(e.target.value)}
-              placeholder="e.g. Filed dispute with CIBIL and Experian. Removed late payment default mark."
-              className="w-full h-32 p-3 border border-[var(--border-strong)] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[var(--navy)] mt-1 font-body"
-            />
-          </div>
+        {/* 5-Stage Interactive Step Flow */}
+        <div className="space-y-4">
+          {PIPELINE_STAGES.map((stg, index) => {
+            const currentStageIndex = PIPELINE_STAGES.findIndex((s) => s.key === refCase.status);
+            const isCurrent = refCase.status === stg.key;
+            const isPassed = refCase.status === 'completed' || (currentStageIndex >= 0 && index < currentStageIndex);
+            const isFuture = !isPassed && !isCurrent && refCase.status !== 'rejected';
 
-          <div className="flex justify-end pt-2">
-            <Button variant="primary" size="lg" onClick={handleSaveStatus}>
-              Save & Update Pipeline Status
+            return (
+              <div
+                key={stg.key}
+                className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  isCurrent
+                    ? 'bg-blue-50/70 border-blue-300 ring-2 ring-blue-100 shadow-2xs'
+                    : isPassed
+                    ? 'bg-emerald-50/40 border-emerald-200'
+                    : 'bg-slate-50/60 border-slate-200'
+                }`}
+              >
+                <div className="flex items-start gap-3.5">
+                  <div
+                    className={`w-9 h-9 rounded-full font-bold text-xs flex items-center justify-center shrink-0 ${
+                      isPassed
+                        ? 'bg-emerald-600 text-white shadow-2xs'
+                        : isCurrent
+                        ? 'bg-[#1B2A72] text-white shadow-sm ring-4 ring-blue-100'
+                        : 'bg-slate-200 text-slate-600'
+                    }`}
+                  >
+                    {isPassed ? <CheckCircle size={20} weight="bold" /> : stg.stepNum}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-display font-bold text-sm text-slate-900">{stg.title}</h4>
+                      {isCurrent && (
+                        <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider">
+                          Current Stage
+                        </span>
+                      )}
+                      {isPassed && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+                          ✓ Completed
+                        </span>
+                      )}
+                      {stg.pointsText && (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">
+                          {stg.pointsText}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">{stg.desc}</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons for this step */}
+                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  {!isPassed && (
+                    <Button
+                      variant={isCurrent ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        updateReferralStatus(refCase.id, stg.key, statusNote || `Advanced to ${stg.title}`);
+                        setStatusNote('');
+                        setSavedSuccess(true);
+                        setTimeout(() => setSavedSuccess(false), 4000);
+                      }}
+                      className="text-xs font-bold cursor-pointer"
+                    >
+                      {isCurrent ? 'Mark Step Done ✓' : `Jump to Step ${stg.stepNum} ➔`}
+                    </Button>
+                  )}
+
+                  {isPassed && (
+                    <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-100/60 px-3 py-1.5 rounded-lg border border-emerald-200">
+                      <CheckCircle size={14} weight="fill" /> Done
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Note & Custom Status Update Form */}
+        <div className="space-y-3 pt-4 border-t border-slate-100">
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+            Fulfillment Note / Bureau Update Log
+          </label>
+          <textarea
+            value={statusNote}
+            onChange={(e) => setStatusNote(e.target.value)}
+            placeholder="e.g. Filed dispute with CIBIL and Experian. Package selected and client onboarded."
+            rows={2}
+            className="w-full p-3 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#1B2A72] bg-slate-50 focus:bg-white transition-all font-body"
+          />
+          <div className="flex justify-end">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                updateReferralStatus(refCase.id, refCase.status, statusNote || 'Audit note updated');
+                setStatusNote('');
+                setSavedSuccess(true);
+                setTimeout(() => setSavedSuccess(false), 4000);
+              }}
+            >
+              Add Note Only
             </Button>
           </div>
         </div>
