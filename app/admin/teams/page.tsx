@@ -187,109 +187,121 @@ export default function AdminTeamsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)] font-mono-num">
-                {paginatedList.map((leader) => {
-                  const isExpanded = expandedLeaderId === leader.id;
-                  return (
-                    <React.Fragment key={leader.id}>
-                      <tr
-                        onClick={() => window.location.href = `/admin/kyc/${leader.id}`}
-                        className={`hover:bg-[var(--surface-2)] transition-colors cursor-pointer group ${
-                          isExpanded ? 'bg-amber-50/50' : ''
-                        }`}
-                      >
-                        <td className="px-4 py-4 text-center" onClick={(e) => toggleExpand(leader.id, e)}>
-                          <button className="p-1 hover:bg-black/5 rounded-md text-[var(--ink-muted)]">
-                            {isExpanded ? <CaretUp size={16} weight="bold" /> : <CaretDown size={16} weight="bold" />}
-                          </button>
-                        </td>
+                {paginatedList.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-2.5">
+                        <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                          <Crown size={26} weight="fill" />
+                        </div>
+                        <div>
+                          <h4 className="font-display font-bold text-sm text-slate-800">No Team Leaders Registered Yet</h4>
+                          <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                            There are currently no registered Team Leaders in this directory matching your filter.
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedList.map((leader) => {
+                    const isExpanded = expandedLeaderId === leader.id;
+                    return (
+                      <React.Fragment key={leader.id}>
+                        <tr
+                          onClick={() => window.location.href = `/admin/kyc/${leader.id}`}
+                          className={`hover:bg-[var(--surface-2)] transition-colors cursor-pointer group ${
+                            isExpanded ? 'bg-amber-50/50' : ''
+                          }`}
+                        >
+                          <td className="px-4 py-4 text-center" onClick={(e) => toggleExpand(leader.id, e)}>
+                            <button className="p-1 hover:bg-black/5 rounded-md text-[var(--ink-muted)]">
+                              {isExpanded ? <CaretUp size={16} weight="bold" /> : <CaretDown size={16} weight="bold" />}
+                            </button>
+                          </td>
 
-                        <td className="px-6 py-4 font-sans font-bold text-[var(--ink)] flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs font-display shrink-0 shadow-2xs">
-                            {leader.name.substring(0, 1)}
-                          </div>
-                          <div>
-                            <div className="group-hover:text-[var(--navy)] transition-colors font-display text-sm">{leader.name}</div>
-                            <div className="text-xs font-normal text-[var(--ink-muted)]">{leader.email} • {leader.phone}</div>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-4 font-mono font-bold text-[var(--navy)] text-xs">
-                          {leader.teamCode}
-                        </td>
-
-                        <td className="px-6 py-4 font-sans text-xs text-[var(--ink-2)]">
-                          <div>{leader.profession}</div>
-                          <div className="text-[var(--ink-muted)]">{leader.city}, {leader.state}</div>
-                        </td>
-
-                        <td className="px-6 py-4 font-mono font-bold text-blue-600">
-                          <button
-                            onClick={(e) => toggleExpand(leader.id, e)}
-                            className="flex items-center gap-1 hover:underline text-left cursor-pointer"
-                          >
-                            <span>{teamMembers.length} Active Sub-Agents</span>
-                            {isExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
-                          </button>
-                        </td>
-
-                        <td className="px-6 py-4">
-                          <Badge variant={leader.status === 'kyc_approved' ? 'green' : 'amber'}>
-                            {leader.status.replace('_', ' ').toUpperCase()}
-                          </Badge>
-                        </td>
-
-                        <td className="px-6 py-4 text-right">
-                          <Button variant="primary" size="sm">
-                            Inspect Leader Page <ArrowRight className="w-3.5 h-3.5 ml-1 text-white" />
-                          </Button>
-                        </td>
-                      </tr>
-
-                      {/* Expandable Sub-Agent Nested Dropdown Row */}
-                      {isExpanded && (
-                        <tr className="bg-amber-50/40 border-b border-amber-200">
-                          <td colSpan={7} className="p-4 pl-14">
-                            <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-2xs space-y-3 font-sans">
-                              <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                                <h4 className="font-display font-bold text-xs text-[var(--navy-deep)] flex items-center gap-1.5 uppercase tracking-wide">
-                                  Sub-Agent Hierarchy Under {leader.name} ({teamMembers.length} Agents)
-                                </h4>
-                                <span className="text-[11px] font-mono text-amber-700 font-semibold">
-                                  10% Cut Credited on Sub-Agent Case Completions
-                                </span>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {teamMembers.map((sub) => (
-                                  <div
-                                    key={sub.id}
-                                    onClick={() => window.location.href = `/admin/kyc/${sub.id}`}
-                                    className="p-3 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] rounded-xl flex items-center justify-between cursor-pointer transition-colors"
-                                  >
-                                    <div className="space-y-0.5">
-                                      <div className="font-bold text-xs text-[var(--ink)] flex items-center gap-1.5">
-                                        <User size={14} className="text-[var(--navy)]" />
-                                        <span>{sub.name}</span>
-                                      </div>
-                                      <div className="text-[11px] text-[var(--ink-muted)] font-mono">
-                                        {sub.profession} • {sub.city}
-                                      </div>
-                                    </div>
-
-                                    <div className="text-right font-mono-num">
-                                      <span className="text-xs font-bold text-blue-600 block">{sub.casesCount} Cases Solved</span>
-                                      <span className="text-[10px] font-bold text-amber-600">+{sub.overridePointsEarned} Override Pts</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+                          <td className="px-6 py-4 font-sans font-bold text-[var(--ink)] flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs font-display shrink-0 shadow-2xs">
+                              {leader.name.substring(0, 1)}
+                            </div>
+                            <div>
+                              <div className="group-hover:text-[var(--navy)] transition-colors font-display text-sm">{leader.name}</div>
+                              <div className="text-xs font-normal text-[var(--ink-muted)]">{leader.email} • {leader.phone}</div>
                             </div>
                           </td>
+
+                          <td className="px-6 py-4 font-mono font-bold text-[var(--navy)] text-xs">
+                            {leader.teamCode}
+                          </td>
+
+                          <td className="px-6 py-4 font-sans text-xs text-[var(--ink-2)]">
+                            <div>{leader.profession}</div>
+                            <div className="text-[var(--ink-muted)]">{leader.city}, {leader.state}</div>
+                          </td>
+
+                          <td className="px-6 py-4 font-mono font-bold text-blue-600">
+                            <button
+                              onClick={(e) => toggleExpand(leader.id, e)}
+                              className="flex items-center gap-1 hover:underline text-left cursor-pointer"
+                            >
+                              <span>{teamMembers.length} Active Sub-Agents</span>
+                              {isExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                            </button>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <Badge variant={leader.status === 'kyc_approved' ? 'green' : 'amber'}>
+                              {leader.status.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          </td>
+
+                          <td className="px-6 py-4 text-right">
+                            <Button variant="primary" size="sm">
+                              Inspect Leader Page <ArrowRight className="w-3.5 h-3.5 ml-1 text-white" />
+                            </Button>
+                          </td>
                         </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
+
+                        {/* Expandable Sub-Agent Nested Dropdown Row */}
+                        {isExpanded && (
+                          <tr className="bg-amber-50/40 border-b border-amber-200">
+                            <td colSpan={7} className="p-4">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-display font-bold text-xs text-amber-900 flex items-center gap-1.5">
+                                    <UsersThree size={16} /> Direct Sub-Agents in {leader.name}&apos;s Team ({teamMembers.length})
+                                  </h4>
+                                  <span className="text-[11px] text-amber-700 font-semibold">
+                                    Leader earns 10% override points on sub-agent lead conversions
+                                  </span>
+                                </div>
+
+                                {teamMembers.length === 0 ? (
+                                  <p className="text-xs text-amber-700 italic">No sub-agents currently enrolled under this leader code.</p>
+                                ) : (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    {teamMembers.map((sub) => (
+                                      <div key={sub.id} className="bg-white p-3 rounded-xl border border-amber-200 flex items-center justify-between text-xs">
+                                        <div>
+                                          <div className="font-bold text-slate-900">{sub.name}</div>
+                                          <div className="text-[11px] text-slate-500">{sub.phone} • {sub.city}</div>
+                                        </div>
+                                        <div className="text-right">
+                                          <span className="font-bold font-mono text-emerald-600">+{sub.overridePointsEarned} Pts</span>
+                                          <div className="text-[10px] text-slate-400">Leader Override</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -328,56 +340,74 @@ export default function AdminTeamsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)] font-mono-num">
-                {paginatedList.map((agent) => (
-                  <tr
-                    key={agent.id}
-                    onClick={() => window.location.href = `/admin/kyc/${agent.id}`}
-                    className="hover:bg-[var(--surface-2)] transition-colors cursor-pointer group"
-                  >
-                    <td className="px-6 py-4 font-sans font-bold text-[var(--ink)] flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[var(--navy)] text-white flex items-center justify-center font-bold text-xs font-display shrink-0 shadow-2xs">
-                        {agent.name.substring(0, 1)}
+                {paginatedList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-2.5">
+                        <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200">
+                          <User size={26} weight="fill" />
+                        </div>
+                        <div>
+                          <h4 className="font-display font-bold text-sm text-slate-800">No Individual DSA Partners Found</h4>
+                          <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                            There are currently no individual DSA agent profiles matching your search filter.
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <div className="group-hover:text-[var(--navy)] transition-colors font-display text-sm">{agent.name}</div>
-                        <div className="text-xs font-normal text-[var(--ink-muted)]">{agent.email} • {agent.phone}</div>
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4 font-mono font-bold text-[var(--navy)] text-xs">
-                      {agent.teamCode}
-                    </td>
-
-                    <td className="px-6 py-4 font-sans text-xs" onClick={(e) => e.stopPropagation()}>
-                      {agent.referredByLeaderName ? (
-                        <Link href={`/admin/kyc/${agent.referredByLeaderId || 'demo'}`}>
-                          <span className="text-[var(--navy)] font-semibold hover:underline flex items-center gap-1">
-                            <Crown size={14} className="text-amber-500" weight="fill" /> {agent.referredByLeaderName}
-                          </span>
-                        </Link>
-                      ) : (
-                        <span className="text-[var(--ink-subtle)] italic">Direct Platform Signup</span>
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4 font-sans text-xs text-[var(--ink-2)]">
-                      <div>{agent.profession}</div>
-                      <div className="text-[var(--ink-muted)]">{agent.city}, {agent.state}</div>
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <Badge variant={agent.status === 'kyc_approved' ? 'green' : agent.status === 'kyc_rejected' ? 'red' : 'amber'}>
-                        {agent.status.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    </td>
-
-                    <td className="px-6 py-4 text-right">
-                      <Button variant="primary" size="sm">
-                        View Individual Page <ArrowRight className="w-3.5 h-3.5 ml-1 text-white" />
-                      </Button>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  paginatedList.map((agent) => (
+                    <tr
+                      key={agent.id}
+                      onClick={() => window.location.href = `/admin/kyc/${agent.id}`}
+                      className="hover:bg-[var(--surface-2)] transition-colors cursor-pointer group"
+                    >
+                      <td className="px-6 py-4 font-sans font-bold text-[var(--ink)] flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[var(--navy)] text-white flex items-center justify-center font-bold text-xs font-display shrink-0 shadow-2xs">
+                          {agent.name.substring(0, 1)}
+                        </div>
+                        <div>
+                          <div className="group-hover:text-[var(--navy)] transition-colors font-display text-sm">{agent.name}</div>
+                          <div className="text-xs font-normal text-[var(--ink-muted)]">{agent.email} • {agent.phone}</div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 font-mono font-bold text-[var(--navy)] text-xs">
+                        {agent.teamCode}
+                      </td>
+
+                      <td className="px-6 py-4 font-sans text-xs" onClick={(e) => e.stopPropagation()}>
+                        {agent.referredByLeaderName ? (
+                          <Link href={`/admin/kyc/${agent.referredByLeaderId || 'demo'}`}>
+                            <span className="text-[var(--navy)] font-semibold hover:underline flex items-center gap-1">
+                              <Crown size={14} className="text-amber-500" weight="fill" /> {agent.referredByLeaderName}
+                            </span>
+                          </Link>
+                        ) : (
+                          <span className="text-[var(--ink-subtle)] italic">Direct Platform Signup</span>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4 font-sans text-xs text-[var(--ink-2)]">
+                        <div>{agent.profession}</div>
+                        <div className="text-[var(--ink-muted)]">{agent.city}, {agent.state}</div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <Badge variant={agent.status === 'kyc_approved' ? 'green' : agent.status === 'kyc_rejected' ? 'red' : 'amber'}>
+                          {agent.status.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <Button variant="primary" size="sm">
+                          View Individual Page <ArrowRight className="w-3.5 h-3.5 ml-1 text-white" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
