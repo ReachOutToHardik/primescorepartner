@@ -618,8 +618,11 @@ export default function RewardsPage() {
                           <span className="text-[11px] text-amber-700 font-semibold">(Unlocked upon KYC Approval)</span>
                         )}
                       </td>
-                      <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600" colSpan={2}>
+                      <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
                         {partner?.status === 'kyc_approved' ? '+100 Pts' : '100 Pts (Locked)'}
+                      </td>
+                      <td className="py-3 px-2 text-right font-mono-num text-slate-500">
+                        {(partner?.primePoints ?? 0).toLocaleString()} Pts
                       </td>
                     </tr>
                   )}
@@ -637,8 +640,11 @@ export default function RewardsPage() {
                           <td className="py-3 px-2 font-medium text-slate-900">
                             Referral Case Resolved: <span className="font-bold">{r.customerName}</span>
                           </td>
-                          <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600" colSpan={2}>
+                          <td className="py-3 px-2 text-right font-mono-num font-bold text-emerald-600">
                             +{r.pointsEarned || 500} Pts
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono-num text-slate-500">
+                            {(partner?.primePoints ?? 0).toLocaleString()} Pts
                           </td>
                         </tr>
                       ))}
@@ -654,8 +660,11 @@ export default function RewardsPage() {
                         <td className="py-3 px-2 font-medium text-slate-900">
                           Voucher Claimed: <span className="font-bold">{rdm.brand}</span> (₹{rdm.denomination})
                         </td>
-                        <td className="py-3 px-2 text-right font-mono-num font-bold text-slate-500" colSpan={2}>
+                        <td className="py-3 px-2 text-right font-mono-num font-bold text-rose-600">
                           -{rdm.points} Pts
+                        </td>
+                        <td className="py-3 px-2 text-right font-mono-num text-slate-500">
+                          {(partner?.primePoints ?? 0).toLocaleString()} Pts
                         </td>
                       </tr>
                     ))}
