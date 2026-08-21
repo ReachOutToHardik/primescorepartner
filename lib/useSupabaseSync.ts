@@ -68,7 +68,9 @@ export function useSupabaseSync() {
         createdAt: r.created_at,
         updatedAt: r.updated_at,
         pointsEarned: r.partner_points_earned || 0,
-        statusHistory: [],
+        statusHistory: Array.isArray(r.status_history)
+          ? r.status_history
+          : (r.status_history ? (typeof r.status_history === 'string' ? JSON.parse(r.status_history) : r.status_history) : []),
       }));
       useAdminStore.setState({ referrals: mappedReferrals });
       // Fetch live reward engine config
@@ -194,7 +196,9 @@ export function useSupabaseSync() {
         createdAt: r.created_at,
         updatedAt: r.updated_at,
         pointsEarned: r.partner_points_earned || 0,
-        statusHistory: [],
+        statusHistory: Array.isArray(r.status_history)
+          ? r.status_history
+          : (r.status_history ? (typeof r.status_history === 'string' ? JSON.parse(r.status_history) : r.status_history) : []),
       }));
       setReferrals(mappedReferrals);
 

@@ -20,8 +20,11 @@ import {
   Wrench, 
   ChatText,
   Coins,
-  ShieldCheck
+  ShieldCheck,
+  Trash,
+  Warning
 } from '@phosphor-icons/react';
+import { Modal } from '@/components/ui/Modal';
 
 const ALL_STATUSES: { key: ReferralStatus; label: string }[] = [
   { key: 'submitted', label: 'Submitted (New Lead Received)' },
@@ -75,13 +78,16 @@ const PIPELINE_STAGES: {
 export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { referrals, updateReferralStatus, partners } = useAdminStore();
+  const { referrals, updateReferralStatus, deleteReferral, partners } = useAdminStore();
 
   const refCase = referrals.find((r) => r.id === id);
 
   const [newStatus, setNewStatus] = useState<ReferralStatus>(refCase?.status || 'completed');
   const [statusNote, setStatusNote] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [editingStepKey, setEditingStepKey] = useState<string | null>(null);
+  const [stepCustomNote, setStepCustomNote] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   if (!refCase) {
     return (
@@ -103,9 +109,6 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 4000);
   };
-
-  const [editingStepKey, setEditingStepKey] = useState<string | null>(null);
-  const [stepCustomNote, setStepCustomNote] = useState('');
 
   return (
     <div className="space-y-6">
@@ -252,34 +255,47 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
           </div>
           
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm('Reset pipeline flow to Step 1 (Submitted)?')) {
-                  updateReferralStatus(refCase.id, 'submitted', 'Reset case flow to Step 1.');
-                  setSavedSuccess(true);
-                  setTimeout(() => setSavedSuccess(false), 4000);
-                }
-              }}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
-            >
-              ↺ Reset to Step 1
-            </button>
+            {refCase.status === 'completed' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeleteModal(true)}
+                className="text-red-600 border-red-200 hover:bg-red-50 text-xs font-bold"
+              >
+                Delete Lead / Case 🗑
+              </Button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Reset pipeline flow to Step 1 (Submitted)?')) {
+                      updateReferralStatus(refCase.id, 'submitted', 'Reset case flow to Step 1.');
+                      setSavedSuccess(true);
+                      setTimeout(() => setSavedSuccess(false), 4000);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+                >
+                  ↺ Reset to Step 1
+                </button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (confirm('Are you sure you want to mark this case as Rejected/Canceled?')) {
-                  updateReferralStatus(refCase.id, 'rejected', statusNote || 'Case rejected by operations team.');
-                  setSavedSuccess(true);
-                  setTimeout(() => setSavedSuccess(false), 4000);
-                }
-              }}
-              className="text-red-600 border-red-200 hover:bg-red-50 text-xs font-bold"
-            >
-              Reject / Remove Case ✖
-            </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to mark this case as Rejected/Canceled?')) {
+                      updateReferralStatus(refCase.id, 'rejected', statusNote || 'Case rejected by operations team.');
+                      setSavedSuccess(true);
+                      setTimeout(() => setSavedSuccess(false), 4000);
+                    }
+                  }}
+                  className="text-red-600 border-red-200 hover:bg-red-50 text-xs font-bold"
+                >
+                  Reject / Remove Case ✖
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -287,8 +303,9 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
         <div className="space-y-4">
           {PIPELINE_STAGES.map((stg, index) => {
             const currentStageIndex = PIPELINE_STAGES.findIndex((s) => s.key === refCase.status);
+            const isCaseCompleted = refCase.status === 'completed';
             const isCurrent = refCase.status === stg.key;
-            const isPassed = refCase.status === 'completed' || (currentStageIndex >= 0 && index < currentStageIndex);
+            const isPassed = isCaseCompleted || (currentStageIndex >= 0 && index < currentStageIndex);
             const nextStageKey = PIPELINE_STAGES[index + 1]?.key || 'completed';
             const prevStageKey = PIPELINE_STAGES[index - 1]?.key || 'submitted';
 
@@ -348,98 +365,106 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
                     </div>
                   </div>
 
-                  {/* Action Buttons & Undo / Revert Controls for this step */}
+                  {/* Action Buttons & Undo / Revert Controls (Hidden if Case is Fully Completed) */}
                   <div className="flex items-center gap-2 flex-wrap self-end sm:self-center shrink-0">
-                    {/* Current Step Controls */}
-                    {isCurrent && (
+                    {isCaseCompleted ? (
+                      <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-100/80 px-3 py-1.5 rounded-lg border border-emerald-200">
+                        <CheckCircle size={14} weight="fill" /> Completed
+                      </span>
+                    ) : (
                       <>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => {
-                            updateReferralStatus(refCase.id, nextStageKey, statusNote || `Completed ${stg.title}`);
-                            setStatusNote('');
-                            setSavedSuccess(true);
-                            setTimeout(() => setSavedSuccess(false), 4000);
-                          }}
-                          className="text-xs font-bold cursor-pointer"
-                        >
-                          Mark Step Done ✓
-                        </Button>
+                        {/* Current Step Controls */}
+                        {isCurrent && (
+                          <>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                updateReferralStatus(refCase.id, nextStageKey, statusNote || `Completed ${stg.title}`);
+                                setStatusNote('');
+                                setSavedSuccess(true);
+                                setTimeout(() => setSavedSuccess(false), 4000);
+                              }}
+                              className="text-xs font-bold cursor-pointer"
+                            >
+                              Mark Step Done ✓
+                            </Button>
 
-                        {index > 0 && (
+                            {index > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  updateReferralStatus(refCase.id, prevStageKey, `Reverted back to Step ${index}`);
+                                  setSavedSuccess(true);
+                                  setTimeout(() => setSavedSuccess(false), 4000);
+                                }}
+                                className="text-xs font-semibold border-slate-300 text-slate-700 hover:bg-slate-100"
+                                title="Undo step and go back to previous stage"
+                              >
+                                ↩ Undo Step
+                              </Button>
+                            )}
+                          </>
+                        )}
+
+                        {/* Passed / Completed Step Controls */}
+                        {isPassed && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-100/70 px-2.5 py-1 rounded-lg border border-emerald-200">
+                              <CheckCircle size={14} weight="fill" /> Completed
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Move case status back to Step ${stg.stepNum} (${stg.title})?`)) {
+                                  updateReferralStatus(refCase.id, stg.key, `Reverted back to ${stg.title}`);
+                                  setSavedSuccess(true);
+                                  setTimeout(() => setSavedSuccess(false), 4000);
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+                              title="Revert pipeline status back to this step"
+                            >
+                              ↩ Move Back to Here
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Future Step Controls */}
+                        {!isPassed && !isCurrent && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              updateReferralStatus(refCase.id, prevStageKey, `Reverted back to Step ${index}`);
+                              updateReferralStatus(refCase.id, stg.key, statusNote || `Jumped to ${stg.title}`);
+                              setStatusNote('');
                               setSavedSuccess(true);
                               setTimeout(() => setSavedSuccess(false), 4000);
                             }}
-                            className="text-xs font-semibold border-slate-300 text-slate-700 hover:bg-slate-100"
-                            title="Undo step and go back to previous stage"
+                            className="text-xs font-bold cursor-pointer"
                           >
-                            ↩ Undo Step
+                            Jump to Step {stg.stepNum} ➔
                           </Button>
                         )}
-                      </>
-                    )}
 
-                    {/* Passed / Completed Step Controls (Allows Reverting Back to Any Completed Step!) */}
-                    {isPassed && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-100/70 px-2.5 py-1 rounded-lg border border-emerald-200">
-                          <CheckCircle size={14} weight="fill" /> Completed
-                        </span>
-
+                        {/* Add/Edit Note Toggle for Step */}
                         <button
                           type="button"
-                          onClick={() => {
-                            if (confirm(`Move case status back to Step ${stg.stepNum} (${stg.title})?`)) {
-                              updateReferralStatus(refCase.id, stg.key, `Reverted back to ${stg.title}`);
-                              setSavedSuccess(true);
-                              setTimeout(() => setSavedSuccess(false), 4000);
-                            }
-                          }}
-                          className="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
-                          title="Revert pipeline status back to this step"
+                          onClick={() => setEditingStepKey(editingStepKey === stg.key ? null : stg.key)}
+                          className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer text-xs font-semibold"
+                          title="Add note to this step"
                         >
-                          ↩ Move Back to Here
+                          ✏ Note
                         </button>
-                      </div>
+                      </>
                     )}
-
-                    {/* Future Step Controls */}
-                    {!isPassed && !isCurrent && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          updateReferralStatus(refCase.id, stg.key, statusNote || `Jumped to ${stg.title}`);
-                          setStatusNote('');
-                          setSavedSuccess(true);
-                          setTimeout(() => setSavedSuccess(false), 4000);
-                        }}
-                        className="text-xs font-bold cursor-pointer"
-                      >
-                        Jump to Step {stg.stepNum} ➔
-                      </Button>
-                    )}
-
-                    {/* Add/Edit Note Toggle for Step */}
-                    <button
-                      type="button"
-                      onClick={() => setEditingStepKey(editingStepKey === stg.key ? null : stg.key)}
-                      className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer text-xs font-semibold"
-                      title="Add note to this step"
-                    >
-                      ✏ Note
-                    </button>
                   </div>
                 </div>
 
                 {/* Inline Step Note Editor */}
-                {editingStepKey === stg.key && (
+                {editingStepKey === stg.key && !isCaseCompleted && (
                   <div className="pt-3 border-t border-slate-200/70 space-y-2 animate-fade-in">
                     <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                       Add Custom Note for Step {stg.stepNum} ({stg.title})
@@ -475,34 +500,99 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
           })}
         </div>
 
-        {/* Global Note Log Form */}
-        <div className="space-y-3 pt-4 border-t border-slate-100">
-          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-            Fulfillment Note / Bureau Update Log
-          </label>
-          <textarea
-            value={statusNote}
-            onChange={(e) => setStatusNote(e.target.value)}
-            placeholder="e.g. Filed dispute with CIBIL and Experian. Package selected and client onboarded."
-            rows={2}
-            className="w-full p-3 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#1B2A72] bg-slate-50 focus:bg-white transition-all font-body"
-          />
-          <div className="flex justify-end">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                updateReferralStatus(refCase.id, refCase.status, statusNote || 'Audit note updated');
-                setStatusNote('');
-                setSavedSuccess(true);
-                setTimeout(() => setSavedSuccess(false), 4000);
+        {/* Global Note Log Form (Hidden when completed) */}
+        {refCase.status !== 'completed' && (
+          <div className="space-y-3 pt-4 border-t border-slate-100">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Add Note / Remark
+            </label>
+            <textarea
+              value={statusNote}
+              onChange={(e) => setStatusNote(e.target.value)}
+              placeholder="e.g. Filed dispute with CIBIL and Experian. Package selected and client onboarded."
+              rows={2}
+              className="w-full p-3 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#1B2A72] bg-slate-50 focus:bg-white transition-all font-body"
+            />
+            <div className="flex justify-end">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  updateReferralStatus(refCase.id, refCase.status, statusNote || 'Audit note updated');
+                  setStatusNote('');
+                  setSavedSuccess(true);
+                  setTimeout(() => setSavedSuccess(false), 4000);
+                }}
+              >
+                Add General Audit Note
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Delete Lead Modal with Points Reversal Choice */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Referral Lead"
+        maxWidth="md"
+      >
+        <div className="space-y-5 py-2">
+          <div className="flex items-start gap-3 bg-amber-50 p-4 rounded-xl border border-amber-200 text-amber-900 text-xs">
+            <Warning size={24} weight="fill" className="text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm">Delete Lead & Choice on Points</h4>
+              <p className="mt-1 leading-relaxed text-amber-800">
+                You are about to delete lead <strong>&quot;{refCase.customerName}&quot;</strong>. Since this case was completed, <strong>{refCase.pointsEarned || 500} PrimePoints</strong> were credited to referring partner <strong>{referringPartner?.name || 'Partner'}</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <button
+              type="button"
+              onClick={async () => {
+                await deleteReferral(refCase.id, true);
+                setShowDeleteModal(false);
+                router.push('/admin/referrals');
               }}
+              className="w-full p-4 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-left transition-all group cursor-pointer"
             >
-              Add General Audit Note
+              <div className="font-bold text-red-900 text-sm flex items-center justify-between">
+                <span>Option 1: Reverse Points (-{refCase.pointsEarned || 500} Pts) & Delete Lead</span>
+                <span className="text-xs bg-red-200 px-2 py-0.5 rounded-md text-red-900">Recommended</span>
+              </div>
+              <p className="text-xs text-red-700 mt-1">
+                Deducts {refCase.pointsEarned || 500} points from partner&apos;s account balance, records a reversal in point_transactions table, and deletes the lead.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await deleteReferral(refCase.id, false);
+                setShowDeleteModal(false);
+                router.push('/admin/referrals');
+              }}
+              className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all group cursor-pointer"
+            >
+              <div className="font-bold text-slate-900 text-sm">
+                Option 2: Keep Points (Delete Lead Only)
+              </div>
+              <p className="text-xs text-slate-600 mt-1">
+                Deletes the lead record from database but leaves partner&apos;s earned reward points intact.
+              </p>
+            </button>
+          </div>
+
+          <div className="flex justify-end pt-3 border-t border-slate-100">
+            <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(false)}>
+              Cancel
             </Button>
           </div>
         </div>
-      </Card>
+      </Modal>
     </div>
   );
 }

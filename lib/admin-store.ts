@@ -156,6 +156,7 @@ interface AdminStore {
   deletePartner: (partnerId: string) => Promise<void>;
   incrementProfileViews: (partnerId: string) => void;
   updateReferralStatus: (referralId: string, status: ReferralStatus, note?: string) => Promise<void>;
+  deleteReferral: (referralId: string, reversePoints: boolean) => Promise<void>;
   toggleGiftCard: (cardId: string) => void;
   addGiftCard: (card: Omit<GiftCardItem, 'id'>) => void;
   toggleService: (serviceId: string) => void;
@@ -358,15 +359,48 @@ export const useAdminStore = create<AdminStore>()(
         try {
           const { supabase } = await import('./supabase');
 
-          // 1. Update referral status in DB
+          // 1. Fetch current referral row to get existing status_history
+          const { data: existingRef } = await supabase
+            .from('referrals')
+            .select('status_history')
+            .eq('id', referralId)
+            .maybeSingle();
+
+          const existingHistory = Array.isArray(existingRef?.status_history)
+            ? existingRef.status_history
+            : (existingRef?.status_history ? JSON.parse(existingRef.status_history) : []);
+
+          const newHistoryItem = {
+            status,
+            date: new Date().toISOString(),
+            note: note || `Status updated to ${status}`,
+          };
+          const updatedHistory = [...existingHistory, newHistoryItem];
+
+          // 2. Update referral status & status_history in DB
           await supabase
             .from('referrals')
             .update({
               current_stage: status,
               updated_at: new Date().toISOString(),
+              status_history: updatedHistory,
               ...(pointsForStage > 0 ? { partner_points_earned: pointsForStage } : {}),
             })
             .eq('id', referralId);
+
+          // 3. Log to referral_status_history table
+          try {
+            await supabase.from('referral_status_history').insert([
+              {
+                referral_id: referralId,
+                stage: status,
+                note_details: note || `Status updated to ${status}`,
+                updated_at: new Date().toISOString(),
+              },
+            ]);
+          } catch (histErr) {
+            console.warn('referral_status_history insert warning:', histErr);
+          }
 
           // 2. If points-awarding stage: credit partner balance + log to point_transactions
           if (pointsForStage > 0) {
@@ -440,6 +474,73 @@ export const useAdminStore = create<AdminStore>()(
                 }
               : r
           ),
+          auditLogs: [newLog, ...state.auditLogs],
+        }));
+      },
+
+      deleteReferral: async (referralId, reversePoints) => {
+        const state = get();
+        const refCase = state.referrals.find((r) => r.id === referralId);
+
+        try {
+          const { supabase } = await import('./supabase');
+
+          // 1. Delete referral row from Supabase DB
+          await supabase.from('referrals').delete().eq('id', referralId);
+
+          // 2. If reversePoints is true & case had points credited to partner
+          if (reversePoints && refCase && refCase.pointsEarned > 0 && refCase.partnerId) {
+            const partnerId = refCase.partnerId;
+            const ptsToDeduct = refCase.pointsEarned;
+
+            const { data: profileRow } = await supabase
+              .from('profiles')
+              .select('prime_points, lifetime_points_earned')
+              .eq('id', partnerId)
+              .maybeSingle();
+
+            if (profileRow) {
+              const currentBal = profileRow.prime_points ?? 0;
+              const currentLife = profileRow.lifetime_points_earned ?? 0;
+              const newBal = Math.max(0, currentBal - ptsToDeduct);
+              const newLife = Math.max(0, currentLife - ptsToDeduct);
+
+              await supabase
+                .from('profiles')
+                .update({
+                  prime_points: newBal,
+                  lifetime_points_earned: newLife,
+                })
+                .eq('id', partnerId);
+
+              await supabase.from('point_transactions').insert([
+                {
+                  partner_id: partnerId,
+                  transaction_type: 'referral_reversal',
+                  points_change: -ptsToDeduct,
+                  balance_after: newBal,
+                  title: `Referral Lead Deleted (Points Reversed): ${refCase.customerName}`,
+                  reference_id: referralId,
+                },
+              ]);
+            }
+          }
+        } catch (err) {
+          console.error('Delete referral error:', err);
+        }
+
+        const newLog: SystemAuditLog = {
+          id: `LOG-${Date.now()}`,
+          actorName: 'Operations Admin',
+          actorRole: 'operations_admin',
+          actionType: 'lead_status_update',
+          targetEntity: referralId,
+          details: `Deleted referral lead ${refCase?.customerName || referralId}. Points reversed: ${reversePoints ? 'Yes' : 'No'}.`,
+          timestamp: new Date().toISOString(),
+        };
+
+        set((state) => ({
+          referrals: state.referrals.filter((r) => r.id !== referralId),
           auditLogs: [newLog, ...state.auditLogs],
         }));
       },
