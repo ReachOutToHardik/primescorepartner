@@ -104,6 +104,9 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
     setTimeout(() => setSavedSuccess(false), 4000);
   };
 
+  const [editingStepKey, setEditingStepKey] = useState<string | null>(null);
+  const [stepCustomNote, setStepCustomNote] = useState('');
+
   return (
     <div className="space-y-6">
       {/* Top Back Navigation Bar */}
@@ -234,7 +237,7 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
         </div>
       </Card>
 
-      {/* Interactive Pipeline Stage Flow Stepper */}
+      {/* Interactive Pipeline Stage Flow Stepper with Undo/Revert/Edit */}
       <Card className="p-6 space-y-6 border-l-4 border-[#1B2A72]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
@@ -242,11 +245,25 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
               <Wrench className="w-5 h-5 text-[var(--navy)]" /> Interactive Referral Pipeline Flow
             </h3>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Click &apos;Mark Step Done&apos; on each stage to advance the case flow, skip steps, or reject referral.
+              Advance stages, undo/revert to previous steps, edit step notes, or reject referral.
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm('Reset pipeline flow to Step 1 (Submitted)?')) {
+                  updateReferralStatus(refCase.id, 'submitted', 'Reset case flow to Step 1.');
+                  setSavedSuccess(true);
+                  setTimeout(() => setSavedSuccess(false), 4000);
+                }
+              }}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+            >
+              ↺ Reset to Step 1
+            </button>
+
             <Button
               variant="outline"
               size="sm"
@@ -270,85 +287,193 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
             const currentStageIndex = PIPELINE_STAGES.findIndex((s) => s.key === refCase.status);
             const isCurrent = refCase.status === stg.key;
             const isPassed = refCase.status === 'completed' || (currentStageIndex >= 0 && index < currentStageIndex);
-            const isFuture = !isPassed && !isCurrent && refCase.status !== 'rejected';
+            const nextStageKey = PIPELINE_STAGES[index + 1]?.key || 'completed';
+            const prevStageKey = PIPELINE_STAGES[index - 1]?.key || 'submitted';
+
+            const stepHistory = refCase.statusHistory.find((h) => h.status === stg.key);
 
             return (
               <div
                 key={stg.key}
-                className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                className={`p-4 rounded-xl border transition-all space-y-3 ${
                   isCurrent
-                    ? 'bg-blue-50/70 border-blue-300 ring-2 ring-blue-100 shadow-2xs'
+                    ? 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-100 shadow-2xs'
                     : isPassed
                     ? 'bg-emerald-50/40 border-emerald-200'
                     : 'bg-slate-50/60 border-slate-200'
                 }`}
               >
-                <div className="flex items-start gap-3.5">
-                  <div
-                    className={`w-9 h-9 rounded-full font-bold text-xs flex items-center justify-center shrink-0 ${
-                      isPassed
-                        ? 'bg-emerald-600 text-white shadow-2xs'
-                        : isCurrent
-                        ? 'bg-[#1B2A72] text-white shadow-sm ring-4 ring-blue-100'
-                        : 'bg-slate-200 text-slate-600'
-                    }`}
-                  >
-                    {isPassed ? <CheckCircle size={20} weight="bold" /> : stg.stepNum}
-                  </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3.5">
+                    <div
+                      className={`w-9 h-9 rounded-full font-bold text-xs flex items-center justify-center shrink-0 ${
+                        isPassed
+                          ? 'bg-emerald-600 text-white shadow-2xs'
+                          : isCurrent
+                          ? 'bg-[#1B2A72] text-white shadow-sm ring-4 ring-blue-100'
+                          : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {isPassed ? <CheckCircle size={20} weight="bold" /> : stg.stepNum}
+                    </div>
 
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-display font-bold text-sm text-slate-900">{stg.title}</h4>
-                      {isCurrent && (
-                        <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider">
-                          Current Stage
-                        </span>
-                      )}
-                      {isPassed && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
-                          ✓ Completed
-                        </span>
-                      )}
-                      {stg.pointsText && (
-                        <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">
-                          {stg.pointsText}
-                        </span>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-display font-bold text-sm text-slate-900">{stg.title}</h4>
+                        {isCurrent && (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider">
+                            Current Active Step
+                          </span>
+                        )}
+                        {isPassed && (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+                            ✓ Done
+                          </span>
+                        )}
+                        {stg.pointsText && (
+                          <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">
+                            {stg.pointsText}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">{stg.desc}</p>
+                      
+                      {stepHistory?.note && (
+                        <div className="mt-2 text-[11px] bg-white p-2 rounded-lg border border-slate-200 text-slate-700 font-sans">
+                          💡 <strong>Step Note:</strong> {stepHistory.note}
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">{stg.desc}</p>
+                  </div>
+
+                  {/* Action Buttons & Undo / Revert Controls for this step */}
+                  <div className="flex items-center gap-2 flex-wrap self-end sm:self-center shrink-0">
+                    {/* Current Step Controls */}
+                    {isCurrent && (
+                      <>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            updateReferralStatus(refCase.id, nextStageKey, statusNote || `Completed ${stg.title}`);
+                            setStatusNote('');
+                            setSavedSuccess(true);
+                            setTimeout(() => setSavedSuccess(false), 4000);
+                          }}
+                          className="text-xs font-bold cursor-pointer"
+                        >
+                          Mark Step Done ✓
+                        </Button>
+
+                        {index > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              updateReferralStatus(refCase.id, prevStageKey, `Reverted back to Step ${index}`);
+                              setSavedSuccess(true);
+                              setTimeout(() => setSavedSuccess(false), 4000);
+                            }}
+                            className="text-xs font-semibold border-slate-300 text-slate-700 hover:bg-slate-100"
+                            title="Undo step and go back to previous stage"
+                          >
+                            ↩ Undo Step
+                          </Button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Passed / Completed Step Controls (Allows Reverting Back to Any Completed Step!) */}
+                    {isPassed && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-100/70 px-2.5 py-1 rounded-lg border border-emerald-200">
+                          <CheckCircle size={14} weight="fill" /> Completed
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Move case status back to Step ${stg.stepNum} (${stg.title})?`)) {
+                              updateReferralStatus(refCase.id, stg.key, `Reverted back to ${stg.title}`);
+                              setSavedSuccess(true);
+                              setTimeout(() => setSavedSuccess(false), 4000);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+                          title="Revert pipeline status back to this step"
+                        >
+                          ↩ Move Back to Here
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Future Step Controls */}
+                    {!isPassed && !isCurrent && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          updateReferralStatus(refCase.id, stg.key, statusNote || `Jumped to ${stg.title}`);
+                          setStatusNote('');
+                          setSavedSuccess(true);
+                          setTimeout(() => setSavedSuccess(false), 4000);
+                        }}
+                        className="text-xs font-bold cursor-pointer"
+                      >
+                        Jump to Step {stg.stepNum} ➔
+                      </Button>
+                    )}
+
+                    {/* Add/Edit Note Toggle for Step */}
+                    <button
+                      type="button"
+                      onClick={() => setEditingStepKey(editingStepKey === stg.key ? null : stg.key)}
+                      className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer text-xs font-semibold"
+                      title="Add note to this step"
+                    >
+                      ✏ Note
+                    </button>
                   </div>
                 </div>
 
-                {/* Action Buttons for this step */}
-                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                  {!isPassed && (
-                    <Button
-                      variant={isCurrent ? 'primary' : 'outline'}
-                      size="sm"
-                      onClick={() => {
-                        updateReferralStatus(refCase.id, stg.key, statusNote || `Advanced to ${stg.title}`);
-                        setStatusNote('');
-                        setSavedSuccess(true);
-                        setTimeout(() => setSavedSuccess(false), 4000);
-                      }}
-                      className="text-xs font-bold cursor-pointer"
-                    >
-                      {isCurrent ? 'Mark Step Done ✓' : `Jump to Step ${stg.stepNum} ➔`}
-                    </Button>
-                  )}
-
-                  {isPassed && (
-                    <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-100/60 px-3 py-1.5 rounded-lg border border-emerald-200">
-                      <CheckCircle size={14} weight="fill" /> Done
-                    </span>
-                  )}
-                </div>
+                {/* Inline Step Note Editor */}
+                {editingStepKey === stg.key && (
+                  <div className="pt-3 border-t border-slate-200/70 space-y-2 animate-fade-in">
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                      Add Custom Note for Step {stg.stepNum} ({stg.title})
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={stepCustomNote}
+                        onChange={(e) => setStepCustomNote(e.target.value)}
+                        placeholder={`e.g. Documentation verified for ${stg.title}`}
+                        className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-[#1B2A72]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (stepCustomNote.trim()) {
+                            updateReferralStatus(refCase.id, stg.key, stepCustomNote.trim());
+                            setStepCustomNote('');
+                            setEditingStepKey(null);
+                            setSavedSuccess(true);
+                            setTimeout(() => setSavedSuccess(false), 4000);
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-[#1B2A72] text-white text-xs font-bold rounded-lg hover:bg-[#0F1A4E] transition-colors cursor-pointer"
+                      >
+                        Save Note
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        {/* Note & Custom Status Update Form */}
+        {/* Global Note Log Form */}
         <div className="space-y-3 pt-4 border-t border-slate-100">
           <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
             Fulfillment Note / Bureau Update Log
@@ -371,7 +496,7 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
                 setTimeout(() => setSavedSuccess(false), 4000);
               }}
             >
-              Add Note Only
+              Add General Audit Note
             </Button>
           </div>
         </div>
