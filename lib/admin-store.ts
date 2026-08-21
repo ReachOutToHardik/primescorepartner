@@ -151,7 +151,7 @@ interface AdminStore {
   // Actions
   adminLogin: (email: string, pass: string) => boolean;
   adminLogout: () => void;
-  approveKyc: (partnerId: string) => Promise<void>;
+  approveKyc: (partnerId: string, customTeamCode?: string) => Promise<void>;
   rejectKyc: (partnerId: string, reason: string) => Promise<void>;
   deletePartner: (partnerId: string) => Promise<void>;
   incrementProfileViews: (partnerId: string) => void;
@@ -208,15 +208,25 @@ export const useAdminStore = create<AdminStore>()(
         set({ isAuthenticated: false });
       },
 
-      approveKyc: async (partnerId) => {
+      approveKyc: async (partnerId, customTeamCode) => {
+        const state = get();
+        const target = state.partners.find((p) => p.id === partnerId);
+        
+        // Auto-generate clean code if none provided (e.g. PS-NAME-UUID)
+        const namePart = (target?.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+        const codeSuffix = partnerId.substring(0, 4).toUpperCase();
+        const autoCode = `PS-${namePart}-${codeSuffix}`;
+        const finalTeamCode = (customTeamCode && customTeamCode.trim()) ? customTeamCode.trim().toUpperCase() : (target?.teamCode || autoCode);
+
         try {
           const { supabase } = await import('./supabase');
           
-          // 1. Update status to kyc_approved & credit 100 Pts sign-up bonus
+          // 1. Update status to kyc_approved, assign team_code, & credit 100 Pts sign-up bonus
           await supabase
             .from('profiles')
             .update({
               status: 'kyc_approved',
+              team_code: finalTeamCode,
               prime_points: 100,
               lifetime_points_earned: 100,
               updated_at: new Date().toISOString(),
@@ -231,7 +241,7 @@ export const useAdminStore = create<AdminStore>()(
                 transaction_type: 'signup_bonus',
                 points_change: 100,
                 balance_after: 100,
-                title: '🎁 Welcome Sign-up Bonus (KYC Approved)',
+                title: `🎁 Welcome Sign-up Bonus (Code: ${finalTeamCode})`,
                 reference_id: 'BONUS-100',
               },
             ]);
@@ -239,13 +249,13 @@ export const useAdminStore = create<AdminStore>()(
             console.warn('Sign-up bonus transaction log warning:', txErr);
           }
 
-          // 3. Send approval + 100 Pts notification to partner
+          // 3. Send approval + 100 Pts notification with referral code
           try {
             await supabase.from('notifications').insert([
               {
                 partner_id: partnerId,
-                title: '🎉 KYC Verified & +100 Pts Sign-Up Bonus Credited!',
-                message: 'Your partner account is verified! You received your +100 PrimePoints sign-up bonus. Start submitting client referrals now!',
+                title: `🎉 Account Approved! Referral Code: ${finalTeamCode}`,
+                message: `Your partner account is verified! Your unique referral code is ${finalTeamCode}. +100 PrimePoints sign-up bonus credited!`,
                 type: 'success',
                 points_badge: '+100 pts',
                 is_read: false,
@@ -258,20 +268,20 @@ export const useAdminStore = create<AdminStore>()(
           console.error('KYC approve error:', err);
         }
 
-        const state = get();
-        const target = state.partners.find((p) => p.id === partnerId);
         const newLog: SystemAuditLog = {
           id: `LOG-${Date.now()}`,
           actorName: 'Super Admin',
           actorRole: 'super_admin',
           actionType: 'kyc_approval',
           targetEntity: target?.name || partnerId,
-          details: 'Approved partner KYC identity documents.',
+          details: `Approved KYC & assigned referral code: ${finalTeamCode}`,
           timestamp: new Date().toISOString(),
         };
         set((state) => ({
           partners: state.partners.map((p) =>
-            p.id === partnerId ? { ...p, status: 'kyc_approved' as PartnerStatus } : p
+            p.id === partnerId
+              ? { ...p, status: 'kyc_approved' as PartnerStatus, teamCode: finalTeamCode }
+              : p
           ),
           auditLogs: [newLog, ...state.auditLogs],
         }));

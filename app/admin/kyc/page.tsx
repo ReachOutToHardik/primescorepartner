@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { TablePagination } from '@/components/ui/TablePagination';
+import { Modal } from '@/components/ui/Modal';
 import { 
   ShieldCheck, 
   MagnifyingGlass, 
@@ -18,11 +19,14 @@ import {
   ArrowRight,
   User,
   Crown,
-  Trash
+  Trash,
+  CheckCircle
 } from '@phosphor-icons/react';
 
 export default function AdminKycListPage() {
-  const { partners, deletePartner } = useAdminStore();
+  const { partners, deletePartner, approveKyc } = useAdminStore();
+  const [approvePartner, setApprovePartner] = useState<any | null>(null);
+  const [codeLinkInput, setCodeLinkInput] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'individual' | 'team_leader'>('all');
@@ -246,11 +250,27 @@ export default function AdminKycListPage() {
 
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
+                          {partner.status === 'kyc_submitted' && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+                                const codeSuffix = partner.id.substring(0, 4).toUpperCase();
+                                setCodeLinkInput(partner.teamCode || `PS-${namePart}-${codeSuffix}`);
+                                setApprovePartner(partner);
+                              }}
+                              className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              Approve
+                            </Button>
+                          )}
+
                           <Link href={`/admin/kyc/${partner.id}`}>
                             <Button 
-                              variant="primary" 
+                              variant="secondary" 
                               size="sm" 
-                              rightIcon={<ArrowRight className="w-3.5 h-3.5 text-white" />}
+                              rightIcon={<ArrowRight className="w-3.5 h-3.5 text-slate-700" />}
                               className="whitespace-nowrap"
                             >
                               View
@@ -289,6 +309,77 @@ export default function AdminKycListPage() {
           </>
         )}
       </Card>
+
+      {/* APPROVE PARTNER MODAL WITH CODE GENERATOR */}
+      {approvePartner && (
+        <Modal
+          isOpen={Boolean(approvePartner)}
+          onClose={() => setApprovePartner(null)}
+          title={`Approve Partner & Assign Referral Code for ${approvePartner.name}`}
+        >
+          <div className="space-y-4">
+            <p className="text-xs text-slate-600">
+              Assign a unique referral code and referral link for <strong className="text-slate-900">{approvePartner.name}</strong>. You can keep the auto-generated code or manually type a custom code/link.
+            </p>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                  Referral Code / Custom Code Link *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const namePart = (approvePartner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+                    const randomNum = Math.floor(100 + Math.random() * 900);
+                    setCodeLinkInput(`PS-${namePart}-${randomNum}`);
+                  }}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                >
+                  ⚡ Auto-Generate New Code
+                </button>
+              </div>
+
+              <input
+                type="text"
+                value={codeLinkInput}
+                onChange={(e) => setCodeLinkInput(e.target.value.toUpperCase())}
+                placeholder="e.g. PS-HARDIK-884 or CUSTOMCODE"
+                className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-bold text-slate-900 outline-none uppercase"
+              />
+            </div>
+
+            {/* Live Link Preview */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Live Referral Link & Instant QR Code Target
+              </span>
+              <div className="font-mono text-xs text-[#1B2A72] font-semibold break-all bg-white p-2.5 rounded-lg border border-slate-200">
+                https://partner.primescore.in/register?ref={codeLinkInput.trim().toUpperCase() || 'PARTNER'}
+              </div>
+              <p className="text-[11px] text-slate-500">
+                This code will be saved in partner&apos;s <code>profiles.team_code</code> column and automatically connected to their dashboard, copy link, and instant QR generator.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" onClick={() => setApprovePartner(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  const finalCode = codeLinkInput.trim().toUpperCase() || 'PARTNER';
+                  await approveKyc(approvePartner.id, finalCode);
+                  setApprovePartner(null);
+                }}
+              >
+                Confirm Approval & Save Code
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

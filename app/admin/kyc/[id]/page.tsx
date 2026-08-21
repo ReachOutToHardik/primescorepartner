@@ -202,8 +202,27 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
   const isTeamLeader = partner.role === 'team_leader';
   const subAgents = isTeamLeader ? teamMembers : [];
 
-  const handleApprove = () => {
-    approveKyc(partner.id);
+  const [approveModalOpen, setApproveModalOpen] = useState(false);
+  const [codeLinkInput, setCodeLinkInput] = useState('');
+
+  const handleOpenApproveModal = () => {
+    const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+    const codeSuffix = partner.id.substring(0, 4).toUpperCase();
+    const autoCode = partner.teamCode || `PS-${namePart}-${codeSuffix}`;
+    setCodeLinkInput(autoCode);
+    setApproveModalOpen(true);
+  };
+
+  const handleConfirmApprove = async () => {
+    const finalCode = codeLinkInput.trim().toUpperCase() || 'PARTNER';
+    await approveKyc(partner.id, finalCode);
+    setApproveModalOpen(false);
+  };
+
+  const handleAutoGenerateCode = () => {
+    const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+    const randomNum = Math.floor(100 + Math.random() * 900);
+    setCodeLinkInput(`PS-${namePart}-${randomNum}`);
   };
 
   const handleRejectConfirm = () => {
@@ -242,7 +261,7 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
             <>
               <button
                 type="button"
-                onClick={handleApprove}
+                onClick={handleOpenApproveModal}
                 className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
               >
                 <CheckCircle size={18} weight="fill" className="shrink-0 text-emerald-400" />
@@ -492,6 +511,64 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </Card>
       )}
+
+      {/* APPROVE PARTNER & ASSIGN REFERRAL CODE MODAL */}
+      <Modal
+        isOpen={approveModalOpen}
+        onClose={() => setApproveModalOpen(false)}
+        title={`Approve Partner & Assign Referral Code for ${partner.name}`}
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-600">
+            Assign a unique referral code and referral link for <strong className="text-slate-900">{partner.name}</strong>. You can keep the auto-generated code or manually type a custom code/link.
+          </p>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                Referral Code / Custom Code Link *
+              </label>
+              <button
+                type="button"
+                onClick={handleAutoGenerateCode}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+              >
+                ⚡ Auto-Generate New Code
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={codeLinkInput}
+              onChange={(e) => setCodeLinkInput(e.target.value.toUpperCase())}
+              placeholder="e.g. PS-HARDIK-884 or CUSTOMCODE"
+              className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-bold text-slate-900 outline-none uppercase"
+            />
+          </div>
+
+          {/* Live Link Preview */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              Live Referral Link & Instant QR Code Target
+            </span>
+            <div className="font-mono text-xs text-[#1B2A72] font-semibold break-all bg-white p-2.5 rounded-lg border border-slate-200">
+              https://partner.primescore.in/register?ref={codeLinkInput.trim().toUpperCase() || 'PARTNER'}
+            </div>
+            <p className="text-[11px] text-slate-500">
+              This code will be saved in partner&apos;s <code>profiles.team_code</code> column and automatically connected to their dashboard, copy link, and instant QR generator.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setApproveModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleConfirmApprove}>
+              Confirm Approval & Save Code
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Reject Modal */}
       <Modal
