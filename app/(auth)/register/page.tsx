@@ -415,29 +415,32 @@ export default function RegisterPage() {
       const registrationTime = new Date().toISOString();
       const { data: createdProfile, error: profileError } = await supabase
         .from('profiles')
-        .insert([
-          {
-            id: userId,
-            name: name.trim(),
-            email: email.trim().toLowerCase(),
-            phone: phone.trim(),
-            profession,
-            city: city.trim(),
-            state: stateName.trim(),
-            pan: pan.trim().toUpperCase(),
-            role: teamLeaderCode ? 'team_member' : accountRole,
-            status: 'kyc_submitted',
-            team_code: generatedTeamCode,
-            referred_by_leader_id: teamLeaderCode || null,
-            avatar_url: avatarUrl || null,
-            is_email_verified: true,
-            prime_points: 0,
-            lifetime_points_earned: 0,
-            kyc_submitted_at: registrationTime,
-          },
-        ])
+        .upsert(
+          [
+            {
+              id: userId,
+              name: name.trim(),
+              email: email.trim().toLowerCase(),
+              phone: phone.trim(),
+              profession,
+              city: city.trim(),
+              state: stateName.trim(),
+              pan: pan.trim().toUpperCase(),
+              role: teamLeaderCode ? 'team_member' : accountRole,
+              status: 'kyc_submitted',
+              team_code: generatedTeamCode,
+              referred_by_leader_id: teamLeaderCode || null,
+              avatar_url: avatarUrl || null,
+              is_email_verified: true,
+              prime_points: 0,
+              lifetime_points_earned: 0,
+              kyc_submitted_at: registrationTime,
+            },
+          ],
+          { onConflict: 'email' }
+        )
         .select('id')
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Profile insert error:', profileError);

@@ -89,40 +89,53 @@ export default function LoginPage() {
       let profile = profileData;
 
       if (!profile) {
-        // Profile row missing in public.profiles table -> Auto-create profile row seamlessly!
-        const defaultName =
-          authData.user.user_metadata?.name ||
-          authData.user.user_metadata?.full_name ||
-          authData.user.email?.split('@')[0] ||
-          'Partner User';
+        const targetEmail = (authData.user.email || resolvedEmail).toLowerCase().trim();
+        
+        // First check if profile already exists by email
+        const { data: profByEmail } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', targetEmail)
+          .maybeSingle();
 
-        const newProfileRow = {
-          id: authData.user.id,
-          name: defaultName,
-          email: authData.user.email || resolvedEmail,
-          phone: authData.user.user_metadata?.phone || '',
-          profession: authData.user.user_metadata?.profession || 'Financial Consultant',
-          city: authData.user.user_metadata?.city || 'Mumbai',
-          state: authData.user.user_metadata?.state || 'Maharashtra',
-          status: 'kyc_approved',
-          role: 'individual',
-          team_code: 'PS-' + authData.user.id.substring(0, 6).toUpperCase(),
-          created_at: new Date().toISOString(),
-          joined_at: new Date().toISOString(),
-          prime_points: 100,
-        };
+        if (profByEmail) {
+          profile = profByEmail;
+        } else {
+          // Profile row missing in public.profiles table -> Auto-create profile row seamlessly with onConflict: 'email'
+          const defaultName =
+            authData.user.user_metadata?.name ||
+            authData.user.user_metadata?.full_name ||
+            targetEmail.split('@')[0] ||
+            'Partner User';
 
-        try {
-          const { data: upsertedProf } = await supabase
-            .from('profiles')
-            .upsert(newProfileRow)
-            .select('*')
-            .maybeSingle();
+          const newProfileRow = {
+            id: authData.user.id,
+            name: defaultName,
+            email: targetEmail,
+            phone: authData.user.user_metadata?.phone || '',
+            profession: authData.user.user_metadata?.profession || 'Financial Consultant',
+            city: authData.user.user_metadata?.city || 'Mumbai',
+            state: authData.user.user_metadata?.state || 'Maharashtra',
+            status: 'kyc_approved',
+            role: 'individual',
+            team_code: 'PS-' + authData.user.id.substring(0, 6).toUpperCase(),
+            created_at: new Date().toISOString(),
+            joined_at: new Date().toISOString(),
+            prime_points: 100,
+          };
 
-          profile = upsertedProf || (newProfileRow as any);
-        } catch (err) {
-          console.warn('Profile auto-create fallback note:', err);
-          profile = newProfileRow as any;
+          try {
+            const { data: upsertedProf } = await supabase
+              .from('profiles')
+              .upsert(newProfileRow, { onConflict: 'email' })
+              .select('*')
+              .maybeSingle();
+
+            profile = upsertedProf || (newProfileRow as any);
+          } catch (err) {
+            console.warn('Profile auto-create fallback note:', err);
+            profile = newProfileRow as any;
+          }
         }
       }
 

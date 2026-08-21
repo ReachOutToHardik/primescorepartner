@@ -117,25 +117,40 @@ export function useSupabaseSync() {
 
       if (!profile) {
         const userObj = (await supabase.auth.getUser()).data?.user;
-        if (userObj) {
-          const defaultName = userObj.user_metadata?.name || userObj.user_metadata?.full_name || userObj.email?.split('@')[0] || 'Partner User';
-          const newProf = {
-            id: partnerId,
-            name: defaultName,
-            email: userObj.email || '',
-            phone: userObj.user_metadata?.phone || '',
-            profession: userObj.user_metadata?.profession || 'Financial Consultant',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            status: 'kyc_approved',
-            role: 'individual',
-            team_code: 'PS-' + partnerId.substring(0, 6).toUpperCase(),
-            created_at: new Date().toISOString(),
-            joined_at: new Date().toISOString(),
-            prime_points: 100,
-          };
-          const { data: created } = await supabase.from('profiles').upsert(newProf).select('*').maybeSingle();
-          profile = created || (newProf as any);
+        if (userObj?.email) {
+          const targetEmail = userObj.email.toLowerCase().trim();
+          const { data: profByEmail } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', targetEmail)
+            .maybeSingle();
+
+          if (profByEmail) {
+            profile = profByEmail;
+          } else {
+            const defaultName = userObj.user_metadata?.name || userObj.user_metadata?.full_name || targetEmail.split('@')[0] || 'Partner User';
+            const newProf = {
+              id: partnerId,
+              name: defaultName,
+              email: targetEmail,
+              phone: userObj.user_metadata?.phone || '',
+              profession: userObj.user_metadata?.profession || 'Financial Consultant',
+              city: 'Mumbai',
+              state: 'Maharashtra',
+              status: 'kyc_approved',
+              role: 'individual',
+              team_code: 'PS-' + partnerId.substring(0, 6).toUpperCase(),
+              created_at: new Date().toISOString(),
+              joined_at: new Date().toISOString(),
+              prime_points: 100,
+            };
+            const { data: created } = await supabase
+              .from('profiles')
+              .upsert(newProf, { onConflict: 'email' })
+              .select('*')
+              .maybeSingle();
+            profile = created || (newProf as any);
+          }
         }
       }
 
