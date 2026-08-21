@@ -50,9 +50,15 @@ export default function ReferPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kycModalOpen, setKycModalOpen] = useState(false);
 
-  // Generated Referral Link (use team code if available, else partner id)
-  const referralCode = partner?.teamCode || partner?.id?.toUpperCase() || 'PARTNER';
-  const referralUrl = `https://app.primescore.in/register?ref=${referralCode}`;
+  // Generated Referral Link (supports custom code or custom full URL)
+  const rawCodeOrUrl = partner?.teamCode || partner?.id?.toUpperCase() || 'PARTNER';
+  const isFullUrl = rawCodeOrUrl.startsWith('http://') || rawCodeOrUrl.startsWith('https://');
+  const referralCode = isFullUrl ? 'CUSTOM-LINK' : rawCodeOrUrl;
+  const referralUrl = isFullUrl
+    ? rawCodeOrUrl
+    : (typeof window !== 'undefined'
+        ? `${window.location.origin}/register?ref=${rawCodeOrUrl}`
+        : `https://app.primescore.in/register?ref=${rawCodeOrUrl}`);
 
   const handleCopyLink = () => {
     if (partner?.status !== 'kyc_approved') {

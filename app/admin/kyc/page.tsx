@@ -310,22 +310,22 @@ export default function AdminKycListPage() {
         )}
       </Card>
 
-      {/* APPROVE PARTNER MODAL WITH CODE GENERATOR */}
+      {/* APPROVE PARTNER MODAL WITH CODE / LINK GENERATOR */}
       {approvePartner && (
         <Modal
           isOpen={Boolean(approvePartner)}
           onClose={() => setApprovePartner(null)}
-          title={`Approve Partner & Assign Referral Code for ${approvePartner.name}`}
+          title={`Approve Partner: ${approvePartner.name}`}
         >
           <div className="space-y-4">
             <p className="text-xs text-slate-600">
-              Assign a unique referral code and referral link for <strong className="text-slate-900">{approvePartner.name}</strong>. You can keep the auto-generated code or manually type a custom code/link.
+              Set a referral code or custom link for <strong>{approvePartner.name}</strong>. You can type your own link, code, or auto-generate one.
             </p>
 
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
-                  Referral Code / Custom Code Link *
+                  Referral Code or Custom Link
                 </label>
                 <button
                   type="button"
@@ -334,32 +334,31 @@ export default function AdminKycListPage() {
                     const randomNum = Math.floor(100 + Math.random() * 900);
                     setCodeLinkInput(`PS-${namePart}-${randomNum}`);
                   }}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
-                  ⚡ Auto-Generate New Code
+                  ⚡ Auto-Generate Code
                 </button>
               </div>
 
               <input
                 type="text"
                 value={codeLinkInput}
-                onChange={(e) => setCodeLinkInput(e.target.value.toUpperCase())}
-                placeholder="e.g. PS-HARDIK-884 or CUSTOMCODE"
-                className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-bold text-slate-900 outline-none uppercase"
+                onChange={(e) => setCodeLinkInput(e.target.value)}
+                placeholder="e.g. PS-HARDIK-884 OR https://primescore.in/join?ref=hardik"
+                className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-semibold text-slate-950 outline-none"
               />
             </div>
 
             {/* Live Link Preview */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                Live Referral Link & Instant QR Code Target
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                Final Partner Link & QR Target
               </span>
-              <div className="font-mono text-xs text-[#1B2A72] font-semibold break-all bg-white p-2.5 rounded-lg border border-slate-200">
-                https://partner.primescore.in/register?ref={codeLinkInput.trim().toUpperCase() || 'PARTNER'}
+              <div className="font-mono text-xs text-[#1B2A72] font-bold break-all bg-white p-2.5 rounded-lg border border-slate-200">
+                {codeLinkInput.trim().startsWith('http://') || codeLinkInput.trim().startsWith('https://')
+                  ? codeLinkInput.trim()
+                  : `https://partner.primescore.in/register?ref=${codeLinkInput.trim().toUpperCase() || 'PARTNER'}`}
               </div>
-              <p className="text-[11px] text-slate-500">
-                This code will be saved in partner&apos;s <code>profiles.team_code</code> column and automatically connected to their dashboard, copy link, and instant QR generator.
-              </p>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
@@ -369,12 +368,12 @@ export default function AdminKycListPage() {
               <Button
                 variant="primary"
                 onClick={async () => {
-                  const finalCode = codeLinkInput.trim().toUpperCase() || 'PARTNER';
+                  const finalCode = codeLinkInput.trim() || 'PARTNER';
                   await approveKyc(approvePartner.id, finalCode);
                   setApprovePartner(null);
                 }}
               >
-                Confirm Approval & Save Code
+                Approve Partner & Save Link
               </Button>
             </div>
           </div>
