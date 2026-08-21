@@ -102,13 +102,30 @@ export default function RedeemPage() {
         await supabase.from('redemptions').insert([insertPayload]);
       }
 
-      // Deduct points from profile
+      // Deduct points from profile in Supabase
+      const newBal = Math.max(0, totalPoints - pointsCost);
       await supabase
         .from('profiles')
-        .update({ prime_points: Math.max(0, totalPoints - pointsCost) })
+        .update({ prime_points: newBal })
         .eq('id', partner.id);
 
-      // Update local state
+      // Record point_transactions entry for Instant Activity Ledger
+      try {
+        await supabase.from('point_transactions').insert([
+          {
+            partner_id: partner.id,
+            transaction_type: 'voucher_redeemed',
+            points_change: -pointsCost,
+            balance_after: newBal,
+            title: `Voucher Claimed: ${selectedBrand.brand} (₹${selectedDenom})`,
+            reference_id: voucherCode,
+          },
+        ]);
+      } catch (txErr) {
+        console.warn('Voucher transaction log warning:', txErr);
+      }
+
+      // Update local state instantly
       redeemGiftCard(selectedBrand.brand, selectedDenom, pointsCost);
       setGeneratedVoucherCode(voucherCode);
       setOtpStep('success');

@@ -217,21 +217,39 @@ export default function AdminGiftCardsPage() {
           .single();
 
         if (partnerProf) {
-          const updatedPoints = (partnerProf.prime_points || 0) + target.points_deducted;
+          const ptsToRefund = target.points_deducted || (target.denomination_inr * 4);
+          const updatedPoints = (partnerProf.prime_points || 0) + ptsToRefund;
+
           await supabase
             .from('profiles')
             .update({ prime_points: updatedPoints })
             .eq('id', target.partner_id);
+
+          // Log refund in point_transactions table
+          try {
+            await supabase.from('point_transactions').insert([
+              {
+                partner_id: target.partner_id,
+                transaction_type: 'admin_grant',
+                points_change: ptsToRefund,
+                balance_after: updatedPoints,
+                title: `🎁 Voucher Request Rejected & Refunded: ${target.brand_name} (₹${target.denomination_inr})`,
+                reference_id: target.id,
+              },
+            ]);
+          } catch (txErr) {
+            console.warn('Voucher refund point_transactions log warning:', txErr);
+          }
         }
 
         // Notify partner of refund
         await supabase.from('notifications').insert([
           {
             partner_id: target.partner_id,
-            title: `Redemption Refunded`,
-            message: `Your ₹${target.denomination_inr} ${target.brand_name} redemption request was rejected. ${target.points_deducted} PrimePoints have been refunded back to your balance. Note: ${rejectReason.trim() || 'Administrative review'}`,
+            title: `🎉 Voucher Refunded (+${target.points_deducted || target.denomination_inr * 4} Pts)`,
+            message: `Your ₹${target.denomination_inr} ${target.brand_name} redemption request was declined and +${target.points_deducted || target.denomination_inr * 4} PrimePoints have been refunded back to your account balance. Reason: ${rejectReason.trim() || 'Administrative review'}`,
             type: 'warning',
-            points_badge: `+${target.points_deducted} Pts Refunded`,
+            points_badge: `+${target.points_deducted || target.denomination_inr * 4} Pts Refunded`,
             is_read: false,
           },
         ]);

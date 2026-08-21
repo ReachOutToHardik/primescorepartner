@@ -183,7 +183,7 @@ export const usePartnerStore = create<PartnerStore>()(
       },
 
       redeemGiftCard: (brand, denomination, pointsRequired) => {
-        const { totalPoints, redemptions } = get();
+        const { totalPoints, redemptions, partner } = get();
 
         if (totalPoints < pointsRequired) {
           return { success: false, message: 'Insufficient PrimePoints balance' };
@@ -200,8 +200,11 @@ export const usePartnerStore = create<PartnerStore>()(
           voucherCode,
         };
 
+        const newBalance = Math.max(0, totalPoints - pointsRequired);
+
         set({
-          totalPoints: totalPoints - pointsRequired,
+          totalPoints: newBalance,
+          partner: partner ? { ...partner, primePoints: newBalance } : null,
           redemptions: [newRedemption, ...redemptions],
         });
 
