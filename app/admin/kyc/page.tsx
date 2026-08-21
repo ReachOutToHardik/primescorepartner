@@ -17,11 +17,12 @@ import {
   Hourglass,
   ArrowRight,
   User,
-  Crown
+  Crown,
+  Trash
 } from '@phosphor-icons/react';
 
 export default function AdminKycListPage() {
-  const { partners } = useAdminStore();
+  const { partners, deletePartner } = useAdminStore();
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'individual' | 'team_leader'>('all');
@@ -244,14 +245,31 @@ export default function AdminKycListPage() {
                       </td>
 
                       <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <Button 
-                          variant="primary" 
-                          size="sm" 
-                          rightIcon={<ArrowRight className="w-3.5 h-3.5 text-white" />}
-                          className="whitespace-nowrap"
-                        >
-                          View Dossier
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Link href={`/admin/kyc/${partner.id}`}>
+                            <Button 
+                              variant="primary" 
+                              size="sm" 
+                              rightIcon={<ArrowRight className="w-3.5 h-3.5 text-white" />}
+                              className="whitespace-nowrap"
+                            >
+                              View
+                            </Button>
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (confirm(`Are you sure you want to delete partner "${partner.name}"? This cannot be undone.`)) {
+                                await deletePartner(partner.id);
+                              }
+                            }}
+                            className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg border border-red-200 transition-colors cursor-pointer"
+                            title="Delete Profile"
+                          >
+                            <Trash className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

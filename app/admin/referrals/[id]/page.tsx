@@ -68,11 +68,13 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
     <div className="space-y-6">
       {/* Top Back Navigation Bar */}
       <div className="flex items-center justify-between">
-        <Link href="/admin/referrals">
-          <Button variant="secondary" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-1 text-[var(--navy)]" /> Back to Leads Directory
-          </Button>
-        </Link>
+        <button
+          type="button"
+          onClick={() => router.push('/admin/referrals')}
+          className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 text-[var(--navy)]" /> Back to Leads Directory
+        </button>
 
         {savedSuccess && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold animate-fade-in border border-emerald-200">
@@ -151,16 +153,20 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
             <div className="flex justify-between py-1 border-b border-gray-100">
               <span className="text-[var(--ink-muted)] font-sans">Partner Name</span>
               <span className="font-bold font-sans text-[var(--navy)]">
-                {referringPartner?.name || 'Arjun Mehta'}
+                {referringPartner?.name || 'Partner'}
               </span>
             </div>
             <div className="flex justify-between py-1 border-b border-gray-100">
+              <span className="text-[var(--ink-muted)] font-sans">Partner Phone</span>
+              <span className="font-mono text-slate-900 font-semibold">{referringPartner?.phone || '9876543210'}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-100">
               <span className="text-[var(--ink-muted)] font-sans">Partner Profession</span>
-              <span className="font-sans">{referringPartner?.profession || 'Chartered Accountant (CA)'}</span>
+              <span className="font-sans">{referringPartner?.profession || 'Financial Agent'}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-gray-100">
               <span className="text-[var(--ink-muted)] font-sans">Partner Team Code</span>
-              <span className="font-mono font-bold">{referringPartner?.teamCode || 'TL-ARJUN-884'}</span>
+              <span className="font-mono font-bold">{referringPartner?.teamCode || 'TL-HAR-542'}</span>
             </div>
             <div className="flex justify-between py-1">
               <span className="text-[var(--ink-muted)] font-sans">Initial Lead Notes</span>

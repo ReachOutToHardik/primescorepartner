@@ -46,7 +46,7 @@ export interface SystemAuditLog {
   id: string;
   actorName: string;
   actorRole: string;
-  actionType: 'kyc_approval' | 'kyc_rejection' | 'lead_status_update' | 'payout_settlement' | 'broadcast_publish';
+  actionType: 'kyc_approval' | 'kyc_rejection' | 'partner_deleted' | 'lead_status_update' | 'payout_settlement' | 'broadcast_publish';
   targetEntity: string;
   details: string;
   timestamp: string;
@@ -153,6 +153,7 @@ interface AdminStore {
   adminLogout: () => void;
   approveKyc: (partnerId: string) => Promise<void>;
   rejectKyc: (partnerId: string, reason: string) => Promise<void>;
+  deletePartner: (partnerId: string) => Promise<void>;
   incrementProfileViews: (partnerId: string) => void;
   updateReferralStatus: (referralId: string, status: ReferralStatus, note?: string) => Promise<void>;
   toggleGiftCard: (cardId: string) => void;
@@ -303,6 +304,32 @@ export const useAdminStore = create<AdminStore>()(
               ? { ...p, status: 'kyc_rejected' as PartnerStatus, rejectionReason: reason }
               : p
           ),
+          auditLogs: [newLog, ...state.auditLogs],
+        }));
+      },
+
+      deletePartner: async (partnerId) => {
+        try {
+          const { supabase } = await import('./supabase');
+          await supabase.from('profiles').delete().eq('id', partnerId);
+        } catch (err) {
+          console.error('Delete partner error:', err);
+        }
+
+        const state = get();
+        const target = state.partners.find((p) => p.id === partnerId);
+        const newLog: SystemAuditLog = {
+          id: `LOG-${Date.now()}`,
+          actorName: 'Super Admin',
+          actorRole: 'super_admin',
+          actionType: 'partner_deleted',
+          targetEntity: target?.name || partnerId,
+          details: `Deleted partner profile (${target?.name || partnerId}).`,
+          timestamp: new Date().toISOString(),
+        };
+
+        set((state) => ({
+          partners: state.partners.filter((p) => p.id !== partnerId),
           auditLogs: [newLog, ...state.auditLogs],
         }));
       },
