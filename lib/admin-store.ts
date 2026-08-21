@@ -485,13 +485,44 @@ export const useAdminStore = create<AdminStore>()(
         try {
           const { supabase } = await import('./supabase');
 
-          // 1. Delete referral row from Supabase DB
-          await supabase.from('referrals').delete().eq('id', referralId);
+          // 1. Soft update status to 'rejected' in Supabase DB (preserves lead record in client & admin views)
+          const { data: existingRef } = await supabase
+            .from('referrals')
+            .select('status_history')
+            .eq('id', referralId)
+            .maybeSingle();
+
+          const existingHistory = Array.isArray(existingRef?.status_history)
+            ? existingRef.status_history
+            : (existingRef?.status_history ? JSON.parse(existingRef.status_history) : []);
+
+          const updatedHistory = [
+            ...existingHistory,
+            {
+              status: 'rejected',
+              date: new Date().toISOString(),
+              note: reversePoints
+                ? 'Lead cancelled by admin. Reward points reversed & deducted.'
+                : 'Lead cancelled by admin.',
+            },
+          ];
+
+          await supabase
+            .from('referrals')
+            .update({
+              current_stage: 'rejected',
+              updated_at: new Date().toISOString(),
+              status_history: updatedHistory,
+              partner_points_earned: reversePoints ? 0 : refCase?.pointsEarned || 0,
+            })
+            .eq('id', referralId);
 
           // 2. If reversePoints is true & case had points credited to partner
           if (reversePoints && refCase && refCase.pointsEarned > 0 && refCase.partnerId) {
             const partnerId = refCase.partnerId;
             const ptsToDeduct = refCase.pointsEarned;
+            const pointsPerInr = get().rewardConfig.pointsPerInr || 4;
+            const inrEquivalent = (ptsToDeduct / pointsPerInr).toFixed(2);
 
             const { data: profileRow } = await supabase
               .from('profiles')
@@ -513,20 +544,21 @@ export const useAdminStore = create<AdminStore>()(
                 })
                 .eq('id', partnerId);
 
+              // Record point deduction transaction with explicit INR cash amount
               await supabase.from('point_transactions').insert([
                 {
                   partner_id: partnerId,
                   transaction_type: 'referral_reversal',
                   points_change: -ptsToDeduct,
                   balance_after: newBal,
-                  title: `Referral Lead Deleted (Points Reversed): ${refCase.customerName}`,
+                  title: `Points Deducted (Lead Cancelled): ${refCase.customerName} (-₹${inrEquivalent} INR)`,
                   reference_id: referralId,
                 },
               ]);
             }
           }
         } catch (err) {
-          console.error('Delete referral error:', err);
+          console.error('Cancel/Delete referral error:', err);
         }
 
         const newLog: SystemAuditLog = {
@@ -535,12 +567,31 @@ export const useAdminStore = create<AdminStore>()(
           actorRole: 'operations_admin',
           actionType: 'lead_status_update',
           targetEntity: referralId,
-          details: `Deleted referral lead ${refCase?.customerName || referralId}. Points reversed: ${reversePoints ? 'Yes' : 'No'}.`,
+          details: `Cancelled lead ${refCase?.customerName || referralId}. Points reversed: ${reversePoints ? 'Yes' : 'No'}.`,
           timestamp: new Date().toISOString(),
         };
 
         set((state) => ({
-          referrals: state.referrals.filter((r) => r.id !== referralId),
+          referrals: state.referrals.map((r) =>
+            r.id === referralId
+              ? {
+                  ...r,
+                  status: 'rejected' as ReferralStatus,
+                  pointsEarned: reversePoints ? 0 : r.pointsEarned,
+                  updatedAt: new Date().toISOString(),
+                  statusHistory: [
+                    ...r.statusHistory,
+                    {
+                      status: 'rejected' as ReferralStatus,
+                      date: new Date().toISOString(),
+                      note: reversePoints
+                        ? 'Lead cancelled by admin. Points deducted.'
+                        : 'Lead cancelled by admin.',
+                    },
+                  ],
+                }
+              : r
+          ),
           auditLogs: [newLog, ...state.auditLogs],
         }));
       },
