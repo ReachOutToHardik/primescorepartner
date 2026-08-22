@@ -10,6 +10,7 @@ import { useAdminStore } from './admin-store';
  */
 export function useSupabaseSync() {
   const partner = usePartnerStore((state) => state.partner);
+  const isAdminAuthenticated = useAdminStore((state) => state.isAuthenticated);
   const { setPartner, setReferrals, setRedemptions, setTeamMembers, setTotalPoints } = usePartnerStore();
   const isSyncingRef = useRef(false);
 
@@ -210,7 +211,6 @@ export function useSupabaseSync() {
         .order('created_at', { ascending: false });
 
       if (redemptionsError && redemptionsError.code === '42703') {
-        // Fallback: query without order if created_at column does not exist yet
         const fallback = await supabase
           .from('redemptions')
           .select('*')
@@ -228,7 +228,6 @@ export function useSupabaseSync() {
         voucherCode: rd.voucher_code || '',
       }));
 
-      // Combine DB redemptions and local redemptions, removing duplicates by ID/voucherCode
       const mergedRedemptionsMap = new Map<string, RedemptionRecord>();
       dbMappedRedemptions.forEach((r) => mergedRedemptionsMap.set(r.id, r));
       currentLocalRedemptions.forEach((r) => {
@@ -239,7 +238,6 @@ export function useSupabaseSync() {
 
       setRedemptions(Array.from(mergedRedemptionsMap.values()));
 
-      // If team leader, fetch team members
       const currentPartner = usePartnerStore.getState().partner;
       if (currentPartner?.role === 'team_leader') {
         const { data: dbMembers } = await supabase
@@ -276,14 +274,13 @@ export function useSupabaseSync() {
     // ─── Guard: verify a live Supabase session or admin auth before touching any DB table ──
     const runSync = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const isAdminAuthenticated = useAdminStore.getState().isAuthenticated;
 
       if (!session && !isAdminAuthenticated) return; // Unauthenticated public requests bail out
 
-      // Sync admin data (profiles + referrals + system_config)
-      syncAdminData();
+      if (isAdminAuthenticated || session) {
+        syncAdminData();
+      }
 
-      // Sync partner-specific data if a partner is stored in state
       if (partner?.id) {
         syncPartnerData(partner.id);
       }
@@ -298,13 +295,11 @@ export function useSupabaseSync() {
 
     const setupRealtime = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const isAdminAuthenticated = useAdminStore.getState().isAuthenticated;
 
-      if (!session && !isAdminAuthenticated) return; // Skip realtime for unauthenticated users
+      if (!session && !isAdminAuthenticated) return;
 
       const subId = Math.random().toString(36).substring(2, 7);
 
-      // ─── Realtime: profiles table ──────────────────────────────────────────
       profilesChannel = supabase
         .channel(`realtime-profiles-${subId}`)
         .on(
@@ -319,7 +314,6 @@ export function useSupabaseSync() {
         )
         .subscribe();
 
-      // ─── Realtime: referrals table ─────────────────────────────────────────
       referralsChannel = supabase
         .channel(`realtime-referrals-${subId}`)
         .on(
@@ -332,7 +326,6 @@ export function useSupabaseSync() {
         )
         .subscribe();
 
-      // ─── Realtime: redemptions table ───────────────────────────────────────
       redemptionsChannel = supabase
         .channel(`realtime-redemptions-${subId}`)
         .on(
@@ -353,5 +346,5 @@ export function useSupabaseSync() {
       if (redemptionsChannel) supabase.removeChannel(redemptionsChannel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partner?.id]);
+  }, [partner?.id, isAdminAuthenticated]);
 }
