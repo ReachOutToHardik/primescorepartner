@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Megaphone, X } from '@phosphor-icons/react';
+import { Megaphone, X, Sparkle } from '@phosphor-icons/react';
 import { useAdminStore } from '@/lib/admin-store';
 
 export function BroadcastMarqueeBanner() {
@@ -60,30 +60,48 @@ export function BroadcastMarqueeBanner() {
   // If dismissed by user or no active broadcast exists, return NOTHING (null)
   if (dismissed || !activeBroadcast) return null;
 
+  // Repeat text item component for seamless infinite marquee loop
+  const MarqueeItem = () => (
+    <span className="inline-flex items-center gap-2.5 px-6">
+      <Sparkle size={13} weight="fill" className="text-amber-400 shrink-0" />
+      <span className="font-bold text-amber-300 font-display tracking-tight text-xs">
+        {activeBroadcast.title}
+      </span>
+      <span className="text-amber-200/50">&mdash;</span>
+      <span className="text-slate-100 font-medium text-xs tracking-wide">
+        {activeBroadcast.message}
+      </span>
+    </span>
+  );
+
   return (
-    <div className="bg-gradient-to-r from-[#0F1A4E] via-[#1B2A72] to-[#0A1238] text-white px-4 py-2 border-b border-amber-400/30 shadow-md relative z-40 overflow-hidden flex items-center justify-between gap-3 text-xs">
-      {/* Background Subtle Sparkle Pulse */}
-      <div className="absolute inset-0 bg-white/5 animate-pulse pointer-events-none" />
+    <div className="bg-gradient-to-r from-[#091136] via-[#121E5C] to-[#0A1238] text-white py-2 px-3 border-b border-amber-400/30 shadow-md relative z-40 overflow-hidden flex items-center justify-between gap-3 text-xs select-none">
+      {/* Background Subtle Shimmer Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent pointer-events-none" />
 
-      {/* Marquee Content */}
-      <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
-        <span className="flex items-center gap-1 px-2.5 py-0.5 bg-amber-400 text-amber-950 font-bold text-[10px] uppercase rounded-full tracking-wider shrink-0 shadow-xs">
-          <Megaphone size={13} weight="fill" /> Announcement
+      {/* Left Static Announcement Pill Badge */}
+      <div className="flex items-center gap-2 shrink-0 z-10 pl-1">
+        <span className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase rounded-full tracking-wider shadow-sm border border-amber-300/40">
+          <Megaphone size={13} weight="fill" className="animate-bounce text-slate-950" />
+          <span>Announcement</span>
         </span>
+      </div>
 
-        <div className="overflow-hidden whitespace-nowrap min-w-0 flex-1">
-          <div className="inline-block animate-marquee font-medium tracking-wide">
-            <span className="font-bold text-amber-300 font-display">{activeBroadcast.title}</span>
-            <span className="mx-2 text-slate-300">&bull;</span>
-            <span className="text-slate-100">{activeBroadcast.message}</span>
-          </div>
+      {/* Center Seamless Infinite Scrolling Marquee Container */}
+      <div className="overflow-hidden whitespace-nowrap min-w-0 flex-1 relative flex items-center">
+        <div className="inline-flex animate-marquee hover:[animation-play-state:paused] cursor-pointer py-0.5">
+          {/* Repeat 4 times for seamless unbroken looping */}
+          <MarqueeItem />
+          <MarqueeItem />
+          <MarqueeItem />
+          <MarqueeItem />
         </div>
       </div>
 
-      {/* Dismiss Button */}
+      {/* Right Dismiss X Button */}
       <button
         onClick={() => setDismissed(true)}
-        className="p-1 hover:bg-white/20 rounded-full text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
+        className="p-1.5 hover:bg-white/15 rounded-full text-slate-300 hover:text-white transition-all shrink-0 cursor-pointer z-10"
         title="Dismiss announcement"
         aria-label="Dismiss announcement"
       >
