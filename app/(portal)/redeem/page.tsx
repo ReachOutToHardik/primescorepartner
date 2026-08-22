@@ -297,8 +297,9 @@ export default function RedeemPage() {
 
       {/* VOUCHER HISTORY TAB */}
       {activeTab === 'history' && (
-        <div className="bg-white border border-[var(--border)] rounded-2xl shadow-xs p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs p-5 sm:p-6 space-y-4">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h2 className="font-display text-lg font-bold text-slate-900">
                 Redeemed Voucher History
@@ -307,7 +308,7 @@ export default function RedeemPage() {
                 Voucher codes are securely generated & revealed once approved by Admin.
               </p>
             </div>
-            <span className="px-3 py-1 bg-slate-100 text-slate-700 font-mono-num text-xs font-bold rounded-full">
+            <span className="self-start sm:self-center px-3 py-1 bg-slate-100 text-slate-700 font-mono-num text-xs font-bold rounded-full shrink-0">
               {liveRedemptions.length > 0 ? liveRedemptions.length : redemptions.length} Claims
             </span>
           </div>
@@ -335,31 +336,34 @@ export default function RedeemPage() {
                 const isPending = !isFulfilled && !isRejected;
 
                 return (
-                  <div key={rdmItem.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
+                  <div key={rdmItem.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                    <div className="flex items-start sm:items-center gap-3.5">
                       <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center font-display font-bold text-xl text-amber-700 shrink-0 shadow-2xs">
                         🎁
                       </div>
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <p className="font-display font-bold text-sm text-slate-900">
                             {brand} E-Voucher (₹{denom})
                           </p>
 
                           {/* Status Badge */}
                           {isPending && (
-                            <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
-                              <Clock size={12} className="animate-spin text-amber-700" /> Processing
+                            <span className="px-2 sm:px-2.5 py-0.5 bg-amber-100/80 text-amber-900 border border-amber-300/80 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0" title="Processing">
+                              <Clock size={13} className="animate-spin text-amber-700 shrink-0" />
+                              <span className="hidden sm:inline">PROCESSING</span>
                             </span>
                           )}
                           {isFulfilled && (
-                            <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
-                              <CheckCircle size={12} className="text-emerald-700" weight="fill" /> Processed
+                            <span className="px-2 sm:px-2.5 py-0.5 bg-emerald-100/80 text-emerald-900 border border-emerald-300/80 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0" title="Processed">
+                              <CheckCircle size={13} className="text-emerald-700 shrink-0" weight="fill" />
+                              <span className="hidden sm:inline">PROCESSED</span>
                             </span>
                           )}
                           {isRejected && (
-                            <span className="px-2.5 py-0.5 bg-rose-100 text-rose-900 border border-rose-300 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
-                              <X size={12} className="text-rose-700" weight="bold" /> Declined & Refunded
+                            <span className="px-2 sm:px-2.5 py-0.5 bg-rose-100/80 text-rose-900 border border-rose-300/80 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0" title="Declined & Refunded">
+                              <X size={13} className="text-rose-700 shrink-0" weight="bold" />
+                              <span className="hidden sm:inline">DECLINED & REFUNDED</span>
                             </span>
                           )}
                         </div>
@@ -370,34 +374,34 @@ export default function RedeemPage() {
                       </div>
                     </div>
 
-                    {/* Right Action / Code Area */}
-                    <div>
+                    {/* Right Action / Code Area (Fully Responsive) */}
+                    <div className="w-full md:w-auto shrink-0">
                       {isPending && (
-                        <div className="bg-amber-50/80 border border-amber-200/80 px-3.5 py-2 rounded-xl text-xs text-amber-900 font-medium flex items-center gap-2">
+                        <div className="w-full md:w-auto bg-amber-50/80 border border-amber-200/80 px-3.5 py-2 rounded-xl text-xs text-amber-900 font-medium flex items-center gap-2">
                           <Clock size={15} className="text-amber-700 shrink-0" />
-                          <span>Admin verification in progress. Code will be revealed upon approval.</span>
+                          <span className="leading-snug">Admin verification in progress. Code will be revealed upon approval.</span>
                         </div>
                       )}
 
                       {isFulfilled && (
-                        <div className="flex items-center gap-2 bg-emerald-50/80 px-3.5 py-2 border border-emerald-200 rounded-xl">
-                          <code className="text-xs font-mono-num font-bold text-emerald-950 tracking-widest select-all">
+                        <div className="w-full md:w-auto flex items-center justify-between gap-3 bg-emerald-50/80 px-3.5 py-2 border border-emerald-200 rounded-xl">
+                          <code className="text-xs sm:text-sm font-mono font-bold text-emerald-950 tracking-wider select-all truncate">
                             {vCode}
                           </code>
                           <button
                             onClick={() => handleCopyCode(vCode)}
-                            className="p-1 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-950 rounded transition-colors"
+                            className="p-1 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-950 rounded transition-colors shrink-0 cursor-pointer"
                             title="Copy Voucher Code"
                           >
-                            <Copy size={15} />
+                            <Copy size={16} />
                           </button>
                         </div>
                       )}
 
                       {isRejected && (
-                        <div className="bg-rose-50/80 border border-rose-200/80 px-3.5 py-2 rounded-xl text-xs text-rose-800 font-medium flex items-center gap-2">
+                        <div className="w-full md:w-auto bg-rose-50/80 border border-rose-200/80 px-3.5 py-2 rounded-xl text-xs text-rose-800 font-medium flex items-center gap-2">
                           <X size={15} className="text-rose-700 shrink-0" weight="bold" />
-                          <span>Request rejected by Admin. +{pts} Pts refunded to balance.</span>
+                          <span>Request rejected by Admin. +{pts.toLocaleString()} Pts refunded to balance.</span>
                         </div>
                       )}
                     </div>
