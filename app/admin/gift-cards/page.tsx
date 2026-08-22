@@ -621,24 +621,28 @@ export default function AdminGiftCardsPage() {
                         {/* Actions */}
                         <td className="px-5 py-4 text-right">
                           {r.status === 'pending' ? (
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-2 shrink-0 min-w-[290px]">
                               <Button
                                 variant="primary"
                                 size="sm"
+                                leftIcon={<CheckCircle size={15} weight="fill" />}
                                 onClick={() => handleFulfillRedemption(r.id)}
                                 isLoading={isProcessingAction}
+                                className="whitespace-nowrap font-bold shrink-0"
                               >
-                                <CheckCircle size={14} className="mr-1" /> Approve & Dispatch
+                                Approve & Dispatch
                               </Button>
                               <Button
                                 variant="danger"
                                 size="sm"
+                                leftIcon={<XCircle size={15} weight="fill" />}
                                 onClick={() => {
                                   setRejectTargetId(r.id);
                                   setRejectModalOpen(true);
                                 }}
+                                className="whitespace-nowrap font-bold shrink-0"
                               >
-                                <XCircle size={14} className="mr-1" /> Reject & Refund
+                                Reject & Refund
                               </Button>
                             </div>
                           ) : r.status === 'fulfilled' ? (
