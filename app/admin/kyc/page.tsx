@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { Modal } from '@/components/ui/Modal';
+import { ResetPartnerPasswordModal } from '@/components/admin/ResetPartnerPasswordModal';
 import { 
   ShieldCheck, 
   MagnifyingGlass, 
@@ -20,12 +21,14 @@ import {
   User,
   Crown,
   Trash,
-  CheckCircle
+  CheckCircle,
+  Key
 } from '@phosphor-icons/react';
 
 export default function AdminKycListPage() {
   const { partners, deletePartner, approveKyc } = useAdminStore();
   const [approvePartner, setApprovePartner] = useState<any | null>(null);
+  const [resetPassPartner, setResetPassPartner] = useState<any | null>(null);
   const [codeLinkInput, setCodeLinkInput] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
@@ -279,6 +282,15 @@ export default function AdminKycListPage() {
 
                           <button
                             type="button"
+                            onClick={() => setResetPassPartner(partner)}
+                            className="p-2 text-[#1B2A72] hover:bg-indigo-50 hover:border-indigo-300 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                            title="Reset Partner Password"
+                          >
+                            <Key className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={async () => {
                               if (confirm(`Are you sure you want to delete partner "${partner.name}"? This cannot be undone.`)) {
                                 await deletePartner(partner.id);
@@ -309,6 +321,13 @@ export default function AdminKycListPage() {
           </>
         )}
       </Card>
+
+      {/* RESET PARTNER PASSWORD MODAL */}
+      <ResetPartnerPasswordModal
+        isOpen={Boolean(resetPassPartner)}
+        onClose={() => setResetPassPartner(null)}
+        partner={resetPassPartner}
+      />
 
       {/* APPROVE PARTNER MODAL WITH CODE / LINK GENERATOR */}
       {approvePartner && (

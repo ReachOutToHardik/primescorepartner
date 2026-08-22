@@ -188,6 +188,7 @@ interface AdminStore {
   createBroadcast: (b: Omit<BroadcastAnnouncement, 'id' | 'publishedAt'>) => Promise<void>;
   toggleBroadcast: (id: string) => Promise<void>;
   issueAdminPoints: (partnerId: string, pointsAmount: number, reason: string) => Promise<void>;
+  updatePartnerPassword: (partnerId: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 // Initial realistic audit logs
@@ -448,6 +449,35 @@ export const useAdminStore = create<AdminStore>()(
           partners: state.partners.filter((p) => p.id !== partnerId),
           auditLogs: [newLog, ...state.auditLogs],
         }));
+      },
+
+      updatePartnerPassword: async (partnerId: string, newPassword: string) => {
+        try {
+          const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+          const res = await fetch('/api/admin/partners/password', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPass,
+            },
+            body: JSON.stringify({ partnerId, newPassword }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            return { success: false, error: data.error || 'Failed to update partner password' };
+          }
+
+          set((state) => ({
+            partners: state.partners.map((p) =>
+              p.id === partnerId ? { ...p, password: newPassword } : p
+            ),
+          }));
+
+          return { success: true };
+        } catch (err: any) {
+          return { success: false, error: err.message || 'Server connection error' };
+        }
       },
 
       incrementProfileViews: (partnerId) =>

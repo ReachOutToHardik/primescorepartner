@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { ResetPartnerPasswordModal } from '@/components/admin/ResetPartnerPasswordModal';
 import { 
   ArrowLeft, 
   ShieldCheck, 
@@ -31,7 +32,8 @@ import {
   UserPlus,
   ArrowRight,
   DownloadSimple,
-  ArrowSquareOut
+  ArrowSquareOut,
+  Key
 } from '@phosphor-icons/react';
 
 export interface KycDocRecord {
@@ -54,6 +56,7 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [resetPassModalOpen, setResetPassModalOpen] = useState(false);
   const [dbDocuments, setDbDocuments] = useState<KycDocRecord[]>([]);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
 
@@ -248,6 +251,15 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         </Link>
 
         <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => setResetPassModalOpen(true)}
+            className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+          >
+            <Key size={18} weight="fill" className="shrink-0 text-amber-400" />
+            <span>Reset Password</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setAdjustPointsModalOpen(true)}
@@ -672,6 +684,12 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </Modal>
       )}
+      {/* RESET PARTNER PASSWORD MODAL */}
+      <ResetPartnerPasswordModal
+        isOpen={resetPassModalOpen}
+        onClose={() => setResetPassModalOpen(false)}
+        partner={partner}
+      />
     </div>
   );
 }
