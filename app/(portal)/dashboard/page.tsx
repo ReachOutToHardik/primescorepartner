@@ -132,6 +132,16 @@ export default function PartnerDashboard() {
     // Unified events array sorted ASCENDING by date
     const events: { dateStr: string; pointsChange: number; isReferral: boolean }[] = [];
 
+    const toLocalDateStr = (isoString?: string | null) => {
+      if (!isoString) return new Date().toISOString().split('T')[0];
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString.split('T')[0];
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     const existingTxRefIds = new Set(pointTransactions.map((tx) => tx.reference_id || tx.id));
 
     // 1. Point Transactions from DB (Single Source of Truth for Points Ledger)
@@ -139,7 +149,7 @@ export default function PartnerDashboard() {
       pointTransactions.forEach((tx) => {
         if (!tx.created_at) return;
         events.push({
-          dateStr: tx.created_at.split('T')[0],
+          dateStr: toLocalDateStr(tx.created_at),
           pointsChange: tx.points_change || 0,
           isReferral: tx.transaction_type === 'referral_earned',
         });
@@ -150,7 +160,7 @@ export default function PartnerDashboard() {
       const remainingUnloggedPoints = totalPoints - dbTxSum;
       if (remainingUnloggedPoints > 0 && partner) {
         events.push({
-          dateStr: (partner.kycSubmittedAt || partner.joinedAt || new Date().toISOString()).split('T')[0],
+          dateStr: toLocalDateStr(partner.kycSubmittedAt || partner.joinedAt),
           pointsChange: remainingUnloggedPoints,
           isReferral: false,
         });
@@ -159,7 +169,7 @@ export default function PartnerDashboard() {
       // Fallback for new accounts without DB transactions yet
       if (partner && totalPoints > 0) {
         events.push({
-          dateStr: (partner.kycSubmittedAt || partner.joinedAt || new Date().toISOString()).split('T')[0],
+          dateStr: toLocalDateStr(partner.kycSubmittedAt || partner.joinedAt),
           pointsChange: totalPoints,
           isReferral: false,
         });
@@ -170,7 +180,7 @@ export default function PartnerDashboard() {
     redemptions.forEach((rdm) => {
       if (!existingTxRefIds.has(rdm.id) && !existingTxRefIds.has(rdm.voucherCode)) {
         events.push({
-          dateStr: (rdm.redeemedAt || new Date().toISOString()).split('T')[0],
+          dateStr: toLocalDateStr(rdm.redeemedAt),
           pointsChange: -rdm.points,
           isReferral: false,
         });
@@ -184,7 +194,7 @@ export default function PartnerDashboard() {
     partnerReferrals.forEach((r) => {
       if (!r.createdAt) return;
       events.push({
-        dateStr: r.createdAt.split('T')[0],
+        dateStr: toLocalDateStr(r.createdAt),
         pointsChange: 0,
         isReferral: true,
       });
@@ -199,7 +209,10 @@ export default function PartnerDashboard() {
       if (periodType === 'day') {
         for (let i = numPeriods - 1; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-          const key = d.toISOString().split('T')[0];
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const key = `${year}-${month}-${day}`;
           const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
           buckets.push({ key, label, referrals: 0, points: 0 });
         }
