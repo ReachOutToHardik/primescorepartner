@@ -90,6 +90,7 @@ export const Modal: React.FC<ModalProps> = ({
     lg: 'max-w-lg',
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
     full: 'max-w-[calc(100vw-2rem)]',
   };
 
@@ -97,7 +98,7 @@ export const Modal: React.FC<ModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          {/* Backdrop */}
+          {/* Backdrop with High-Grade Blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -105,7 +106,7 @@ export const Modal: React.FC<ModalProps> = ({
             transition={{ duration: 0.2 }}
             onClick={() => closeOnBackdropClick && onClose()}
             className={cn(
-              'fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity',
+              'fixed inset-0 bg-slate-950/75 backdrop-blur-md transition-opacity',
               overlayClassName
             )}
             aria-hidden="true"

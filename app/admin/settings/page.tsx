@@ -50,7 +50,6 @@ export default function AdminSettingsPage() {
   const [staffEmail, setStaffEmail] = useState('');
   const [staffPassword, setStaffPassword] = useState('Staff@2026');
   const [staffRole, setStaffRole] = useState<'operations_admin' | 'compliance_officer' | 'support_agent' | 'custom_staff'>('operations_admin');
-  const [staffDept, setStaffDept] = useState('Lead Operations');
   const [staffPages, setStaffPages] = useState<string[]>([
     'dashboard', 'kyc', 'referrals', 'teams', 'analytics', 'gift-cards', 'services', 'rewards-config', 'notifications', 'settings'
   ]);
@@ -62,7 +61,6 @@ export default function AdminSettingsPage() {
   const [editStaffEmail, setEditStaffEmail] = useState('');
   const [editStaffPassword, setEditStaffPassword] = useState('');
   const [editStaffRole, setEditStaffRole] = useState<'operations_admin' | 'compliance_officer' | 'support_agent' | 'custom_staff'>('operations_admin');
-  const [editStaffDept, setEditStaffDept] = useState('');
   const [editStaffPages, setEditStaffPages] = useState<string[]>([]);
 
   // Delete Staff Modal
@@ -85,7 +83,6 @@ export default function AdminSettingsPage() {
         email: staffEmail,
         password: staffPassword,
         role: staffRole,
-        department: staffDept,
         allowedPages: staffPages,
         isActive: true,
       });
@@ -102,7 +99,6 @@ export default function AdminSettingsPage() {
     setEditStaffEmail(user.email);
     setEditStaffPassword(user.password || '');
     setEditStaffRole(user.role || 'operations_admin');
-    setEditStaffDept(user.department || 'Lead Operations');
     setEditStaffPages(user.allowedPages || PERMISSION_PAGES.map((p) => p.id));
     setEditModalOpen(true);
   };
@@ -114,7 +110,6 @@ export default function AdminSettingsPage() {
         email: editStaffEmail,
         password: editStaffPassword || undefined,
         role: editStaffRole,
-        department: editStaffDept,
         allowedPages: editStaffPages,
       });
       setEditModalOpen(false);
@@ -218,7 +213,7 @@ export default function AdminSettingsPage() {
                   <tr>
                     <th className="px-6 py-3.5">Staff Name & ID</th>
                     <th className="px-6 py-3.5">Assigned Role</th>
-                    <th className="px-6 py-3.5">Department</th>
+                    <th className="px-6 py-3.5">Allowed Pages Access</th>
                     <th className="px-6 py-3.5">Last Login</th>
                     <th className="px-6 py-3.5">Status</th>
                     <th className="px-6 py-3.5 text-right">Actions</th>
@@ -236,11 +231,10 @@ export default function AdminSettingsPage() {
                           {u.role.replace('_', ' ').toUpperCase()}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 font-sans text-xs text-[var(--ink-2)]">
-                        <div>{u.department}</div>
-                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                          {u.role === 'super_admin' ? 'All 10 Pages Allowed' : `${u.allowedPages?.length || 0} Pages Allowed`}
-                        </div>
+                      <td className="px-6 py-4 font-sans text-xs">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          {u.role === 'super_admin' ? 'All 10 Pages Allowed' : `${u.allowedPages?.length || 0} / 10 Pages Allowed`}
+                        </span>
                       </td>
                       <td className="px-6 py-4 font-sans text-xs text-[var(--ink-muted)]">
                         {new Date(u.lastLogin).toLocaleString()}
@@ -402,7 +396,7 @@ export default function AdminSettingsPage() {
       )}
 
       {/* Add Staff Modal */}
-      <Modal isOpen={staffModalOpen} onClose={() => setStaffModalOpen(false)} title="Add Admin Staff Member">
+      <Modal isOpen={staffModalOpen} onClose={() => setStaffModalOpen(false)} title="Add Admin Staff Member" maxWidth="2xl">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -427,7 +421,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-[var(--ink)] uppercase">Login Password</label>
               <input
@@ -451,30 +445,39 @@ export default function AdminSettingsPage() {
                 <option value="custom_staff">Custom Staff Access</option>
               </select>
             </div>
-            <div>
-              <label className="text-xs font-bold text-[var(--ink)] uppercase">Department</label>
-              <input
-                type="text"
-                value={staffDept}
-                onChange={(e) => setStaffDept(e.target.value)}
-                placeholder="KYC Verification Team"
-                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
-              />
-            </div>
           </div>
 
           {/* Plain English Page Permission Checkboxes */}
-          <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
-            <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider block">
-              Allowed Pages Permission List
-            </label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+          <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider block">
+                Allowed Pages Permission List
+              </label>
+              <div className="flex gap-2 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setStaffPages(PERMISSION_PAGES.map((p) => p.id))}
+                  className="text-indigo-600 hover:underline"
+                >
+                  Select All
+                </button>
+                <span className="text-slate-300">|</span>
+                <button
+                  type="button"
+                  onClick={() => setStaffPages([])}
+                  className="text-slate-500 hover:underline"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
               {PERMISSION_PAGES.map((page) => {
                 const checked = staffPages.includes(page.id);
                 return (
                   <label
                     key={page.id}
-                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer select-none transition-all ${
+                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer select-none transition-all ${
                       checked ? 'bg-white border-[#1B2A72] text-[#1B2A72] font-bold shadow-xs' : 'bg-slate-100 border-slate-200 text-slate-600'
                     }`}
                   >
@@ -488,7 +491,7 @@ export default function AdminSettingsPage() {
                           setStaffPages(staffPages.filter((p) => p !== page.id));
                         }
                       }}
-                      className="rounded-xs accent-[#1B2A72]"
+                      className="rounded-xs accent-[#1B2A72] w-4 h-4"
                     />
                     <span>{page.label}</span>
                   </label>
@@ -505,7 +508,7 @@ export default function AdminSettingsPage() {
       </Modal>
 
       {/* Edit Staff Modal */}
-      <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} title="Edit Staff Member Permissions">
+      <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} title="Edit Staff Member Permissions" maxWidth="2xl">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -528,7 +531,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-[var(--ink)] uppercase">Login Password</label>
               <input
@@ -552,29 +555,39 @@ export default function AdminSettingsPage() {
                 <option value="custom_staff">Custom Staff Access</option>
               </select>
             </div>
-            <div>
-              <label className="text-xs font-bold text-[var(--ink)] uppercase">Department</label>
-              <input
-                type="text"
-                value={editStaffDept}
-                onChange={(e) => setEditStaffDept(e.target.value)}
-                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
-              />
-            </div>
           </div>
 
           {/* Plain English Page Permission Checkboxes for Edit */}
-          <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
-            <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider block">
-              Allowed Pages Permission List
-            </label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+          <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider block">
+                Allowed Pages Permission List
+              </label>
+              <div className="flex gap-2 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setEditStaffPages(PERMISSION_PAGES.map((p) => p.id))}
+                  className="text-indigo-600 hover:underline"
+                >
+                  Select All
+                </button>
+                <span className="text-slate-300">|</span>
+                <button
+                  type="button"
+                  onClick={() => setEditStaffPages([])}
+                  className="text-slate-500 hover:underline"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
               {PERMISSION_PAGES.map((page) => {
                 const checked = editStaffPages.includes(page.id);
                 return (
                   <label
                     key={page.id}
-                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer select-none transition-all ${
+                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer select-none transition-all ${
                       checked ? 'bg-white border-[#1B2A72] text-[#1B2A72] font-bold shadow-xs' : 'bg-slate-100 border-slate-200 text-slate-600'
                     }`}
                   >
@@ -588,7 +601,7 @@ export default function AdminSettingsPage() {
                           setEditStaffPages(editStaffPages.filter((p) => p !== page.id));
                         }
                       }}
-                      className="rounded-xs accent-[#1B2A72]"
+                      className="rounded-xs accent-[#1B2A72] w-4 h-4"
                     />
                     <span>{page.label}</span>
                   </label>

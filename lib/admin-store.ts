@@ -38,7 +38,6 @@ export interface AdminStaffUser {
   email: string;
   password?: string;
   role: 'super_admin' | 'operations_admin' | 'compliance_officer' | 'support_agent' | 'custom_staff';
-  department: string;
   allowedPages?: string[];
   lastLogin: string;
   isActive: boolean;
@@ -80,8 +79,8 @@ export const ALL_ADMIN_PAGES = [
 
 // Static admin staff list (only real staff, no demo data)
 const INITIAL_STAFF: AdminStaffUser[] = [
-  { id: 'ADM-01', name: 'Sawai', email: 'sawai@primescore.in', role: 'super_admin', department: 'Chief Executive Officer (CEO)', allowedPages: ALL_ADMIN_PAGES, lastLogin: new Date().toISOString(), isActive: true },
-  { id: 'ADM-02', name: 'Hardik', email: 'hardik@primescore.in', role: 'super_admin', department: 'Technology Head (CTO)', allowedPages: ALL_ADMIN_PAGES, lastLogin: new Date().toISOString(), isActive: true },
+  { id: 'ADM-01', name: 'Sawai', email: 'sawai@primescore.in', role: 'super_admin', allowedPages: ALL_ADMIN_PAGES, lastLogin: new Date().toISOString(), isActive: true },
+  { id: 'ADM-02', name: 'Hardik', email: 'hardik@primescore.in', role: 'super_admin', allowedPages: ALL_ADMIN_PAGES, lastLogin: new Date().toISOString(), isActive: true },
 ];
 
 // Gift cards initialized from static config (no mock data)
@@ -811,7 +810,6 @@ export const useAdminStore = create<AdminStore>()(
               email: user.email,
               password: user.password || 'Staff@2026',
               role: user.role,
-              department: user.department,
               allowedPages: user.allowedPages || ALL_ADMIN_PAGES,
             }),
           });
@@ -825,7 +823,6 @@ export const useAdminStore = create<AdminStore>()(
             email: user.email,
             password: user.password || 'Staff@2026',
             role: user.role,
-            department: user.department,
             allowedPages: user.allowedPages || ALL_ADMIN_PAGES,
             lastLogin: data?.last_login || new Date().toISOString(),
             isActive: true,

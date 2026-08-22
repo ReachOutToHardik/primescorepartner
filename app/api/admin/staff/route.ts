@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized admin request.' }, { status: 401 });
     }
 
-    const { name, email, password, role, department, allowedPages } = await req.json();
+    const { name, email, password, role, allowedPages } = await req.json();
 
     if (!name || !email) {
       return NextResponse.json({ error: 'Name and email are required.' }, { status: 400 });
@@ -31,7 +31,6 @@ export async function POST(req: Request) {
           email: email.trim().toLowerCase(),
           password: password || 'Staff@2026',
           role: role || 'operations_admin',
-          department: department || 'Lead Operations',
           allowed_pages: allowedPages || ['dashboard', 'kyc', 'referrals', 'teams', 'analytics', 'gift-cards', 'services', 'rewards-config', 'notifications', 'settings'],
           is_active: true,
           last_login: new Date().toISOString(),
@@ -60,7 +59,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Unauthorized admin request.' }, { status: 401 });
     }
 
-    const { id, name, email, password, role, department, allowedPages, isActive } = await req.json();
+    const { id, name, email, password, role, allowedPages, isActive } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: 'Staff ID is required.' }, { status: 400 });
@@ -71,7 +70,6 @@ export async function PATCH(req: Request) {
     if (email !== undefined) updates.email = email.trim().toLowerCase();
     if (password !== undefined) updates.password = password;
     if (role !== undefined) updates.role = role;
-    if (department !== undefined) updates.department = department;
     if (allowedPages !== undefined) updates.allowed_pages = allowedPages;
     if (isActive !== undefined) updates.is_active = isActive;
 

@@ -154,7 +154,6 @@ export function useSupabaseSync() {
             email: s.email,
             password: s.password,
             role: s.role || 'operations_admin',
-            department: s.department || 'Lead Operations',
             allowedPages: s.allowed_pages || ALL_ADMIN_PAGES,
             lastLogin: s.last_login || s.created_at,
             isActive: s.is_active !== false,
