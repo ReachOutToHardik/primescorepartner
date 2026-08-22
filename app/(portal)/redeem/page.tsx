@@ -40,6 +40,36 @@ export default function RedeemPage() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Live Redemptions from DB
+  const [liveRedemptions, setLiveRedemptions] = useState<{
+    id: string;
+    brand_name: string;
+    denomination_inr: number;
+    points_burned: number;
+    voucher_code: string;
+    status: 'pending' | 'fulfilled' | 'rejected';
+    created_at: string;
+  }[]>([]);
+
+  const fetchLiveRedemptions = async () => {
+    if (!partner?.id) return;
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data } = await supabase
+        .from('redemptions')
+        .select('*')
+        .eq('partner_id', partner.id)
+        .order('created_at', { ascending: false });
+      if (data) setLiveRedemptions(data);
+    } catch (err) {
+      console.error('Fetch live redemptions error:', err);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchLiveRedemptions();
+  }, [partner?.id, activeTab]);
+
   const handleOpenRedeemModal = (card: typeof GIFT_CARDS[0], denom: number) => {
     if (partner?.status !== 'kyc_approved') {
       setKycModalOpen(true);
@@ -58,12 +88,9 @@ export default function RedeemPage() {
   };
 
   const handleRequestOTP = () => {
-    // Generate a 6-digit OTP for this session
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     setInternalOtp(otp);
     setOtpStep('otp');
-    // In production this would be sent via SMS/WhatsApp to partner.phone
-    // For now show it in the UI as a dev indicator
     console.info(`[DEV] OTP for redemption: ${otp}`);
   };
 
@@ -78,26 +105,24 @@ export default function RedeemPage() {
     setErrorMsg('');
 
     const pointsCost = selectedDenom * 4;
-    const voucherCode = `${selectedBrand.brand.substring(0, 4).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
     try {
       const { supabase } = await import('@/lib/supabase');
 
-      // Insert redemption record with points_burned & points_deducted fail-safe schema matching
+      // Insert redemption record with status 'pending' and NO voucher code yet
       const insertPayload: Record<string, any> = {
         partner_id: partner.id,
         brand_name: selectedBrand.brand,
         denomination_inr: selectedDenom,
         points_burned: pointsCost,
         points_deducted: pointsCost,
-        voucher_code: voucherCode,
+        voucher_code: '', // Left empty until Admin HQ approves/fulfills
         status: 'pending',
       };
 
       const { error: insertError } = await supabase.from('redemptions').insert([insertPayload]);
 
       if (insertError && insertError.code === 'PGRST204') {
-        // If points_deducted column doesn't exist in Supabase schema cache, retry with points_burned
         delete insertPayload.points_deducted;
         await supabase.from('redemptions').insert([insertPayload]);
       }
@@ -117,8 +142,8 @@ export default function RedeemPage() {
             transaction_type: 'voucher_redeemed',
             points_change: -pointsCost,
             balance_after: newBal,
-            title: `Voucher Claimed: ${selectedBrand.brand} (₹${selectedDenom})`,
-            reference_id: voucherCode,
+            title: `Voucher Request Submitted: ${selectedBrand.brand} (₹${selectedDenom})`,
+            reference_id: `RDM-PENDING-${Date.now()}`,
           },
         ]);
       } catch (txErr) {
@@ -127,8 +152,9 @@ export default function RedeemPage() {
 
       // Update local state instantly
       redeemGiftCard(selectedBrand.brand, selectedDenom, pointsCost);
-      setGeneratedVoucherCode(voucherCode);
+      setGeneratedVoucherCode('');
       setOtpStep('success');
+      fetchLiveRedemptions();
     } catch (err) {
       console.error('Redemption error:', err);
       setErrorMsg('Redemption failed. Please try again.');
@@ -271,51 +297,113 @@ export default function RedeemPage() {
 
       {/* VOUCHER HISTORY TAB */}
       {activeTab === 'history' && (
-        <div className="bg-white border border-[var(--border)] rounded-xs shadow-xs p-6 space-y-4">
-          <h2 className="font-display text-lg font-bold text-[var(--ink)]">
-            Redeemed Voucher Codes
-          </h2>
+        <div className="bg-white border border-[var(--border)] rounded-2xl shadow-xs p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 className="font-display text-lg font-bold text-slate-900">
+                Redeemed Voucher History
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Voucher codes are securely generated & revealed once approved by Admin.
+              </p>
+            </div>
+            <span className="px-3 py-1 bg-slate-100 text-slate-700 font-mono-num text-xs font-bold rounded-full">
+              {liveRedemptions.length > 0 ? liveRedemptions.length : redemptions.length} Claims
+            </span>
+          </div>
 
-          {redemptions.length === 0 ? (
-            <div className="p-8 text-center text-[var(--ink-muted)] space-y-2">
-              <Gift size={32} className="mx-auto text-[var(--ink-subtle)]" />
-              <p className="font-semibold">No gift cards redeemed yet.</p>
-              <p className="text-xs">
-                Select a gift card from the catalog above to instantly claim e-vouchers with your PrimePoints!
+          {(liveRedemptions.length > 0 ? liveRedemptions : redemptions).length === 0 ? (
+            <div className="p-8 text-center text-slate-500 space-y-2">
+              <Gift size={36} className="mx-auto text-slate-400" />
+              <p className="font-semibold text-slate-800">No gift cards redeemed yet.</p>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Select a gift card from the catalog above to claim e-vouchers with your PrimePoints!
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-[var(--border)]">
-              {redemptions.map((rdm) => (
-                <div key={rdm.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xs bg-[var(--surface)] flex items-center justify-center font-display font-bold text-lg text-[#1B2A72] border border-[var(--border)] shrink-0">
-                      🎁
-                    </div>
-                    <div>
-                      <p className="font-display font-bold text-sm text-[var(--ink)]">
-                        {rdm.brand} E-Voucher (₹{rdm.denomination})
-                      </p>
-                      <p className="text-xs font-mono-num text-[var(--ink-muted)]">
-                        Redeemed for {rdm.points.toLocaleString()} PrimePoints on {new Date(rdm.redeemedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
+            <div className="divide-y divide-slate-100">
+              {(liveRedemptions.length > 0 ? liveRedemptions : redemptions).map((rdmItem: any) => {
+                const brand = rdmItem.brand_name || rdmItem.brand;
+                const denom = rdmItem.denomination_inr || rdmItem.denomination;
+                const pts = rdmItem.points_burned || rdmItem.points || (denom * 4);
+                const dateStr = rdmItem.created_at || rdmItem.redeemedAt;
+                const status = rdmItem.status || 'pending';
+                const vCode = rdmItem.voucher_code || rdmItem.voucherCode || '';
 
-                  <div className="flex items-center gap-2 bg-[var(--surface)] p-2 border border-[var(--border)] rounded-xs">
-                    <code className="text-xs font-mono-num font-bold text-[#1B2A72] tracking-wider select-all">
-                      {rdm.voucherCode}
-                    </code>
-                    <button
-                      onClick={() => handleCopyCode(rdm.voucherCode)}
-                      className="p-1.5 hover:bg-white text-[var(--ink-muted)] hover:text-[var(--ink)] rounded transition-colors"
-                      title="Copy Code"
-                    >
-                      <Copy size={14} />
-                    </button>
+                const isFulfilled = status === 'fulfilled' && Boolean(vCode);
+                const isRejected = status === 'rejected';
+                const isPending = !isFulfilled && !isRejected;
+
+                return (
+                  <div key={rdmItem.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center font-display font-bold text-xl text-amber-700 shrink-0 shadow-2xs">
+                        🎁
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <p className="font-display font-bold text-sm text-slate-900">
+                            {brand} E-Voucher (₹{denom})
+                          </p>
+
+                          {/* Status Badge */}
+                          {isPending && (
+                            <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                              <Clock size={12} className="animate-spin text-amber-700" /> Processing
+                            </span>
+                          )}
+                          {isFulfilled && (
+                            <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                              <CheckCircle size={12} className="text-emerald-700" weight="fill" /> Processed
+                            </span>
+                          )}
+                          {isRejected && (
+                            <span className="px-2.5 py-0.5 bg-rose-100 text-rose-900 border border-rose-300 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                              <X size={12} className="text-rose-700" weight="bold" /> Declined & Refunded
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs font-mono-num text-slate-500">
+                          Redeemed for <span className="font-semibold text-slate-700">{pts.toLocaleString()} Pts</span> on {new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right Action / Code Area */}
+                    <div>
+                      {isPending && (
+                        <div className="bg-amber-50/80 border border-amber-200/80 px-3.5 py-2 rounded-xl text-xs text-amber-900 font-medium flex items-center gap-2">
+                          <Clock size={15} className="text-amber-700 shrink-0" />
+                          <span>Admin verification in progress. Code will be revealed upon approval.</span>
+                        </div>
+                      )}
+
+                      {isFulfilled && (
+                        <div className="flex items-center gap-2 bg-emerald-50/80 px-3.5 py-2 border border-emerald-200 rounded-xl">
+                          <code className="text-xs font-mono-num font-bold text-emerald-950 tracking-widest select-all">
+                            {vCode}
+                          </code>
+                          <button
+                            onClick={() => handleCopyCode(vCode)}
+                            className="p-1 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-950 rounded transition-colors"
+                            title="Copy Voucher Code"
+                          >
+                            <Copy size={15} />
+                          </button>
+                        </div>
+                      )}
+
+                      {isRejected && (
+                        <div className="bg-rose-50/80 border border-rose-200/80 px-3.5 py-2 rounded-xl text-xs text-rose-800 font-medium flex items-center gap-2">
+                          <X size={15} className="text-rose-700 shrink-0" weight="bold" />
+                          <span>Request rejected by Admin. +{pts} Pts refunded to balance.</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
