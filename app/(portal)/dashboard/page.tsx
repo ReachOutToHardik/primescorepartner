@@ -125,87 +125,126 @@ export default function PartnerDashboard() {
     fetchTransactions();
   }, [partner?.id]);
 
-  // Interactive trend datasets dynamically aggregated from EVERY real partner referral log
+  // Interactive trend datasets dynamically aggregated from EVERY real partner referral and point transaction
   const trendData = useMemo(() => {
     const now = new Date();
 
-    if (timeRange === '15d') {
-      const days: { key: string; label: string; referrals: number; points: number }[] = [];
-      for (let i = 14; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-        const key = d.toISOString().split('T')[0];
-        const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-        days.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
-      }
+    // Unified events array sorted ASCENDING by date
+    const events: { dateStr: string; pointsChange: number; isReferral: boolean }[] = [];
 
-      referrals.forEach((r) => {
-        if (!r.createdAt) return;
-        const refDate = new Date(r.createdAt);
-        const refKey = refDate.toISOString().split('T')[0];
-        const match = days.find((day) => day.key === refKey);
-        if (match) match.referrals += 1;
+    // 1. Point Transactions from DB
+    pointTransactions.forEach((tx) => {
+      if (!tx.created_at) return;
+      events.push({
+        dateStr: tx.created_at.split('T')[0],
+        pointsChange: tx.points_change || 0,
+        isReferral: tx.transaction_type === 'referral_earned',
       });
-
-      return days;
-    }
-
-    if (timeRange === '30d') {
-      const days: { key: string; label: string; referrals: number; points: number }[] = [];
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-        const key = d.toISOString().split('T')[0];
-        const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-        days.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
-      }
-
-      referrals.forEach((r) => {
-        if (!r.createdAt) return;
-        const refDate = new Date(r.createdAt);
-        const refKey = refDate.toISOString().split('T')[0];
-        const match = days.find((day) => day.key === refKey);
-        if (match) match.referrals += 1;
-      });
-
-      return days;
-    }
-
-    if (timeRange === '6m') {
-      const months: { key: string; label: string; referrals: number; points: number }[] = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${d.getMonth()}`;
-        const label = d.toLocaleString('en-US', { month: 'short' });
-        months.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
-      }
-
-      referrals.forEach((r) => {
-        const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
-        const refKey = `${refDate.getFullYear()}-${refDate.getMonth()}`;
-        const match = months.find((m) => m.key === refKey);
-        if (match) match.referrals += 1;
-      });
-
-      return months;
-    }
-
-    // 1 Year (All 12 months up to current month)
-    const months12: { key: string; label: string; referrals: number; points: number }[] = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const label = d.toLocaleString('en-US', { month: 'short' });
-      months12.push({ key, label, referrals: 0, points: i === 0 ? (totalPoints || 0) : 0 });
-    }
-
-    referrals.forEach((r) => {
-      const refDate = r.createdAt ? new Date(r.createdAt) : new Date();
-      const refKey = `${refDate.getFullYear()}-${refDate.getMonth()}`;
-      const match = months12.find((m) => m.key === refKey);
-      if (match) match.referrals += 1;
     });
 
-    return months12;
-  }, [timeRange, referrals, totalPoints]);
+    const existingTxRefIds = new Set(pointTransactions.map((tx) => tx.reference_id || tx.id));
+
+    // 2. Local Redemptions if not in DB tx
+    redemptions.forEach((rdm) => {
+      if (!existingTxRefIds.has(rdm.id) && !existingTxRefIds.has(rdm.voucherCode)) {
+        events.push({
+          dateStr: (rdm.redeemedAt || new Date().toISOString()).split('T')[0],
+          pointsChange: -rdm.points,
+          isReferral: false,
+        });
+      }
+    });
+
+    // 3. Local Referrals
+    referrals.forEach((r) => {
+      if (!r.createdAt) return;
+      events.push({
+        dateStr: r.createdAt.split('T')[0],
+        pointsChange: r.status === 'completed' && !existingTxRefIds.has(r.id) ? (r.pointsEarned || 500) : 0,
+        isReferral: true,
+      });
+    });
+
+    // 4. Welcome Bonus fallback if no DB tx
+    const hasSignup = pointTransactions.some((tx) => tx.transaction_type === 'signup_bonus');
+    if (!hasSignup && partner) {
+      events.push({
+        dateStr: (partner.kycSubmittedAt || partner.joinedAt || new Date().toISOString()).split('T')[0],
+        pointsChange: partner.status === 'kyc_approved' ? 100 : 0,
+        isReferral: false,
+      });
+    }
+
+    // Sort events ascending by date
+    events.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+
+    const buildBuckets = (numPeriods: number, periodType: 'day' | 'month') => {
+      const buckets: { key: string; label: string; referrals: number; points: number }[] = [];
+
+      if (periodType === 'day') {
+        for (let i = numPeriods - 1; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+          const key = d.toISOString().split('T')[0];
+          const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+          buckets.push({ key, label, referrals: 0, points: 0 });
+        }
+      } else {
+        for (let i = numPeriods - 1; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const monthNum = String(d.getMonth() + 1).padStart(2, '0');
+          const key = `${d.getFullYear()}-${monthNum}`;
+          const label = d.toLocaleString('en-US', { month: 'short' });
+          buckets.push({ key, label, referrals: 0, points: 0 });
+        }
+      }
+
+      // Compute cumulative running points & referral counts per bucket
+      let runningPoints = 0;
+      let eventIdx = 0;
+
+      buckets.forEach((bucket) => {
+        while (eventIdx < events.length) {
+          const ev = events[eventIdx];
+          const evMonthKey = ev.dateStr.substring(0, 7); // 'YYYY-MM'
+          const evKey = periodType === 'day' ? ev.dateStr : evMonthKey;
+
+          if (evKey > bucket.key) {
+            // Event belongs to a future date bucket — stop for this bucket
+            break;
+          }
+
+          runningPoints += ev.pointsChange;
+          if (ev.isReferral) {
+            const targetBucket = buckets.find((b) => b.key === evKey);
+            if (targetBucket) targetBucket.referrals += 1;
+          }
+
+          eventIdx++;
+        }
+
+        bucket.points = Math.max(0, runningPoints);
+      });
+
+      // Fill forward running points for remaining buckets if events ended
+      if (buckets.length > 0) {
+        let lastPts = 0;
+        buckets.forEach((b) => {
+          if (b.points > 0) {
+            lastPts = b.points;
+          } else if (lastPts > 0) {
+            b.points = lastPts;
+          }
+        });
+      }
+
+      return buckets;
+    };
+
+    if (timeRange === '15d') return buildBuckets(15, 'day');
+    if (timeRange === '30d') return buildBuckets(30, 'day');
+    if (timeRange === '6m') return buildBuckets(6, 'month');
+    return buildBuckets(12, 'month');
+  }, [timeRange, referrals, redemptions, pointTransactions, partner]);
 
   // Chart.js Dataset Configuration
   const chartJsData = useMemo(() => {
