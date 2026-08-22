@@ -7,6 +7,7 @@ import Topbar from '@/components/layout/Topbar';
 import { usePartnerStore } from '@/lib/store';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { BroadcastMarqueeBanner } from '@/components/ui/BroadcastMarqueeBanner';
 import { useSupabaseSync } from '@/lib/useSupabaseSync';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -36,7 +37,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {
-          // No valid Supabase session — clear Zustand state and redirect
           await logout();
           router.replace('/login');
           return;
@@ -51,20 +51,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     };
 
     verifySession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated]);
 
-  // Close mobile sidebar on route change
   useEffect(() => {
     setMobileSidebarOpen(false);
   }, [pathname]);
 
-  // Show loading until both hydrated and session confirmed
   if (!isHydrated || !sessionVerified) {
     return <LoadingSpinner message="Verifying your session..." />;
   }
 
-  // Extra safety: if zustand says not auth'd after session check, redirect
   if (!isAuthenticated) {
     return <LoadingSpinner message="Redirecting to login..." />;
   }
@@ -81,6 +77,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        {/* Top Marquee Announcement Banner (renders if active broadcast exists) */}
+        <BroadcastMarqueeBanner />
+
         {/* Topbar Component */}
         <Topbar onMenuClick={() => setMobileSidebarOpen(true)} />
 

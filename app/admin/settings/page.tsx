@@ -205,25 +205,39 @@ export default function AdminSettingsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)] font-mono-num">
-                  {auditLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-[var(--surface-2)] transition-colors">
-                      <td className="px-6 py-4 font-mono text-xs">
-                        <div className="font-bold text-[var(--navy)]">{log.id}</div>
-                        <div className="text-[10px] text-[var(--ink-muted)]">{new Date(log.timestamp).toLocaleString()}</div>
+                  {auditLogs.length > 0 ? (
+                    auditLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-[var(--surface-2)] transition-colors">
+                        <td className="px-6 py-4 font-mono text-xs">
+                          <div className="font-bold text-[var(--navy)]">{log.id}</div>
+                          <div className="text-[10px] text-[var(--ink-muted)]">{new Date(log.timestamp).toLocaleString()}</div>
+                        </td>
+                        <td className="px-6 py-4 font-sans font-medium text-[var(--ink)]">
+                          <div>{log.actorName}</div>
+                          <div className="text-[11px] text-[var(--ink-muted)] capitalize">{log.actorRole.replace('_', ' ')}</div>
+                        </td>
+                        <td className="px-6 py-4 font-sans text-xs">
+                          <Badge variant={log.actionType === 'kyc_approval' ? 'green' : log.actionType === 'kyc_rejection' ? 'red' : 'blue'}>
+                            {log.actionType.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 font-sans text-xs font-semibold text-[var(--ink-2)]">{log.targetEntity}</td>
+                        <td className="px-6 py-4 font-sans text-xs text-[var(--ink-muted)] max-w-xs">{log.details}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <ListChecks size={36} className="text-slate-400" />
+                          <p className="font-display font-bold text-slate-800 text-sm">No System Audit Logs Recorded Yet</p>
+                          <p className="text-xs text-slate-500 max-w-sm">
+                            Audit log entries are automatically created when staff members approve KYC, update referral stages, or change platform settings.
+                          </p>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 font-sans font-medium text-[var(--ink)]">
-                        <div>{log.actorName}</div>
-                        <div className="text-[11px] text-[var(--ink-muted)] capitalize">{log.actorRole.replace('_', ' ')}</div>
-                      </td>
-                      <td className="px-6 py-4 font-sans text-xs">
-                        <Badge variant={log.actionType === 'kyc_approval' ? 'green' : log.actionType === 'kyc_rejection' ? 'red' : 'blue'}>
-                          {log.actionType.replace('_', ' ').toUpperCase()}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 font-sans text-xs font-semibold text-[var(--ink-2)]">{log.targetEntity}</td>
-                      <td className="px-6 py-4 font-sans text-xs text-[var(--ink-muted)] max-w-xs">{log.details}</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -241,31 +255,41 @@ export default function AdminSettingsPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {broadcasts.map((b) => (
-              <Card key={b.id} className="p-5 space-y-3 border-l-4 border-[var(--navy)]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--ink-muted)]">
-                      Published {new Date(b.publishedAt).toLocaleDateString()}
-                    </span>
-                    <h3 className="font-display font-bold text-base text-[var(--ink)] mt-0.5">{b.title}</h3>
+          {broadcasts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {broadcasts.map((b) => (
+                <Card key={b.id} className="p-5 space-y-3 border-l-4 border-[var(--navy)]">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--ink-muted)]">
+                        Published {new Date(b.publishedAt).toLocaleDateString()}
+                      </span>
+                      <h3 className="font-display font-bold text-base text-[var(--ink)] mt-0.5">{b.title}</h3>
+                    </div>
+                    <Badge variant={b.isActive ? 'green' : 'gray'}>
+                      {b.isActive ? 'Live' : 'Archived'}
+                    </Badge>
                   </div>
-                  <Badge variant={b.isActive ? 'green' : 'gray'}>
-                    {b.isActive ? 'Live' : 'Archived'}
-                  </Badge>
-                </div>
 
-                <p className="text-xs text-[var(--ink-2)] leading-relaxed">{b.message}</p>
+                  <p className="text-xs text-[var(--ink-2)] leading-relaxed">{b.message}</p>
 
-                <div className="pt-2 flex justify-end border-t border-gray-100">
-                  <Button variant={b.isActive ? 'danger' : 'secondary'} size="sm" onClick={() => toggleBroadcast(b.id)}>
-                    {b.isActive ? 'Deactivate Banner' : 'Publish Banner'}
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
+                  <div className="pt-2 flex justify-end border-t border-gray-100">
+                    <Button variant={b.isActive ? 'danger' : 'secondary'} size="sm" onClick={() => toggleBroadcast(b.id)}>
+                      {b.isActive ? 'Deactivate Banner' : 'Publish Banner'}
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-12 text-center text-slate-500 space-y-3">
+              <Megaphone size={36} className="mx-auto text-slate-400" />
+              <p className="font-display font-bold text-slate-800 text-sm">No Broadcast Banners Published</p>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Click "Create New Broadcast" above to publish live announcement banners to all partner dashboards.
+              </p>
+            </Card>
+          )}
         </div>
       )}
 

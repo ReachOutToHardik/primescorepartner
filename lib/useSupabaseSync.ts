@@ -97,6 +97,45 @@ export function useSupabaseSync() {
           },
         });
       }
+
+      // Fetch live broadcasts from Supabase
+      const { data: dbBroadcasts } = await supabase
+        .from('broadcasts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (dbBroadcasts && dbBroadcasts.length > 0) {
+        useAdminStore.setState({
+          broadcasts: dbBroadcasts.map((b) => ({
+            id: b.id,
+            title: b.title,
+            message: b.message,
+            type: b.type || 'info',
+            publishedAt: b.published_at || b.created_at,
+            isActive: b.is_active !== false,
+          })),
+        });
+      }
+
+      // Fetch live audit logs from Supabase
+      const { data: dbAuditLogs } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (dbAuditLogs && dbAuditLogs.length > 0) {
+        useAdminStore.setState({
+          auditLogs: dbAuditLogs.map((l) => ({
+            id: l.id,
+            actorName: l.actor_name,
+            actorRole: l.actor_role || 'super_admin',
+            actionType: l.action_type,
+            targetEntity: l.target_entity,
+            details: l.details || '',
+            timestamp: l.created_at,
+          })),
+        });
+      }
     } catch (err) {
       console.error('Admin Supabase sync error:', err);
     } finally {

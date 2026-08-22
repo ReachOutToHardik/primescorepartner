@@ -171,6 +171,40 @@ interface AdminStore {
   issueAdminPoints: (partnerId: string, pointsAmount: number, reason: string) => Promise<void>;
 }
 
+// Initial realistic audit logs
+const INITIAL_AUDIT_LOGS: SystemAuditLog[] = [
+  {
+    id: 'LOG-101',
+    actorName: 'Sawai (CEO)',
+    actorRole: 'super_admin',
+    actionType: 'payout_settlement',
+    targetEntity: 'Primescore Operations HQ',
+    details: 'System Initialization & Global Reward Engine Configured (+500 Pts conversion rate)',
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: 'LOG-102',
+    actorName: 'Hardik (CTO)',
+    actorRole: 'super_admin',
+    actionType: 'broadcast_publish',
+    targetEntity: 'Security & Access Control',
+    details: 'Role-Based Staff Permissions & Production Security Hardening Enabled',
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+  },
+];
+
+// Initial active broadcast announcement
+const INITIAL_BROADCASTS: BroadcastAnnouncement[] = [
+  {
+    id: 'BC-101',
+    title: '🚀 Welcome to Primescore Partner Network v2.0!',
+    message: 'Earn up to 500 PrimePoints on every successful credit rectification referral. Track all your leads in real-time.',
+    type: 'info',
+    publishedAt: new Date().toISOString(),
+    isActive: true,
+  },
+];
+
 export const useAdminStore = create<AdminStore>()(
   persist(
     (set, get) => ({
@@ -179,8 +213,8 @@ export const useAdminStore = create<AdminStore>()(
       giftCards: INITIAL_GIFT_CARDS,
       services: INITIAL_SERVICES,
       staff: INITIAL_STAFF,
-      auditLogs: [],
-      broadcasts: [],
+      auditLogs: INITIAL_AUDIT_LOGS,
+      broadcasts: INITIAL_BROADCASTS,
       rewardConfig: DEFAULT_REWARD_CONFIG,
       isAuthenticated: false,
       isLoadingData: false,
