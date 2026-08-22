@@ -165,12 +165,13 @@ export default function PartnerDashboard() {
       });
     });
 
-    // 4. Welcome Bonus fallback if no DB tx
-    const hasSignup = pointTransactions.some((tx) => tx.transaction_type === 'signup_bonus');
-    if (!hasSignup && partner) {
+    // 4. Unaccounted initial points balance fallback to match live totalPoints
+    const currentSum = events.reduce((sum, ev) => sum + ev.pointsChange, 0);
+    const unaccountedPoints = totalPoints - currentSum;
+    if (unaccountedPoints > 0 && partner) {
       events.push({
         dateStr: (partner.kycSubmittedAt || partner.joinedAt || new Date().toISOString()).split('T')[0],
-        pointsChange: partner.status === 'kyc_approved' ? 100 : 0,
+        pointsChange: unaccountedPoints,
         isReferral: false,
       });
     }
