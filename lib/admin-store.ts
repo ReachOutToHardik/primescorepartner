@@ -166,8 +166,8 @@ interface AdminStore {
   addAuditLog: (log: Omit<SystemAuditLog, 'id' | 'timestamp'>) => void;
   addStaffUser: (user: Omit<AdminStaffUser, 'id' | 'lastLogin'>) => void;
   toggleStaffStatus: (id: string) => void;
-  createBroadcast: (b: Omit<BroadcastAnnouncement, 'id' | 'publishedAt'>) => void;
-  toggleBroadcast: (id: string) => void;
+  createBroadcast: (b: Omit<BroadcastAnnouncement, 'id' | 'publishedAt'>) => Promise<void>;
+  toggleBroadcast: (id: string) => Promise<void>;
   issueAdminPoints: (partnerId: string, pointsAmount: number, reason: string) => Promise<void>;
 }
 
@@ -204,6 +204,45 @@ const INITIAL_BROADCASTS: BroadcastAnnouncement[] = [
     isActive: true,
   },
 ];
+
+// Helper function to insert real audit log into Supabase audit_logs table
+export async function recordAuditLog(
+  actorName: string,
+  actorRole: string,
+  actionType: 'kyc_approval' | 'kyc_rejection' | 'partner_deleted' | 'lead_status_update' | 'payout_settlement' | 'broadcast_publish',
+  targetEntity: string,
+  details: string
+) {
+  try {
+    const { supabase } = await import('./supabase');
+    const newLog = {
+      actor_name: actorName,
+      actor_role: actorRole,
+      action_type: actionType,
+      target_entity: targetEntity,
+      details: details,
+    };
+    const { data } = await supabase.from('audit_logs').insert([newLog]).select('*').maybeSingle();
+    if (data) {
+      useAdminStore.setState((prev) => ({
+        auditLogs: [
+          {
+            id: data.id,
+            actorName: data.actor_name,
+            actorRole: data.actor_role,
+            actionType: data.action_type as any,
+            targetEntity: data.target_entity,
+            details: data.details || '',
+            timestamp: data.created_at,
+          },
+          ...prev.auditLogs,
+        ],
+      }));
+    }
+  } catch (err) {
+    console.warn('Audit log recording note:', err);
+  }
+}
 
 export const useAdminStore = create<AdminStore>()(
   persist(
@@ -740,27 +779,76 @@ export const useAdminStore = create<AdminStore>()(
           ),
         })),
 
-      createBroadcast: (b) =>
-        set((state) => {
+      createBroadcast: async (b) => {
+        try {
+          const { supabase } = await import('./supabase');
+          const { data } = await supabase
+            .from('broadcasts')
+            .insert([
+              {
+                title: b.title,
+                message: b.message,
+                type: b.type || 'info',
+                is_active: b.isActive !== false,
+                published_at: new Date().toISOString(),
+              },
+            ])
+            .select('*')
+            .maybeSingle();
+
           const newBroadcast: BroadcastAnnouncement = {
-            ...b,
-            id: `BC-${Date.now()}`,
-            publishedAt: new Date().toISOString(),
+            id: data?.id || `BC-${Date.now()}`,
+            title: b.title,
+            message: b.message,
+            type: b.type || 'info',
+            publishedAt: data?.published_at || new Date().toISOString(),
+            isActive: b.isActive !== false,
           };
-          const newLog: SystemAuditLog = {
-            id: `LOG-${Date.now()}`,
-            actorName: 'Super Admin',
-            actorRole: 'super_admin',
-            actionType: 'broadcast_publish',
-            targetEntity: b.title,
-            details: `Published announcement banner to all partner dashboards.`,
-            timestamp: new Date().toISOString(),
-          };
-          return {
+
+          await recordAuditLog(
+            'Sawai (CEO)',
+            'super_admin',
+            'broadcast_publish',
+            b.title,
+            'Published announcement banner to partner portal marquee.'
+          );
+
+          set((state) => ({
             broadcasts: [newBroadcast, ...state.broadcasts],
-            auditLogs: [newLog, ...state.auditLogs],
-          };
-        }),
+          }));
+        } catch (err) {
+          console.error('Create broadcast DB error:', err);
+        }
+      },
+
+      toggleBroadcast: async (id: string) => {
+        const current = get().broadcasts.find((b) => b.id === id);
+        const nextState = !current?.isActive;
+
+        try {
+          const { supabase } = await import('./supabase');
+          await supabase
+            .from('broadcasts')
+            .update({ is_active: nextState })
+            .eq('id', id);
+
+          await recordAuditLog(
+            'Sawai (CEO)',
+            'super_admin',
+            'broadcast_publish',
+            current?.title || id,
+            `Broadcast announcement banner status changed to ${nextState ? 'Active' : 'Deactivated'}.`
+          );
+        } catch (err) {
+          console.warn('Toggle broadcast DB warning:', err);
+        }
+
+        set((state) => ({
+          broadcasts: state.broadcasts.map((b) =>
+            b.id === id ? { ...b, isActive: nextState } : b
+          ),
+        }));
+      },
 
       issueAdminPoints: async (partnerId: string, pointsAmount: number, reason: string) => {
         try {
@@ -826,13 +914,6 @@ export const useAdminStore = create<AdminStore>()(
           auditLogs: [newLog, ...state.auditLogs],
         }));
       },
-
-      toggleBroadcast: (id) =>
-        set((state) => ({
-          broadcasts: state.broadcasts.map((b) =>
-            b.id === id ? { ...b, isActive: !b.isActive } : b
-          ),
-        })),
     }),
     {
       name: 'primescore-admin-store-v7',
