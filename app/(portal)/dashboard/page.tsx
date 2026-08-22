@@ -225,18 +225,6 @@ export default function PartnerDashboard() {
         bucket.points = Math.max(0, runningPoints);
       });
 
-      // Fill forward running points for remaining buckets if events ended
-      if (buckets.length > 0) {
-        let lastPts = 0;
-        buckets.forEach((b) => {
-          if (b.points > 0) {
-            lastPts = b.points;
-          } else if (lastPts > 0) {
-            b.points = lastPts;
-          }
-        });
-      }
-
       return buckets;
     };
 
