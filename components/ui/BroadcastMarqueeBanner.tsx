@@ -92,8 +92,8 @@ export function BroadcastMarqueeBanner() {
         return 'text-red-400 font-bold';
       case 'green':
         return 'text-emerald-400 font-bold';
-      case 'blue':
-        return 'text-sky-400 font-bold';
+      case 'white':
+        return 'text-white font-bold';
       case 'yellow':
       default:
         return 'text-amber-300 font-bold';

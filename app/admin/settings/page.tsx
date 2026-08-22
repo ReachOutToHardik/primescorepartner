@@ -40,7 +40,7 @@ export default function AdminSettingsPage() {
   const [bcMessage, setBcMessage] = useState('');
   const [bcType, setBcType] = useState<'info' | 'warning' | 'promotion' | 'reward'>('promotion');
   const [bcIcon, setBcIcon] = useState<'megaphone' | 'sparkle' | 'gift' | 'warning' | 'check' | 'bell'>('megaphone');
-  const [bcColor, setBcColor] = useState<'yellow' | 'red' | 'green' | 'blue'>('yellow');
+  const [bcColor, setBcColor] = useState<'yellow' | 'red' | 'green' | 'white'>('yellow');
 
   const handleAddStaff = () => {
     if (staffName.trim() && staffEmail.trim()) {
@@ -371,32 +371,32 @@ export default function AdminSettingsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-[var(--ink)] uppercase">Icon Style</label>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Banner Icon</label>
               <select
                 value={bcIcon}
                 onChange={(e) => setBcIcon(e.target.value as any)}
                 className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 bg-white"
               >
-                <option value="megaphone">📢 Megaphone</option>
-                <option value="sparkle">✨ Sparkle</option>
-                <option value="gift">🎁 Gift Box</option>
-                <option value="warning">⚠️ Alert Warning</option>
-                <option value="check">✅ Success Check</option>
-                <option value="bell">🔔 Bell Alert</option>
+                <option value="megaphone">Megaphone</option>
+                <option value="sparkle">Sparkle Star</option>
+                <option value="gift">Gift Box</option>
+                <option value="warning">Warning Alert</option>
+                <option value="check">Checkmark</option>
+                <option value="bell">Bell Alert</option>
               </select>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[var(--ink)] uppercase">Title Text Color</label>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Title Color</label>
               <select
                 value={bcColor}
                 onChange={(e) => setBcColor(e.target.value as any)}
                 className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 bg-white"
               >
-                <option value="yellow">🟡 Gold / Yellow</option>
-                <option value="red">🔴 Crimson Red</option>
-                <option value="green">🟢 Emerald Green</option>
-                <option value="blue">🔵 Sky Blue</option>
+                <option value="yellow">Gold Yellow</option>
+                <option value="red">Crimson Red</option>
+                <option value="green">Emerald Green</option>
+                <option value="white">Pure White</option>
               </select>
             </div>
           </div>

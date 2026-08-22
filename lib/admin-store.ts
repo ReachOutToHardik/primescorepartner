@@ -58,7 +58,7 @@ export interface BroadcastAnnouncement {
   message: string;
   type: 'info' | 'warning' | 'promotion' | 'reward';
   icon?: 'megaphone' | 'sparkle' | 'gift' | 'warning' | 'check' | 'bell';
-  color?: 'yellow' | 'red' | 'green' | 'blue';
+  color?: 'yellow' | 'red' | 'green' | 'white';
   publishedAt: string;
   isActive: boolean;
 }
@@ -832,7 +832,12 @@ export const useAdminStore = create<AdminStore>()(
           );
 
           set((state) => ({
-            broadcasts: [newBroadcast, ...state.broadcasts],
+            broadcasts: [
+              newBroadcast,
+              ...state.broadcasts.map((prev) =>
+                b.isActive !== false ? { ...prev, isActive: false } : prev
+              ),
+            ],
           }));
         } catch (err) {
           console.error('Create broadcast DB error:', err);

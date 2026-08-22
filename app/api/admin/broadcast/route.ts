@@ -23,6 +23,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Title and message are required.' }, { status: 400 });
     }
 
+    // Auto-deactivate previous active banners if new banner is set to active
+    if (isActive !== false) {
+      await supabaseAdmin
+        .from('broadcasts')
+        .update({ is_active: false })
+        .eq('is_active', true);
+    }
+
     const { data, error } = await supabaseAdmin
       .from('broadcasts')
       .insert([
