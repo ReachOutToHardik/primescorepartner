@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized admin request.' }, { status: 401 });
     }
 
-    const { title, message, type, isActive } = await req.json();
+    const { title, message, type, icon, color, isActive } = await req.json();
 
     if (!title || !message) {
       return NextResponse.json({ error: 'Title and message are required.' }, { status: 400 });
@@ -30,6 +30,8 @@ export async function POST(req: Request) {
           title: title.trim(),
           message: message.trim(),
           type: type || 'info',
+          icon: icon || 'megaphone',
+          color: color || 'yellow',
           is_active: isActive !== false,
           published_at: new Date().toISOString(),
         },

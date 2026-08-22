@@ -56,7 +56,9 @@ export interface BroadcastAnnouncement {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'promotion';
+  type: 'info' | 'warning' | 'promotion' | 'reward';
+  icon?: 'megaphone' | 'sparkle' | 'gift' | 'warning' | 'check' | 'bell';
+  color?: 'yellow' | 'red' | 'green' | 'blue';
   publishedAt: string;
   isActive: boolean;
 }
@@ -801,6 +803,8 @@ export const useAdminStore = create<AdminStore>()(
               title: b.title,
               message: b.message,
               type: b.type || 'info',
+              icon: b.icon || 'megaphone',
+              color: b.color || 'yellow',
               isActive: b.isActive !== false,
             }),
           });
@@ -813,6 +817,8 @@ export const useAdminStore = create<AdminStore>()(
             title: b.title,
             message: b.message,
             type: b.type || 'info',
+            icon: b.icon || 'megaphone',
+            color: b.color || 'yellow',
             publishedAt: data?.published_at || new Date().toISOString(),
             isActive: b.isActive !== false,
           };

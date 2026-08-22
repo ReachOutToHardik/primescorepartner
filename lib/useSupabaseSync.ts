@@ -111,6 +111,8 @@ export function useSupabaseSync() {
             title: b.title,
             message: b.message,
             type: b.type || 'info',
+            icon: b.icon || 'megaphone',
+            color: b.color || 'yellow',
             publishedAt: b.published_at || b.created_at,
             isActive: b.is_active !== false,
           })),
