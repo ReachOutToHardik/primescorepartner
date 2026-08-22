@@ -205,7 +205,7 @@ const INITIAL_BROADCASTS: BroadcastAnnouncement[] = [
   },
 ];
 
-// Helper function to insert real audit log into Supabase audit_logs table
+// Helper function to insert real audit log into Supabase audit_logs table via secure server route
 export async function recordAuditLog(
   actorName: string,
   actorRole: string,
@@ -214,16 +214,25 @@ export async function recordAuditLog(
   details: string
 ) {
   try {
-    const { supabase } = await import('./supabase');
-    const newLog = {
-      actor_name: actorName,
-      actor_role: actorRole,
-      action_type: actionType,
-      target_entity: targetEntity,
-      details: details,
-    };
-    const { data } = await supabase.from('audit_logs').insert([newLog]).select('*').maybeSingle();
-    if (data) {
+    const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+    const res = await fetch('/api/admin/audit-log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-password': adminPass,
+      },
+      body: JSON.stringify({
+        actorName,
+        actorRole,
+        actionType,
+        targetEntity,
+        details,
+      }),
+    });
+
+    const resData = await res.json();
+    if (res.ok && resData?.data) {
+      const data = resData.data;
       useAdminStore.setState((prev) => ({
         auditLogs: [
           {
@@ -781,20 +790,23 @@ export const useAdminStore = create<AdminStore>()(
 
       createBroadcast: async (b) => {
         try {
-          const { supabase } = await import('./supabase');
-          const { data } = await supabase
-            .from('broadcasts')
-            .insert([
-              {
-                title: b.title,
-                message: b.message,
-                type: b.type || 'info',
-                is_active: b.isActive !== false,
-                published_at: new Date().toISOString(),
-              },
-            ])
-            .select('*')
-            .maybeSingle();
+          const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+          const res = await fetch('/api/admin/broadcast', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPass,
+            },
+            body: JSON.stringify({
+              title: b.title,
+              message: b.message,
+              type: b.type || 'info',
+              isActive: b.isActive !== false,
+            }),
+          });
+
+          const resData = await res.json();
+          const data = resData?.data;
 
           const newBroadcast: BroadcastAnnouncement = {
             id: data?.id || `BC-${Date.now()}`,
@@ -826,11 +838,18 @@ export const useAdminStore = create<AdminStore>()(
         const nextState = !current?.isActive;
 
         try {
-          const { supabase } = await import('./supabase');
-          await supabase
-            .from('broadcasts')
-            .update({ is_active: nextState })
-            .eq('id', id);
+          const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+          await fetch('/api/admin/broadcast', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPass,
+            },
+            body: JSON.stringify({
+              id,
+              isActive: nextState,
+            }),
+          });
 
           await recordAuditLog(
             'Sawai (CEO)',
