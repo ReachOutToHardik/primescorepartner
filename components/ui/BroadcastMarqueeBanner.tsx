@@ -60,53 +60,56 @@ export function BroadcastMarqueeBanner() {
   // If dismissed by user or no active broadcast exists, return NOTHING (null)
   if (dismissed || !activeBroadcast) return null;
 
-  // Repeat text item component for seamless infinite marquee loop
-  const MarqueeItem = () => (
-    <span className="inline-flex items-center gap-2.5 px-6">
+  // Single announcement item snippet
+  const MarqueeSnippet = () => (
+    <div className="flex items-center gap-3 px-8 shrink-0">
       <Sparkle size={13} weight="fill" className="text-amber-400 shrink-0" />
       <span className="font-bold text-amber-300 font-display tracking-tight text-xs">
         {activeBroadcast.title}
       </span>
-      <span className="text-amber-200/50">&mdash;</span>
+      <span className="text-slate-400 font-mono">&mdash;</span>
       <span className="text-slate-100 font-medium text-xs tracking-wide">
         {activeBroadcast.message}
       </span>
-    </span>
+    </div>
   );
 
   return (
-    <div className="bg-gradient-to-r from-[#091136] via-[#121E5C] to-[#0A1238] text-white py-2 px-3 border-b border-amber-400/30 shadow-md relative z-40 overflow-hidden flex items-center justify-between gap-3 text-xs select-none">
-      {/* Background Subtle Shimmer Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent pointer-events-none" />
-
-      {/* Left Static Announcement Pill Badge */}
-      <div className="flex items-center gap-2 shrink-0 z-10 pl-1">
-        <span className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase rounded-full tracking-wider shadow-sm border border-amber-300/40">
-          <Megaphone size={13} weight="fill" className="animate-bounce text-slate-950" />
-          <span>Announcement</span>
+    <div className="bg-[#0B1338] text-white py-2 px-4 border-b border-white/10 shadow-sm relative z-40 flex items-center justify-between gap-4 text-xs select-none">
+      {/* Left Static Sleek Badge with Divider */}
+      <div className="flex items-center gap-2.5 shrink-0 border-r border-white/15 pr-4 py-0.5">
+        <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-400/10 text-amber-400 font-bold text-[10px] uppercase rounded-md tracking-wider border border-amber-400/30">
+          <Megaphone size={13} weight="fill" /> Announcement
         </span>
       </div>
 
-      {/* Center Seamless Infinite Scrolling Marquee Container */}
-      <div className="overflow-hidden whitespace-nowrap min-w-0 flex-1 relative flex items-center">
-        <div className="inline-flex animate-marquee hover:[animation-play-state:paused] cursor-pointer py-0.5">
-          {/* Repeat 4 times for seamless unbroken looping */}
-          <MarqueeItem />
-          <MarqueeItem />
-          <MarqueeItem />
-          <MarqueeItem />
+      {/* Center Infinite Ticker Container with Smooth Fade Masking */}
+      <div className="relative flex-1 overflow-hidden h-6 flex items-center [mask-image:linear-gradient(to_right,transparent_0%,black_24px,black_calc(100%-24px),transparent_100%)]">
+        <div className="flex w-max animate-marquee hover:[animation-play-state:paused] cursor-pointer">
+          {/* Track Copy 1 */}
+          <div className="flex shrink-0 items-center">
+            <MarqueeSnippet />
+            <MarqueeSnippet />
+          </div>
+          {/* Track Copy 2 (Identical duplicate for seamless infinite -50% loop) */}
+          <div className="flex shrink-0 items-center">
+            <MarqueeSnippet />
+            <MarqueeSnippet />
+          </div>
         </div>
       </div>
 
-      {/* Right Dismiss X Button */}
-      <button
-        onClick={() => setDismissed(true)}
-        className="p-1.5 hover:bg-white/15 rounded-full text-slate-300 hover:text-white transition-all shrink-0 cursor-pointer z-10"
-        title="Dismiss announcement"
-        aria-label="Dismiss announcement"
-      >
-        <X size={15} weight="bold" />
-      </button>
+      {/* Right Dismiss Button */}
+      <div className="pl-2 border-l border-white/15 shrink-0">
+        <button
+          onClick={() => setDismissed(true)}
+          className="p-1 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+          title="Dismiss announcement"
+          aria-label="Dismiss announcement"
+        >
+          <X size={15} weight="bold" />
+        </button>
+      </div>
     </div>
   );
 }
