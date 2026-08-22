@@ -213,52 +213,19 @@ export default function PartnerDashboard() {
         }
       }
 
-      // Compute cumulative running points & referral counts per bucket
-      // Initialize runningPoints with initial balance baseline so past periods reflect active account balance
-      let runningPoints = 0;
-      let eventIdx = 0;
-
-      // 1. Pre-accumulate events that occurred before the first bucket
-      while (eventIdx < events.length) {
-        const ev = events[eventIdx];
+      // Map events directly into their corresponding date/month bucket
+      events.forEach((ev) => {
         const evMonthKey = ev.dateStr.substring(0, 7);
         const evKey = periodType === 'day' ? ev.dateStr : evMonthKey;
-        if (evKey < buckets[0].key) {
-          runningPoints += ev.pointsChange;
-          eventIdx++;
-        } else {
-          break;
-        }
-      }
-
-      // 2. Baseline fallback: If runningPoints is 0 and totalPoints > 0, set initial baseline to totalPoints
-      // so the account balance line starts smoothly at the partner's active balance
-      if (runningPoints === 0 && totalPoints > 0) {
-        const futureChanges = events.slice(eventIdx).reduce((sum, ev) => sum + ev.pointsChange, 0);
-        runningPoints = Math.max(0, totalPoints - futureChanges);
-      }
-
-      buckets.forEach((bucket) => {
-        while (eventIdx < events.length) {
-          const ev = events[eventIdx];
-          const evMonthKey = ev.dateStr.substring(0, 7);
-          const evKey = periodType === 'day' ? ev.dateStr : evMonthKey;
-
-          if (evKey > bucket.key) {
-            // Event belongs to a future date bucket — stop for this bucket
-            break;
-          }
-
-          runningPoints += ev.pointsChange;
+        const targetBucket = buckets.find((b) => b.key === evKey);
+        if (targetBucket) {
           if (ev.isReferral) {
-            const targetBucket = buckets.find((b) => b.key === evKey);
-            if (targetBucket) targetBucket.referrals += 1;
+            targetBucket.referrals += 1;
           }
-
-          eventIdx++;
+          if (ev.pointsChange > 0) {
+            targetBucket.points += ev.pointsChange;
+          }
         }
-
-        bucket.points = Math.max(0, runningPoints);
       });
 
       return buckets;
