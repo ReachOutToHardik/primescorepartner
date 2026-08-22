@@ -36,8 +36,10 @@ export interface AdminStaffUser {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'operations_admin' | 'compliance_officer' | 'support_agent';
+  password?: string;
+  role: 'super_admin' | 'operations_admin' | 'compliance_officer' | 'support_agent' | 'custom_staff';
   department: string;
+  allowedPages?: string[];
   lastLogin: string;
   isActive: boolean;
 }
@@ -63,10 +65,23 @@ export interface BroadcastAnnouncement {
   isActive: boolean;
 }
 
+export const ALL_ADMIN_PAGES = [
+  'dashboard',
+  'kyc',
+  'referrals',
+  'teams',
+  'analytics',
+  'gift-cards',
+  'services',
+  'rewards-config',
+  'notifications',
+  'settings',
+];
+
 // Static admin staff list (only real staff, no demo data)
 const INITIAL_STAFF: AdminStaffUser[] = [
-  { id: 'ADM-01', name: 'Sawai', email: 'sawai@primescore.in', role: 'super_admin', department: 'Chief Executive Officer (CEO)', lastLogin: new Date().toISOString(), isActive: true },
-  { id: 'ADM-02', name: 'Hardik', email: 'hardik@primescore.in', role: 'super_admin', department: 'Technology Head (CTO)', lastLogin: new Date().toISOString(), isActive: true },
+  { id: 'ADM-01', name: 'Sawai', email: 'sawai@primescore.in', role: 'super_admin', department: 'Chief Executive Officer (CEO)', allowedPages: ALL_ADMIN_PAGES, lastLogin: new Date().toISOString(), isActive: true },
+  { id: 'ADM-02', name: 'Hardik', email: 'hardik@primescore.in', role: 'super_admin', department: 'Technology Head (CTO)', allowedPages: ALL_ADMIN_PAGES, lastLogin: new Date().toISOString(), isActive: true },
 ];
 
 // Gift cards initialized from static config (no mock data)
@@ -148,6 +163,7 @@ interface AdminStore {
   broadcasts: BroadcastAnnouncement[];
   rewardConfig: RewardEngineConfig;
   isAuthenticated: boolean;
+  adminEmail: string | null;
   isLoadingData: boolean;
 
   // Actions
@@ -166,8 +182,10 @@ interface AdminStore {
   updateService: (serviceId: string, data: Partial<PlatformService>) => void;
   updateRewardConfig: (newConfig: Partial<RewardEngineConfig>) => void;
   addAuditLog: (log: Omit<SystemAuditLog, 'id' | 'timestamp'>) => void;
-  addStaffUser: (user: Omit<AdminStaffUser, 'id' | 'lastLogin'>) => void;
-  toggleStaffStatus: (id: string) => void;
+  addStaffUser: (user: Omit<AdminStaffUser, 'id' | 'lastLogin'>) => Promise<void>;
+  updateStaffUser: (id: string, updates: Partial<AdminStaffUser>) => Promise<void>;
+  toggleStaffStatus: (id: string) => Promise<void>;
+  deleteStaffUser: (id: string) => Promise<void>;
   createBroadcast: (b: Omit<BroadcastAnnouncement, 'id' | 'publishedAt'>) => Promise<void>;
   toggleBroadcast: (id: string) => Promise<void>;
   issueAdminPoints: (partnerId: string, pointsAmount: number, reason: string) => Promise<void>;
@@ -267,16 +285,20 @@ export const useAdminStore = create<AdminStore>()(
       broadcasts: INITIAL_BROADCASTS,
       rewardConfig: DEFAULT_REWARD_CONFIG,
       isAuthenticated: false,
+      adminEmail: null,
       isLoadingData: false,
 
       adminLogin: (email, pass) => {
         const cleanEmail = email.toLowerCase().trim();
-        // Verify email is in allowed list AND password matches env var
+        // Verify email is in allowed list or staff table AND password matches env var / staff password
         const masterPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-        const isAllowedEmail = ALLOWED_ADMIN_EMAILS.includes(cleanEmail);
-        const isCorrectPassword = masterPassword && pass === masterPassword;
+        const currentStaffUser = get().staff.find((s) => s.email.toLowerCase() === cleanEmail);
+
+        const isAllowedEmail = ALLOWED_ADMIN_EMAILS.includes(cleanEmail) || !!currentStaffUser;
+        const isCorrectPassword = (masterPassword && pass === masterPassword) || (currentStaffUser?.password && pass === currentStaffUser.password);
+
         if (isAllowedEmail && isCorrectPassword) {
-          set({ isAuthenticated: true });
+          set({ isAuthenticated: true, adminEmail: cleanEmail });
           return true;
         }
         return false;
@@ -289,7 +311,7 @@ export const useAdminStore = create<AdminStore>()(
           window.localStorage.removeItem('primescore-admin-store-v7');
           window.localStorage.removeItem('primescore-admin-store-v6');
         }
-        set({ isAuthenticated: false });
+        set({ isAuthenticated: false, adminEmail: null });
       },
 
       approveKyc: async (partnerId, customTeamCode) => {
@@ -775,20 +797,150 @@ export const useAdminStore = create<AdminStore>()(
           ],
         })),
 
-      addStaffUser: (user) =>
-        set((state) => ({
-          staff: [
-            ...state.staff,
-            { ...user, id: `ADM-${Date.now()}`, lastLogin: new Date().toISOString() },
-          ],
-        })),
+      addStaffUser: async (user) => {
+        try {
+          const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+          const res = await fetch('/api/admin/staff', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPass,
+            },
+            body: JSON.stringify({
+              name: user.name,
+              email: user.email,
+              password: user.password || 'Staff@2026',
+              role: user.role,
+              department: user.department,
+              allowedPages: user.allowedPages || ALL_ADMIN_PAGES,
+            }),
+          });
 
-      toggleStaffStatus: (id) =>
-        set((state) => ({
-          staff: state.staff.map((u) =>
-            u.id === id ? { ...u, isActive: !u.isActive } : u
-          ),
-        })),
+          const resData = await res.json();
+          const data = resData?.data;
+
+          const newStaffMember: AdminStaffUser = {
+            id: data?.id || `ADM-${Date.now()}`,
+            name: user.name,
+            email: user.email,
+            password: user.password || 'Staff@2026',
+            role: user.role,
+            department: user.department,
+            allowedPages: user.allowedPages || ALL_ADMIN_PAGES,
+            lastLogin: data?.last_login || new Date().toISOString(),
+            isActive: true,
+          };
+
+          await recordAuditLog(
+            'Sawai (CEO)',
+            'super_admin',
+            'lead_status_update',
+            user.name,
+            `Created staff account for ${user.email} (${user.role}).`
+          );
+
+          set((state) => ({
+            staff: [...state.staff, newStaffMember],
+          }));
+        } catch (err) {
+          console.error('Add staff DB error:', err);
+        }
+      },
+
+      updateStaffUser: async (id, updates) => {
+        try {
+          const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+          await fetch('/api/admin/staff', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPass,
+            },
+            body: JSON.stringify({
+              id,
+              ...updates,
+            }),
+          });
+
+          await recordAuditLog(
+            'Sawai (CEO)',
+            'super_admin',
+            'lead_status_update',
+            updates.name || id,
+            `Updated staff settings & permissions for staff ID ${id}.`
+          );
+
+          set((state) => ({
+            staff: state.staff.map((u) => (u.id === id ? { ...u, ...updates } : u)),
+          }));
+        } catch (err) {
+          console.error('Update staff DB error:', err);
+        }
+      },
+
+      toggleStaffStatus: async (id) => {
+        const current = get().staff.find((u) => u.id === id);
+        const nextActive = !current?.isActive;
+
+        try {
+          const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+          await fetch('/api/admin/staff', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPass,
+            },
+            body: JSON.stringify({
+              id,
+              isActive: nextActive,
+            }),
+          });
+
+          await recordAuditLog(
+            'Sawai (CEO)',
+            'super_admin',
+            'lead_status_update',
+            current?.name || id,
+            `${nextActive ? 'Activated' : 'Deactivated'} staff member account.`
+          );
+
+          set((state) => ({
+            staff: state.staff.map((u) => (u.id === id ? { ...u, isActive: nextActive } : u)),
+          }));
+        } catch (err) {
+          console.error('Toggle staff status DB error:', err);
+        }
+      },
+
+      deleteStaffUser: async (id) => {
+        const current = get().staff.find((u) => u.id === id);
+
+        try {
+          const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+          await fetch('/api/admin/staff', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPass,
+            },
+            body: JSON.stringify({ id }),
+          });
+
+          await recordAuditLog(
+            'Sawai (CEO)',
+            'super_admin',
+            'partner_deleted',
+            current?.name || id,
+            `Removed / deleted staff account permanently.`
+          );
+
+          set((state) => ({
+            staff: state.staff.filter((u) => u.id !== id),
+          }));
+        } catch (err) {
+          console.error('Delete staff DB error:', err);
+        }
+      },
 
       createBroadcast: async (b) => {
         try {

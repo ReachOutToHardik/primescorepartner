@@ -138,6 +138,29 @@ export function useSupabaseSync() {
           })),
         });
       }
+
+      // Fetch live admin staff accounts from Supabase
+      const { data: dbStaff } = await supabase
+        .from('admin_staff')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (dbStaff && dbStaff.length > 0) {
+        const { ALL_ADMIN_PAGES } = await import('@/lib/admin-store');
+        useAdminStore.setState({
+          staff: dbStaff.map((s) => ({
+            id: s.id,
+            name: s.name,
+            email: s.email,
+            password: s.password,
+            role: s.role || 'operations_admin',
+            department: s.department || 'Lead Operations',
+            allowedPages: s.allowed_pages || ALL_ADMIN_PAGES,
+            lastLogin: s.last_login || s.created_at,
+            isActive: s.is_active !== false,
+          })),
+        });
+      }
     } catch (err) {
       console.error('Admin Supabase sync error:', err);
     } finally {

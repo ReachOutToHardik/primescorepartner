@@ -26,23 +26,47 @@ import {
 } from '@phosphor-icons/react';
 
 const ADMIN_NAV = [
-  { name: 'Dashboard', href: '/admin', icon: SquaresFour },
-  { name: 'Partner Approvals', href: '/admin/kyc', icon: ShieldCheck },
-  { name: 'All Referrals', href: '/admin/referrals', icon: ClipboardText },
-  { name: 'Partner Teams', href: '/admin/teams', icon: UsersThree },
-  { name: 'Analytics & Transactions', href: '/admin/analytics', icon: ChartLine },
-  { name: 'Gift Vouchers', href: '/admin/gift-cards', icon: Gift },
-  { name: 'Services List', href: '/admin/services', icon: Wrench },
-  { name: 'Points & Reward Rates', href: '/admin/rewards-config', icon: Coins },
-  { name: 'Send Announcements', href: '/admin/notifications', icon: Megaphone },
-  { name: 'Settings & Logs', href: '/admin/settings', icon: Gear },
+  { id: 'dashboard', name: 'HQ Overview', href: '/admin', icon: SquaresFour },
+  { id: 'kyc', name: 'Partner Verifications (KYC)', href: '/admin/kyc', icon: ShieldCheck },
+  { id: 'referrals', name: 'Referral Cases & Leads', href: '/admin/referrals', icon: ClipboardText },
+  { id: 'teams', name: 'Team Leaders & DSAs', href: '/admin/teams', icon: UsersThree },
+  { id: 'analytics', name: 'Payouts & Reports', href: '/admin/analytics', icon: ChartLine },
+  { id: 'gift-cards', name: 'Gift Voucher Claims', href: '/admin/gift-cards', icon: Gift },
+  { id: 'services', name: 'Services Catalog', href: '/admin/services', icon: Wrench },
+  { id: 'rewards-config', name: 'Points & Reward Rates', href: '/admin/rewards-config', icon: Coins },
+  { id: 'notifications', name: 'Send Announcements', href: '/admin/notifications', icon: Megaphone },
+  { id: 'settings', name: 'Staff Accounts & Settings', href: '/admin/settings', icon: Gear },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { adminLogout } = useAdminStore();
+  const { adminEmail, staff, adminLogout } = useAdminStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Find currently logged-in admin user / staff profile
+  const currentStaff = staff.find(
+    (s) => s.email.toLowerCase() === (adminEmail || 'sawai@primescore.in').toLowerCase()
+  );
+
+  const isSuperAdmin = !currentStaff || currentStaff.role === 'super_admin';
+  const allowedPages = currentStaff?.allowedPages || [
+    'dashboard',
+    'kyc',
+    'referrals',
+    'teams',
+    'analytics',
+    'gift-cards',
+    'services',
+    'rewards-config',
+    'notifications',
+    'settings',
+  ];
+
+  // Filter sidebar navigation according to assigned plain English staff pages
+  const navItems = isSuperAdmin
+    ? ADMIN_NAV
+    : ADMIN_NAV.filter((item) => allowedPages.includes(item.id));
 
   const handleLogout = () => {
     adminLogout();
@@ -115,7 +139,7 @@ export default function AdminSidebar() {
 
         {/* Navigation Items */}
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin">
-          {ADMIN_NAV.map((item) => {
+          {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
@@ -150,22 +174,24 @@ export default function AdminSidebar() {
           {!isCollapsed ? (
             <div className="p-3 rounded-xl bg-[#121E5C] border border-white/10 space-y-2.5 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Super Admin</span>
+                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">
+                  {currentStaff?.role ? currentStaff.role.replace('_', ' ') : 'Super Admin'}
+                </span>
                 <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" /> Active
                 </span>
               </div>
 
               <div className="flex items-center gap-2.5 pt-2 border-t border-white/10">
-                <div className="w-8 h-8 rounded-full bg-[var(--navy)] text-white flex items-center justify-center font-bold text-xs font-display shrink-0 border border-white/20">
-                  S
+                <div className="w-8 h-8 rounded-full bg-[var(--navy)] text-white flex items-center justify-center font-bold text-xs font-display shrink-0 border border-white/20 uppercase">
+                  {(currentStaff?.name || adminEmail || 'S')[0]}
                 </div>
                 <div className="overflow-hidden leading-tight flex-1">
                   <div className="text-xs font-bold text-white truncate font-display">
-                    Sawai (CEO)
+                    {currentStaff?.name || 'Sawai (CEO)'}
                   </div>
                   <div className="text-[10px] text-slate-300 truncate font-mono-num">
-                    sawai@primescore.in • ADM-01
+                    {currentStaff?.email || adminEmail || 'sawai@primescore.in'}
                   </div>
                 </div>
               </div>

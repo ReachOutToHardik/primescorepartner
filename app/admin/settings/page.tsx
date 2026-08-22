@@ -27,16 +27,48 @@ import {
   Bell
 } from '@phosphor-icons/react';
 
+const PERMISSION_PAGES = [
+  { id: 'dashboard', label: 'HQ Overview & Stats' },
+  { id: 'kyc', label: 'Partner Verification & KYC' },
+  { id: 'referrals', label: 'Referral Leads & Cases' },
+  { id: 'teams', label: 'Team Leaders & DSAs' },
+  { id: 'analytics', label: 'Payouts & Reports' },
+  { id: 'gift-cards', label: 'Gift Vouchers & Rewards' },
+  { id: 'services', label: 'Services & Products Catalog' },
+  { id: 'rewards-config', label: 'Points & Commission Rates' },
+  { id: 'notifications', label: 'Send Announcements' },
+  { id: 'settings', label: 'Staff Accounts & Settings' },
+];
+
 export default function AdminSettingsPage() {
-  const { staff, auditLogs, broadcasts, addStaffUser, toggleStaffStatus, createBroadcast, toggleBroadcast } = useAdminStore();
+  const { staff, auditLogs, broadcasts, addStaffUser, updateStaffUser, toggleStaffStatus, deleteStaffUser, createBroadcast, toggleBroadcast } = useAdminStore();
   const [activeTab, setActiveTab] = useState<'staff' | 'logs' | 'broadcasts'>('staff');
 
-  // Staff Modal
+  // Add Staff Modal
   const [staffModalOpen, setStaffModalOpen] = useState(false);
   const [staffName, setStaffName] = useState('');
   const [staffEmail, setStaffEmail] = useState('');
-  const [staffRole, setStaffRole] = useState<'operations_admin' | 'compliance_officer' | 'support_agent'>('operations_admin');
+  const [staffPassword, setStaffPassword] = useState('Staff@2026');
+  const [staffRole, setStaffRole] = useState<'operations_admin' | 'compliance_officer' | 'support_agent' | 'custom_staff'>('operations_admin');
   const [staffDept, setStaffDept] = useState('Lead Operations');
+  const [staffPages, setStaffPages] = useState<string[]>([
+    'dashboard', 'kyc', 'referrals', 'teams', 'analytics', 'gift-cards', 'services', 'rewards-config', 'notifications', 'settings'
+  ]);
+
+  // Edit Staff Modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editStaffId, setEditStaffId] = useState<string | null>(null);
+  const [editStaffName, setEditStaffName] = useState('');
+  const [editStaffEmail, setEditStaffEmail] = useState('');
+  const [editStaffPassword, setEditStaffPassword] = useState('');
+  const [editStaffRole, setEditStaffRole] = useState<'operations_admin' | 'compliance_officer' | 'support_agent' | 'custom_staff'>('operations_admin');
+  const [editStaffDept, setEditStaffDept] = useState('');
+  const [editStaffPages, setEditStaffPages] = useState<string[]>([]);
+
+  // Delete Staff Modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteStaffId, setDeleteStaffId] = useState<string | null>(null);
+  const [deleteStaffName, setDeleteStaffName] = useState('');
 
   // Broadcast Modal
   const [bcModalOpen, setBcModalOpen] = useState(false);
@@ -46,18 +78,55 @@ export default function AdminSettingsPage() {
   const [bcIcon, setBcIcon] = useState<'megaphone' | 'sparkle' | 'gift' | 'warning' | 'check' | 'bell'>('megaphone');
   const [bcColor, setBcColor] = useState<'yellow' | 'red' | 'green' | 'white'>('yellow');
 
-  const handleAddStaff = () => {
+  const handleAddStaff = async () => {
     if (staffName.trim() && staffEmail.trim()) {
-      addStaffUser({
+      await addStaffUser({
         name: staffName,
         email: staffEmail,
+        password: staffPassword,
         role: staffRole,
         department: staffDept,
+        allowedPages: staffPages,
         isActive: true,
       });
       setStaffName('');
       setStaffEmail('');
+      setStaffPassword('Staff@2026');
       setStaffModalOpen(false);
+    }
+  };
+
+  const handleOpenEditStaff = (user: any) => {
+    setEditStaffId(user.id);
+    setEditStaffName(user.name);
+    setEditStaffEmail(user.email);
+    setEditStaffPassword(user.password || '');
+    setEditStaffRole(user.role || 'operations_admin');
+    setEditStaffDept(user.department || 'Lead Operations');
+    setEditStaffPages(user.allowedPages || PERMISSION_PAGES.map((p) => p.id));
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEditStaff = async () => {
+    if (editStaffId && editStaffName.trim() && editStaffEmail.trim()) {
+      await updateStaffUser(editStaffId, {
+        name: editStaffName,
+        email: editStaffEmail,
+        password: editStaffPassword || undefined,
+        role: editStaffRole,
+        department: editStaffDept,
+        allowedPages: editStaffPages,
+      });
+      setEditModalOpen(false);
+      setEditStaffId(null);
+    }
+  };
+
+  const handleConfirmDeleteStaff = async () => {
+    if (deleteStaffId) {
+      await deleteStaffUser(deleteStaffId);
+      setDeleteModalOpen(false);
+      setDeleteStaffId(null);
     }
   };
 
@@ -167,7 +236,12 @@ export default function AdminSettingsPage() {
                           {u.role.replace('_', ' ').toUpperCase()}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 font-sans text-xs text-[var(--ink-2)]">{u.department}</td>
+                      <td className="px-6 py-4 font-sans text-xs text-[var(--ink-2)]">
+                        <div>{u.department}</div>
+                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                          {u.role === 'super_admin' ? 'All 10 Pages Allowed' : `${u.allowedPages?.length || 0} Pages Allowed`}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 font-sans text-xs text-[var(--ink-muted)]">
                         {new Date(u.lastLogin).toLocaleString()}
                       </td>
@@ -177,14 +251,40 @@ export default function AdminSettingsPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button
-                          variant={u.isActive ? 'danger' : 'secondary'}
-                          size="sm"
-                          onClick={() => toggleStaffStatus(u.id)}
-                          disabled={u.role === 'super_admin'}
-                        >
-                          {u.isActive ? 'Revoke Access' : 'Restore Access'}
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditStaff(u)}
+                            className="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors cursor-pointer"
+                            title="Edit Staff Permissions"
+                          >
+                            ✏️ Edit
+                          </button>
+
+                          <Button
+                            variant={u.isActive ? 'danger' : 'secondary'}
+                            size="sm"
+                            onClick={() => toggleStaffStatus(u.id)}
+                            disabled={u.role === 'super_admin'}
+                          >
+                            {u.isActive ? 'Revoke' : 'Restore'}
+                          </Button>
+
+                          {u.role !== 'super_admin' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDeleteStaffId(u.id);
+                                setDeleteStaffName(u.name);
+                                setDeleteModalOpen(true);
+                              }}
+                              className="px-2 py-1 text-xs font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors cursor-pointer"
+                              title="Delete Staff Account"
+                            >
+                              🗑
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -304,42 +404,53 @@ export default function AdminSettingsPage() {
       {/* Add Staff Modal */}
       <Modal isOpen={staffModalOpen} onClose={() => setStaffModalOpen(false)} title="Add Admin Staff Member">
         <div className="space-y-4">
-          <div>
-            <label className="text-xs font-bold text-[var(--ink)] uppercase">Full Name</label>
-            <input
-              type="text"
-              value={staffName}
-              onChange={(e) => setStaffName(e.target.value)}
-              placeholder="e.g. Ananya Sharma"
-              className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Full Name</label>
+              <input
+                type="text"
+                value={staffName}
+                onChange={(e) => setStaffName(e.target.value)}
+                placeholder="e.g. Ananya Sharma"
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Email Address</label>
+              <input
+                type="email"
+                value={staffEmail}
+                onChange={(e) => setStaffEmail(e.target.value)}
+                placeholder="ananya.s@primescore.in"
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-[var(--ink)] uppercase">Email Address</label>
-            <input
-              type="email"
-              value={staffEmail}
-              onChange={(e) => setStaffEmail(e.target.value)}
-              placeholder="ananya.s@primescore.in"
-              className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Login Password</label>
+              <input
+                type="text"
+                value={staffPassword}
+                onChange={(e) => setStaffPassword(e.target.value)}
+                placeholder="Staff@2026"
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1 font-mono"
+              />
+            </div>
             <div>
               <label className="text-xs font-bold text-[var(--ink)] uppercase">Assigned Role</label>
               <select
                 value={staffRole}
                 onChange={(e) => setStaffRole(e.target.value as any)}
-                className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 bg-white"
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1 bg-white"
               >
                 <option value="operations_admin">Operations Admin</option>
                 <option value="compliance_officer">Compliance Officer</option>
                 <option value="support_agent">Support Agent</option>
+                <option value="custom_staff">Custom Staff Access</option>
               </select>
             </div>
-
             <div>
               <label className="text-xs font-bold text-[var(--ink)] uppercase">Department</label>
               <input
@@ -347,14 +458,164 @@ export default function AdminSettingsPage() {
                 value={staffDept}
                 onChange={(e) => setStaffDept(e.target.value)}
                 placeholder="KYC Verification Team"
-                className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1"
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
               />
+            </div>
+          </div>
+
+          {/* Plain English Page Permission Checkboxes */}
+          <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
+            <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider block">
+              Allowed Pages Permission List
+            </label>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+              {PERMISSION_PAGES.map((page) => {
+                const checked = staffPages.includes(page.id);
+                return (
+                  <label
+                    key={page.id}
+                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer select-none transition-all ${
+                      checked ? 'bg-white border-[#1B2A72] text-[#1B2A72] font-bold shadow-xs' : 'bg-slate-100 border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setStaffPages([...staffPages, page.id]);
+                        } else {
+                          setStaffPages(staffPages.filter((p) => p !== page.id));
+                        }
+                      }}
+                      className="rounded-xs accent-[#1B2A72]"
+                    />
+                    <span>{page.label}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setStaffModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleAddStaff} disabled={!staffName.trim() || !staffEmail.trim()}>Add Staff</Button>
+            <Button variant="primary" onClick={handleAddStaff} disabled={!staffName.trim() || !staffEmail.trim()}>Add Staff Member</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Staff Modal */}
+      <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} title="Edit Staff Member Permissions">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Full Name</label>
+              <input
+                type="text"
+                value={editStaffName}
+                onChange={(e) => setEditStaffName(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Email Address</label>
+              <input
+                type="email"
+                value={editStaffEmail}
+                onChange={(e) => setEditStaffEmail(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Login Password</label>
+              <input
+                type="text"
+                value={editStaffPassword}
+                onChange={(e) => setEditStaffPassword(e.target.value)}
+                placeholder="Leave blank to keep unchanged"
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1 font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Assigned Role</label>
+              <select
+                value={editStaffRole}
+                onChange={(e) => setEditStaffRole(e.target.value as any)}
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1 bg-white"
+              >
+                <option value="operations_admin">Operations Admin</option>
+                <option value="compliance_officer">Compliance Officer</option>
+                <option value="support_agent">Support Agent</option>
+                <option value="custom_staff">Custom Staff Access</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[var(--ink)] uppercase">Department</label>
+              <input
+                type="text"
+                value={editStaffDept}
+                onChange={(e) => setEditStaffDept(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none mt-1"
+              />
+            </div>
+          </div>
+
+          {/* Plain English Page Permission Checkboxes for Edit */}
+          <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
+            <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider block">
+              Allowed Pages Permission List
+            </label>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+              {PERMISSION_PAGES.map((page) => {
+                const checked = editStaffPages.includes(page.id);
+                return (
+                  <label
+                    key={page.id}
+                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer select-none transition-all ${
+                      checked ? 'bg-white border-[#1B2A72] text-[#1B2A72] font-bold shadow-xs' : 'bg-slate-100 border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setEditStaffPages([...editStaffPages, page.id]);
+                        } else {
+                          setEditStaffPages(editStaffPages.filter((p) => p !== page.id));
+                        }
+                      }}
+                      className="rounded-xs accent-[#1B2A72]"
+                    />
+                    <span>{page.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setEditModalOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleSaveEditStaff} disabled={!editStaffName.trim() || !editStaffEmail.trim()}>Save Changes</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Staff Confirmation Modal */}
+      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Remove Staff Member">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-700">
+            Are you sure you want to permanently remove staff account <strong className="text-slate-900 font-bold">{deleteStaffName}</strong>?
+          </p>
+          <p className="text-xs text-slate-500 bg-rose-50 p-3 rounded-lg border border-rose-200">
+            ⚠️ This will revoke their access to Primescore Admin HQ immediately.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleConfirmDeleteStaff}>Delete Staff Member</Button>
           </div>
         </div>
       </Modal>

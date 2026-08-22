@@ -84,7 +84,73 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Main Content Area */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 max-w-7xl w-full mx-auto">
           <div className="w-full animate-fade-in">
-            {children}
+            {(() => {
+              const { pathname } = window ? { pathname: window.location.pathname } : { pathname: '' };
+              const { adminEmail, staff } = useAdminStore.getState();
+              const currentStaff = staff.find(
+                (s) => s.email.toLowerCase() === (adminEmail || 'sawai@primescore.in').toLowerCase()
+              );
+
+              const isSuperAdmin = !currentStaff || currentStaff.role === 'super_admin';
+              const allowedPages = currentStaff?.allowedPages || [
+                'dashboard',
+                'kyc',
+                'referrals',
+                'teams',
+                'analytics',
+                'gift-cards',
+                'services',
+                'rewards-config',
+                'notifications',
+                'settings',
+              ];
+
+              // Path to Page ID mapping
+              let pageId = 'dashboard';
+              if (pathname.includes('/admin/kyc')) pageId = 'kyc';
+              else if (pathname.includes('/admin/referrals')) pageId = 'referrals';
+              else if (pathname.includes('/admin/teams')) pageId = 'teams';
+              else if (pathname.includes('/admin/analytics')) pageId = 'analytics';
+              else if (pathname.includes('/admin/gift-cards')) pageId = 'gift-cards';
+              else if (pathname.includes('/admin/services')) pageId = 'services';
+              else if (pathname.includes('/admin/rewards-config')) pageId = 'rewards-config';
+              else if (pathname.includes('/admin/notifications')) pageId = 'notifications';
+              else if (pathname.includes('/admin/settings')) pageId = 'settings';
+
+              const isAllowed = isSuperAdmin || allowedPages.includes(pageId);
+
+              if (!isAllowed) {
+                const firstAllowedPage = allowedPages[0] || 'dashboard';
+                const firstAllowedHref = firstAllowedPage === 'dashboard' ? '/admin' : `/admin/${firstAllowedPage}`;
+
+                return (
+                  <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-white border border-red-200 rounded-2xl shadow-sm space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 text-3xl">
+                      🔒
+                    </div>
+                    <div className="space-y-1 max-w-md">
+                      <h2 className="text-xl font-extrabold text-slate-900 font-display">
+                        403 Access Denied
+                      </h2>
+                      <p className="text-sm text-slate-600 font-body">
+                        You do not have permission to view or manage the <strong className="text-slate-900 uppercase font-mono">{pageId}</strong> page.
+                      </p>
+                      <p className="text-xs text-slate-400 font-body pt-1">
+                        Please contact your Super Admin if you need access to this section.
+                      </p>
+                    </div>
+                    <a
+                      href={firstAllowedHref}
+                      className="px-5 py-2.5 bg-[#1B2A72] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#0F1A4E] transition-all"
+                    >
+                      Return to My Allowed Work Pages &rarr;
+                    </a>
+                  </div>
+                );
+              }
+
+              return children;
+            })()}
           </div>
         </main>
       </div>
