@@ -20,7 +20,11 @@ import {
   Broadcast,
   Coins,
   CurrencyInr,
-  ArrowRight
+  ArrowRight,
+  Sparkle,
+  Gift,
+  Warning,
+  Bell
 } from '@phosphor-icons/react';
 
 export default function AdminSettingsPage() {
@@ -356,58 +360,172 @@ export default function AdminSettingsPage() {
       </Modal>
 
       {/* Broadcast Modal */}
-      <Modal isOpen={bcModalOpen} onClose={() => setBcModalOpen(false)} title="Publish Broadcast Announcement Banner">
+      <Modal isOpen={bcModalOpen} onClose={() => setBcModalOpen(false)} title="Create Announcement Banner">
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-bold text-[var(--ink)] uppercase">Announcement Title</label>
+            <label className="text-xs font-bold text-[var(--ink)] uppercase tracking-wider">Title</label>
             <input
               type="text"
               value={bcTitle}
               onChange={(e) => setBcTitle(e.target.value)}
-              placeholder="e.g. Diwali Multiplier Offer!"
-              className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1"
+              placeholder="e.g. Special Commission Bonus Active!"
+              className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 font-body focus:border-[#1B2A72]"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold text-[var(--ink)] uppercase">Banner Icon</label>
-              <select
-                value={bcIcon}
-                onChange={(e) => setBcIcon(e.target.value as any)}
-                className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 bg-white"
+          {/* Visual Icon Grid (6 Options with SVG Icons) */}
+          <div>
+            <label className="text-xs font-bold text-[var(--ink)] uppercase tracking-wider block mb-1.5">
+              Select Icon
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setBcIcon('megaphone')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcIcon === 'megaphone'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
               >
-                <option value="megaphone">Megaphone</option>
-                <option value="sparkle">Sparkle Star</option>
-                <option value="gift">Gift Box</option>
-                <option value="warning">Warning Alert</option>
-                <option value="check">Checkmark</option>
-                <option value="bell">Bell Alert</option>
-              </select>
-            </div>
+                <Megaphone size={16} weight="fill" className={bcIcon === 'megaphone' ? 'text-amber-400' : 'text-slate-500'} />
+                <span>Megaphone</span>
+              </button>
 
-            <div>
-              <label className="text-xs font-bold text-[var(--ink)] uppercase">Title Color</label>
-              <select
-                value={bcColor}
-                onChange={(e) => setBcColor(e.target.value as any)}
-                className="w-full p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 bg-white"
+              <button
+                type="button"
+                onClick={() => setBcIcon('sparkle')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcIcon === 'sparkle'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
               >
-                <option value="yellow">Gold Yellow</option>
-                <option value="red">Crimson Red</option>
-                <option value="green">Emerald Green</option>
-                <option value="white">Pure White</option>
-              </select>
+                <Sparkle size={16} weight="fill" className={bcIcon === 'sparkle' ? 'text-amber-400' : 'text-slate-500'} />
+                <span>Sparkle</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBcIcon('gift')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcIcon === 'gift'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <Gift size={16} weight="fill" className={bcIcon === 'gift' ? 'text-amber-400' : 'text-slate-500'} />
+                <span>Gift Box</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBcIcon('warning')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcIcon === 'warning'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <Warning size={16} weight="fill" className={bcIcon === 'warning' ? 'text-red-400' : 'text-slate-500'} />
+                <span>Warning</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBcIcon('check')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcIcon === 'check'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <CheckCircle size={16} weight="fill" className={bcIcon === 'check' ? 'text-emerald-400' : 'text-slate-500'} />
+                <span>Success</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBcIcon('bell')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcIcon === 'bell'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <Bell size={16} weight="fill" className={bcIcon === 'bell' ? 'text-sky-400' : 'text-slate-500'} />
+                <span>Bell</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Visual Title Color Selector */}
+          <div>
+            <label className="text-xs font-bold text-[var(--ink)] uppercase tracking-wider block mb-1.5">
+              Title Color
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() => setBcColor('yellow')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcColor === 'yellow'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-500 shrink-0" />
+                <span>Yellow</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBcColor('red')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcColor === 'red'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span className="w-3.5 h-3.5 rounded-full bg-red-500 border border-red-600 shrink-0" />
+                <span>Red</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBcColor('green')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcColor === 'green'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 border border-emerald-600 shrink-0" />
+                <span>Green</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBcColor('white')}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bcColor === 'white'
+                    ? 'bg-[#1B2A72] text-white border-[#1B2A72] shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span className="w-3.5 h-3.5 rounded-full bg-white border border-slate-400 shrink-0" />
+                <span>White</span>
+              </button>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[var(--ink)] uppercase">Message Content</label>
+            <label className="text-xs font-bold text-[var(--ink)] uppercase tracking-wider">Message</label>
             <textarea
               value={bcMessage}
               onChange={(e) => setBcMessage(e.target.value)}
-              placeholder="Detailed announcement text visible to all active partners..."
-              className="w-full h-24 p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 font-body"
+              placeholder="Type announcement details visible to all partners..."
+              className="w-full h-24 p-3 border border-gray-300 rounded-xl text-sm outline-none mt-1 font-body focus:border-[#1B2A72]"
             />
           </div>
 
