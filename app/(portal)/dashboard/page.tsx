@@ -132,19 +132,41 @@ export default function PartnerDashboard() {
     // Unified events array sorted ASCENDING by date
     const events: { dateStr: string; pointsChange: number; isReferral: boolean }[] = [];
 
-    // 1. Point Transactions from DB
-    pointTransactions.forEach((tx) => {
-      if (!tx.created_at) return;
-      events.push({
-        dateStr: tx.created_at.split('T')[0],
-        pointsChange: tx.points_change || 0,
-        isReferral: tx.transaction_type === 'referral_earned',
-      });
-    });
-
     const existingTxRefIds = new Set(pointTransactions.map((tx) => tx.reference_id || tx.id));
 
-    // 2. Local Redemptions if not in DB tx
+    // 1. Point Transactions from DB (Single Source of Truth for Points Ledger)
+    if (pointTransactions.length > 0) {
+      pointTransactions.forEach((tx) => {
+        if (!tx.created_at) return;
+        events.push({
+          dateStr: tx.created_at.split('T')[0],
+          pointsChange: tx.points_change || 0,
+          isReferral: tx.transaction_type === 'referral_earned',
+        });
+      });
+
+      // Account for any remaining points between DB transactions and current totalPoints
+      const dbTxSum = pointTransactions.reduce((sum, tx) => sum + (tx.points_change || 0), 0);
+      const remainingUnloggedPoints = totalPoints - dbTxSum;
+      if (remainingUnloggedPoints > 0 && partner) {
+        events.push({
+          dateStr: (partner.kycSubmittedAt || partner.joinedAt || new Date().toISOString()).split('T')[0],
+          pointsChange: remainingUnloggedPoints,
+          isReferral: false,
+        });
+      }
+    } else {
+      // Fallback for new accounts without DB transactions yet
+      if (partner && totalPoints > 0) {
+        events.push({
+          dateStr: (partner.kycSubmittedAt || partner.joinedAt || new Date().toISOString()).split('T')[0],
+          pointsChange: totalPoints,
+          isReferral: false,
+        });
+      }
+    }
+
+    // 2. Add local redemptions ONLY if not already in DB transactions
     redemptions.forEach((rdm) => {
       if (!existingTxRefIds.has(rdm.id) && !existingTxRefIds.has(rdm.voucherCode)) {
         events.push({
@@ -155,26 +177,18 @@ export default function PartnerDashboard() {
       }
     });
 
-    // 3. Local Referrals
-    referrals.forEach((r) => {
+    // 3. Referral Volume markers (strictly for Referrals Count metric, zero points pollution)
+    const partnerReferrals = referrals.filter(
+      (r) => !partner?.id || r.partnerId === partner.id || r.partnerId === 'demo'
+    );
+    partnerReferrals.forEach((r) => {
       if (!r.createdAt) return;
       events.push({
         dateStr: r.createdAt.split('T')[0],
-        pointsChange: r.status === 'completed' && !existingTxRefIds.has(r.id) ? (r.pointsEarned || 500) : 0,
+        pointsChange: 0,
         isReferral: true,
       });
     });
-
-    // 4. Unaccounted initial points balance fallback to match live totalPoints
-    const currentSum = events.reduce((sum, ev) => sum + ev.pointsChange, 0);
-    const unaccountedPoints = totalPoints - currentSum;
-    if (unaccountedPoints > 0 && partner) {
-      events.push({
-        dateStr: (partner.kycSubmittedAt || partner.joinedAt || new Date().toISOString()).split('T')[0],
-        pointsChange: unaccountedPoints,
-        isReferral: false,
-      });
-    }
 
     // Sort events ascending by date
     events.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
