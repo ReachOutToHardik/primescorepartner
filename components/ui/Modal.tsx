@@ -97,7 +97,7 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           {/* Backdrop with High-Grade Blur */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -106,7 +106,7 @@ export const Modal: React.FC<ModalProps> = ({
             transition={{ duration: 0.2 }}
             onClick={() => closeOnBackdropClick && onClose()}
             className={cn(
-              'fixed inset-0 bg-slate-950/75 backdrop-blur-md transition-opacity',
+              'fixed inset-0 bg-slate-950/80 backdrop-blur-xl transition-opacity',
               overlayClassName
             )}
             aria-hidden="true"

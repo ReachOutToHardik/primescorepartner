@@ -32,8 +32,54 @@ export default function ReferralsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  // Selected Referral for 5-Stage Stepper Slide-Over Modal
-  const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null);
+  // Selected Referral for 5-Stage Stepper Modal
+  const [selectedReferralId, setSelectedReferralId] = useState<string | null>(null);
+
+  const selectedReferral = useMemo(() => {
+    if (!selectedReferralId) return null;
+    return referrals.find((r) => r.id === selectedReferralId) || null;
+  }, [referrals, selectedReferralId]);
+
+  // Live Auto-Sync when modal is open to fetch immediate Admin HQ status updates
+  const partner = usePartnerStore((s) => s.partner);
+  React.useEffect(() => {
+    if (!selectedReferralId || !partner?.id) return;
+    const interval = setInterval(async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: dbRefs } = await supabase
+          .from('referrals')
+          .select('*')
+          .eq('partner_id', partner.id)
+          .order('created_at', { ascending: false });
+
+        if (dbRefs && dbRefs.length > 0) {
+          const mapped: Referral[] = dbRefs.map((r: any) => ({
+            id: r.id,
+            partnerId: r.partner_id,
+            customerName: r.customer_name,
+            customerPhone: r.customer_phone,
+            customerEmail: r.customer_email || '',
+            city: r.city || '',
+            service: r.service_name || '',
+            notes: r.notes || '',
+            status: (r.current_stage || r.status || 'submitted') as ReferralStatus,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+            pointsEarned: r.partner_points_earned || 0,
+            statusHistory: Array.isArray(r.status_history)
+              ? r.status_history
+              : (r.status_history ? (typeof r.status_history === 'string' ? JSON.parse(r.status_history) : r.status_history) : []),
+          }));
+          usePartnerStore.getState().setReferrals(mapped);
+        }
+      } catch (err) {
+        console.warn('Live modal sync error:', err);
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [selectedReferralId, partner?.id]);
 
   // Status Filter options
   const statusOptions = [
@@ -247,7 +293,7 @@ export default function ReferralsPage() {
             <Card
               key={ref.id}
               variant="elevated"
-              onClick={() => setSelectedReferral(ref)}
+              onClick={() => setSelectedReferralId(ref.id)}
               className="p-4 space-y-3 active:bg-slate-50 transition-all cursor-pointer"
             >
               <div className="flex items-center justify-between">
@@ -310,7 +356,7 @@ export default function ReferralsPage() {
                 filteredReferrals.map((ref) => (
                   <tr
                     key={ref.id}
-                    onClick={() => setSelectedReferral(ref)}
+                    onClick={() => setSelectedReferralId(ref.id)}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                   >
                     <td className="p-4">
@@ -348,11 +394,11 @@ export default function ReferralsPage() {
       {/* 5-STAGE STATUS STEPPER MODAL */}
       {selectedReferral && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fade-in"
-          onClick={() => setSelectedReferral(null)}
+          className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+          onClick={() => setSelectedReferralId(null)}
         >
           <div
-            className="w-full max-w-2xl bg-white border border-[var(--border)] rounded-xs shadow-2xl p-6 sm:p-8 flex flex-col justify-between max-h-[90vh] overflow-y-auto animate-fade-up relative"
+            className="w-full max-w-2xl bg-white border border-slate-200/80 rounded-2xl shadow-2xl p-6 sm:p-8 flex flex-col justify-between max-h-[90vh] overflow-y-auto animate-fade-up relative my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -368,7 +414,7 @@ export default function ReferralsPage() {
                   </h2>
                 </div>
                 <button
-                  onClick={() => setSelectedReferral(null)}
+                  onClick={() => setSelectedReferralId(null)}
                   className="p-2 text-[var(--ink-muted)] hover:text-[var(--ink)] rounded-xs hover:bg-[var(--surface-2)]"
                 >
                   <X size={20} weight="bold" />
@@ -473,7 +519,7 @@ export default function ReferralsPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setSelectedReferral(null)}
+                onClick={() => setSelectedReferralId(null)}
               >
                 Close Details
               </Button>

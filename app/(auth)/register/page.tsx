@@ -422,6 +422,7 @@ export default function RegisterPage() {
               name: name.trim(),
               email: email.trim().toLowerCase(),
               phone: phone.trim(),
+              password: password.trim(),
               profession,
               city: city.trim(),
               state: stateName.trim(),
