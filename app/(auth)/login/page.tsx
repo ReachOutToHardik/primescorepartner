@@ -483,11 +483,18 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Mobile Corner Footer (Visible on Mobile) */}
-        <div className="w-full pt-4 lg:hidden text-center text-[10px] sm:text-xs text-slate-400 font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
-          <p className="inline-flex items-center justify-center gap-1.5">
-            <span>&copy; 2026 Primescore. All rights reserved.</span>
-            <a href="mailto:info@primescore.in" className="text-slate-300 font-semibold hover:underline">
+        {/* Desktop & Mobile Footer Links */}
+        <div className="w-full pt-4 text-center text-[10px] sm:text-xs text-slate-400 font-medium space-y-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-slate-300 lg:text-slate-500">
+            <Link href="/privacy" className="hover:text-amber-400 lg:hover:text-[#1B2A72] transition">Privacy Policy</Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-amber-400 lg:hover:text-[#1B2A72] transition">Terms & Conditions</Link>
+            <span>•</span>
+            <Link href="/refund" className="hover:text-amber-400 lg:hover:text-[#1B2A72] transition">Payout Policy</Link>
+          </div>
+          <p className="inline-flex items-center justify-center gap-1.5 text-slate-400 lg:text-[var(--ink-muted)]">
+            <span>&copy; {new Date().getFullYear()} Primescore. All rights reserved.</span>
+            <a href="mailto:info@primescore.in" className="text-slate-300 lg:text-[var(--ink)] font-semibold hover:underline">
               info@primescore.in
             </a>
           </p>

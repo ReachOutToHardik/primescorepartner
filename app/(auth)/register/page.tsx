@@ -1060,8 +1060,15 @@ export default function RegisterPage() {
       </div>
 
       {/* Footer */}
-      <div className="text-center text-xs text-[var(--ink-subtle)] py-4">
-        &copy; {new Date().getFullYear()} Primescore. All rights reserved.
+      <div className="text-center text-xs text-[var(--ink-subtle)] py-4 space-y-1.5">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[11px] text-slate-500">
+          <Link href="/privacy" className="hover:text-[#1B2A72] transition">Privacy Policy</Link>
+          <span>•</span>
+          <Link href="/terms" className="hover:text-[#1B2A72] transition">Terms & Conditions</Link>
+          <span>•</span>
+          <Link href="/refund" className="hover:text-[#1B2A72] transition">Payout Policy</Link>
+        </div>
+        <p>&copy; {new Date().getFullYear()} Primescore. All rights reserved.</p>
       </div>
     </div>
   );
