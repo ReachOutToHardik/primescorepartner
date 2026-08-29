@@ -69,7 +69,7 @@ export default function PartnerDashboard() {
   const pendingCount = referrals.filter((r) => r.status !== 'completed' && r.status !== 'rejected').length;
 
   // Time range filter state & Chart Metric mode toggle
-  const [timeRange, setTimeRange] = useState<'15d' | '30d' | '6m' | '1y'>('6m');
+  const [timeRange, setTimeRange] = useState<'today' | '15d' | '30d' | 'month' | '6m' | '1y'>('6m');
   const [chartMetricMode, setChartMetricMode] = useState<'both' | 'referrals' | 'points'>('both');
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
@@ -244,8 +244,10 @@ export default function PartnerDashboard() {
       return buckets;
     };
 
+    if (timeRange === 'today') return buildBuckets(1, 'day');
     if (timeRange === '15d') return buildBuckets(15, 'day');
     if (timeRange === '30d') return buildBuckets(30, 'day');
+    if (timeRange === 'month') return buildBuckets(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(), 'day');
     if (timeRange === '6m') return buildBuckets(6, 'month');
     return buildBuckets(12, 'month');
   }, [timeRange, referrals, redemptions, pointTransactions, partner]);
@@ -655,15 +657,17 @@ export default function PartnerDashboard() {
               </p>
             </div>
 
-            {/* Date Range Pill Buttons (Equal 4-col grid on mobile for perfect symmetry) */}
-            <div className="grid grid-cols-4 sm:flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto shrink-0">
+            {/* Date Range Pill Buttons */}
+            <div className="grid grid-cols-3 sm:flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto shrink-0">
               {(
                 [
+                  { id: 'today', label: '1D', fullLabel: 'Today' },
                   { id: '15d', label: '15D', fullLabel: '15 Days' },
                   { id: '30d', label: '30D', fullLabel: '30 Days' },
+                  { id: 'month', label: 'Month', fullLabel: 'This Month' },
                   { id: '6m', label: '6M', fullLabel: '6 Months' },
                   { id: '1y', label: '1Y', fullLabel: '1 Year' },
-                ] as { id: '15d' | '30d' | '6m' | '1y'; label: string; fullLabel: string }[]
+                ] as { id: 'today' | '15d' | '30d' | 'month' | '6m' | '1y'; label: string; fullLabel: string }[]
               ).map((range) => (
                 <button
                   key={range.id}
@@ -965,7 +969,7 @@ export default function PartnerDashboard() {
 
           <div className="w-56 p-4 mx-auto bg-white rounded-2xl border-2 border-dashed border-[#1B2A72]/30 flex flex-col items-center justify-center gap-2.5 shadow-sm relative group">
             <QRCodeSVG
-              value={`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`}
+              value={`https://dashboard.primescore.in/ref/${(partner as any)?.userReferralCode || 'PSMKMVLN'}`}
               size={170}
               bgColor={"#FFFFFF"}
               fgColor={"#0F1A4E"}
@@ -981,26 +985,26 @@ export default function PartnerDashboard() {
               }}
             />
             <span className="text-[10px] font-bold text-[#1B2A72] bg-indigo-50 px-2.5 py-1 rounded-md mt-1 border border-indigo-200 font-mono-num uppercase">
-              Code: {partner?.teamCode || partner?.id?.slice(0, 8) || 'REF-ACTIVE'}
+              Client Code: {(partner as any)?.userReferralCode || 'PSMKMVLN'}
             </span>
           </div>
 
           <div className="space-y-1.5 text-left">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Direct Referral Web Link
+              Direct Client Referral Web Link
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 readOnly
-                value={`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`}
+                value={`https://dashboard.primescore.in/ref/${(partner as any)?.userReferralCode || 'PSMKMVLN'}`}
                 className="w-full px-3.5 py-2.5 text-xs font-mono font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none select-all"
               />
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://primescore.in/refer?ref=${partner?.teamCode || partner?.id?.slice(0, 8) || 'PARTNER'}`);
-                  alert('Referral link copied to clipboard!');
+                  navigator.clipboard.writeText(`https://dashboard.primescore.in/ref/${(partner as any)?.userReferralCode || 'PSMKMVLN'}`);
+                  alert('Client referral link copied to clipboard!');
                 }}
                 className="px-4 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold text-xs rounded-xl transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
               >

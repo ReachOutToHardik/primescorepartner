@@ -127,7 +127,7 @@ export default function AdminNotificationsPage() {
       }
 
       // 2. Dispatch via secure server-side Next.js API route
-      const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+      const adminPass = useAdminStore.getState()._adminPass || '';
       const response = await fetch('/api/admin/send-notification', {
         method: 'POST',
         headers: {

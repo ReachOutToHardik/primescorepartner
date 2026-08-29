@@ -40,46 +40,8 @@ export default function ReferralsPage() {
     return referrals.find((r) => r.id === selectedReferralId) || null;
   }, [referrals, selectedReferralId]);
 
-  // Live Auto-Sync when modal is open to fetch immediate Admin HQ status updates
-  const partner = usePartnerStore((s) => s.partner);
-  React.useEffect(() => {
-    if (!selectedReferralId || !partner?.id) return;
-    const interval = setInterval(async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase');
-        const { data: dbRefs } = await supabase
-          .from('referrals')
-          .select('*')
-          .eq('partner_id', partner.id)
-          .order('created_at', { ascending: false });
-
-        if (dbRefs && dbRefs.length > 0) {
-          const mapped: Referral[] = dbRefs.map((r: any) => ({
-            id: r.id,
-            partnerId: r.partner_id,
-            customerName: r.customer_name,
-            customerPhone: r.customer_phone,
-            customerEmail: r.customer_email || '',
-            city: r.city || '',
-            service: r.service_name || '',
-            notes: r.notes || '',
-            status: (r.current_stage || r.status || 'submitted') as ReferralStatus,
-            createdAt: r.created_at,
-            updatedAt: r.updated_at,
-            pointsEarned: r.partner_points_earned || 0,
-            statusHistory: Array.isArray(r.status_history)
-              ? r.status_history
-              : (r.status_history ? (typeof r.status_history === 'string' ? JSON.parse(r.status_history) : r.status_history) : []),
-          }));
-          usePartnerStore.getState().setReferrals(mapped);
-        }
-      } catch (err) {
-        console.warn('Live modal sync error:', err);
-      }
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, [selectedReferralId, partner?.id]);
+  // Realtime updates are handled by useSupabaseSync (websocket subscription).
+  // No polling needed here.
 
   // Status Filter options
   const statusOptions = [

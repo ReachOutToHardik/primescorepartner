@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { Modal } from '@/components/ui/Modal';
 import { ResetPartnerPasswordModal } from '@/components/admin/ResetPartnerPasswordModal';
+import { AddPartnerModal } from '@/components/admin/AddPartnerModal';
+import { DeleteConfirmationModal } from '@/components/admin/DeleteConfirmationModal';
 import { 
   ShieldCheck, 
   MagnifyingGlass, 
@@ -22,14 +24,18 @@ import {
   Crown,
   Trash,
   CheckCircle,
-  Key
+  Key,
+  UserPlus
 } from '@phosphor-icons/react';
 
 export default function AdminKycListPage() {
   const { partners, deletePartner, approveKyc } = useAdminStore();
   const [approvePartner, setApprovePartner] = useState<any | null>(null);
   const [resetPassPartner, setResetPassPartner] = useState<any | null>(null);
+  const [deleteTargetPartner, setDeleteTargetPartner] = useState<any | null>(null);
+  const [isAddPartnerOpen, setIsAddPartnerOpen] = useState(false);
   const [codeLinkInput, setCodeLinkInput] = useState('');
+  const [userRefCodeInput, setUserRefCodeInput] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'individual' | 'team_leader'>('all');
@@ -38,25 +44,20 @@ export default function AdminKycListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
+  // Filter List by Status Tab
   const pendingList = partners.filter((p) => p.status === 'kyc_submitted');
   const approvedList = partners.filter((p) => p.status === 'kyc_approved');
   const rejectedList = partners.filter((p) => p.status === 'kyc_rejected');
 
-  const rawList =
-    activeTab === 'pending'
-      ? pendingList
-      : activeTab === 'approved'
-      ? approvedList
-      : rejectedList;
-
-  const currentTabList = rawList.filter((p) => {
+  const currentTabList = (activeTab === 'pending' ? pendingList : activeTab === 'approved' ? approvedList : rejectedList).filter((p) => {
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.pan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.phone.includes(searchQuery) ||
-      p.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.referredByLeaderName && p.referredByLeaderName.toLowerCase().includes(searchQuery.toLowerCase()));
+      !q ||
+      p.name.toLowerCase().includes(q) ||
+      p.email.toLowerCase().includes(q) ||
+      p.phone.includes(q) ||
+      p.city.toLowerCase().includes(q) ||
+      (p.teamCode && p.teamCode.toLowerCase().includes(q));
 
     const matchesRole = roleFilter === 'all' || p.role === roleFilter;
 
@@ -75,48 +76,58 @@ export default function AdminKycListPage() {
         <div>
           <h1 className="text-2xl font-display font-bold text-[var(--navy-deep)] flex items-center gap-2">
             <ShieldCheck className="w-7 h-7 text-[var(--navy)]" weight="fill" />
-            Partner KYC Verification
+            Partner KYC Verification & Roster
           </h1>
           <p className="text-sm text-[var(--ink-muted)]">
-            Check PAN card, Aadhaar, bank details, referred leader, and converted cases.
+            Check PAN card, Aadhaar, bank details, referred leader, and onboarded partner accounts.
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex bg-[var(--surface-2)] p-1 rounded-xl font-medium text-xs border border-[var(--border)]">
-          <button
-            onClick={() => { setActiveTab('pending'); setCurrentPage(1); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
-              activeTab === 'pending'
-                ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
-                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
-            }`}
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setIsAddPartnerOpen(true)}
+            className="bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-sm"
           >
-            <Hourglass className="w-4 h-4 text-amber-500" weight="fill" />
-            Pending ({pendingList.length})
-          </button>
-          <button
-            onClick={() => { setActiveTab('approved'); setCurrentPage(1); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
-              activeTab === 'approved'
-                ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
-                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
-            }`}
-          >
-            <UserCheck className="w-4 h-4 text-emerald-500" weight="fill" />
-            Approved ({approvedList.length})
-          </button>
-          <button
-            onClick={() => { setActiveTab('rejected'); setCurrentPage(1); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
-              activeTab === 'rejected'
-                ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
-                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
-            }`}
-          >
-            <UserMinus className="w-4 h-4 text-red-500" weight="fill" />
-            Rejected ({rejectedList.length})
-          </button>
+            <UserPlus size={16} weight="bold" />
+            <span>➕ Onboard New Partner</span>
+          </Button>
+
+          {/* Tab Navigation */}
+          <div className="flex bg-[var(--surface-2)] p-1 rounded-xl font-medium text-xs border border-[var(--border)]">
+            <button
+              onClick={() => { setActiveTab('pending'); setCurrentPage(1); }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
+                activeTab === 'pending'
+                  ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
+              }`}
+            >
+              <Hourglass className="w-4 h-4 text-amber-500" weight="fill" />
+              Pending ({pendingList.length})
+            </button>
+            <button
+              onClick={() => { setActiveTab('approved'); setCurrentPage(1); }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
+                activeTab === 'approved'
+                  ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
+              }`}
+            >
+              <UserCheck className="w-4 h-4 text-emerald-500" weight="fill" />
+              Approved ({approvedList.length})
+            </button>
+            <button
+              onClick={() => { setActiveTab('rejected'); setCurrentPage(1); }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
+                activeTab === 'rejected'
+                  ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
+              }`}
+            >
+              <UserMinus className="w-4 h-4 text-red-500" weight="fill" />
+              Rejected ({rejectedList.length})
+            </button>
+          </div>
         </div>
       </div>
 
@@ -260,7 +271,8 @@ export default function AdminKycListPage() {
                               onClick={() => {
                                 const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
                                 const codeSuffix = partner.id.substring(0, 4).toUpperCase();
-                                setCodeLinkInput(partner.teamCode || `PS-${namePart}-${codeSuffix}`);
+                                setCodeLinkInput(partner.teamCode || `IND-${namePart}-${codeSuffix}`);
+                                setUserRefCodeInput((partner as any).userReferralCode || 'PSMKMVLN');
                                 setApprovePartner(partner);
                               }}
                               className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -291,11 +303,7 @@ export default function AdminKycListPage() {
 
                           <button
                             type="button"
-                            onClick={async () => {
-                              if (confirm(`Are you sure you want to delete partner "${partner.name}"? This cannot be undone.`)) {
-                                await deletePartner(partner.id);
-                              }
-                            }}
+                            onClick={() => setDeleteTargetPartner(partner)}
                             className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg border border-red-200 transition-colors cursor-pointer"
                             title="Delete Profile"
                           >
@@ -338,46 +346,67 @@ export default function AdminKycListPage() {
         >
           <div className="space-y-4">
             <p className="text-xs text-slate-600">
-              Set a referral code or custom link for <strong>{approvePartner.name}</strong>. You can type your own link, code, or auto-generate one.
+              Provide or auto-generate referral codes for <strong>{approvePartner.name}</strong>.
             </p>
 
+            {/* 1. Client Referral Code (dashboard.primescore.in) */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
-                  Referral Code or Custom Link
+                  User Referral Code (Client Link Code) *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                    let c = 'PS';
+                    for (let i = 0; i < 6; i++) c += chars.charAt(Math.floor(Math.random() * chars.length));
+                    setUserRefCodeInput(c);
+                  }}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+                >
+                  ⚡ Auto-Generate
+                </button>
+              </div>
+
+              <input
+                type="text"
+                value={userRefCodeInput}
+                onChange={(e) => setUserRefCodeInput(e.target.value.toUpperCase())}
+                placeholder="e.g. PSMKMVLN"
+                className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-bold text-slate-950 outline-none uppercase"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                Client Referral Target: <strong className="text-[#1B2A72] font-mono">https://dashboard.primescore.in/ref/{userRefCodeInput.trim().toUpperCase() || 'PSMKMVLN'}</strong>
+              </p>
+            </div>
+
+            {/* 2. Team Code / Partner Referral Code */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                  Partner Network Team Code (Sub-Agent Code)
                 </label>
                 <button
                   type="button"
                   onClick={() => {
                     const namePart = (approvePartner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
                     const randomNum = Math.floor(100 + Math.random() * 900);
-                    setCodeLinkInput(`PS-${namePart}-${randomNum}`);
+                    setCodeLinkInput(`IND-${namePart}-${randomNum}`);
                   }}
                   className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
-                  ⚡ Auto-Generate Code
+                  ⚡ Auto-Generate
                 </button>
               </div>
 
               <input
                 type="text"
                 value={codeLinkInput}
-                onChange={(e) => setCodeLinkInput(e.target.value)}
-                placeholder="e.g. PS-HARDIK-884 OR https://primescore.in/join?ref=hardik"
-                className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-semibold text-slate-950 outline-none"
+                onChange={(e) => setCodeLinkInput(e.target.value.toUpperCase())}
+                placeholder="e.g. IND-HAR-509"
+                className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-semibold text-slate-950 outline-none uppercase"
               />
-            </div>
-
-            {/* Live Link Preview */}
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                Final Partner Link & QR Target
-              </span>
-              <div className="font-mono text-xs text-[#1B2A72] font-bold break-all bg-white p-2.5 rounded-lg border border-slate-200">
-                {codeLinkInput.trim().startsWith('http://') || codeLinkInput.trim().startsWith('https://')
-                  ? codeLinkInput.trim()
-                  : `https://partner.primescore.in/register?ref=${codeLinkInput.trim().toUpperCase() || 'PARTNER'}`}
-              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
@@ -387,17 +416,39 @@ export default function AdminKycListPage() {
               <Button
                 variant="primary"
                 onClick={async () => {
-                  const finalCode = codeLinkInput.trim() || 'PARTNER';
-                  await approveKyc(approvePartner.id, finalCode);
+                  const finalTeamCode = codeLinkInput.trim() || 'IND-HAR-509';
+                  const finalUserRefCode = userRefCodeInput.trim() || 'PSMKMVLN';
+                  await approveKyc(approvePartner.id, finalTeamCode, finalUserRefCode);
                   setApprovePartner(null);
                 }}
               >
-                Approve Partner & Save Link
+                Approve Partner & Save Credentials
               </Button>
             </div>
           </div>
         </Modal>
       )}
+
+      {/* Onboard New Partner Modal */}
+      <AddPartnerModal
+        isOpen={isAddPartnerOpen}
+        onClose={() => setIsAddPartnerOpen(false)}
+      />
+
+      {/* Delete Partner Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={!!deleteTargetPartner}
+        onClose={() => setDeleteTargetPartner(null)}
+        onConfirm={async () => {
+          if (deleteTargetPartner) {
+            await deletePartner(deleteTargetPartner.id);
+            setDeleteTargetPartner(null);
+          }
+        }}
+        title="Delete Partner Dossier"
+        itemName={deleteTargetPartner?.name}
+        description="Deleting this partner account will permanently remove their profile, referral records, and points transaction history."
+      />
     </div>
   );
 }

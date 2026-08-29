@@ -28,6 +28,7 @@ import jsPDF from 'jspdf';
 
 import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
 import { FileCogIcon } from '@/components/ui/file-cog';
+import { LeadSubmittedRewardModal } from '@/components/ui/LeadSubmittedRewardModal';
 
 export default function ReferPage() {
   const { partner, setReferrals, referrals } = usePartnerStore();
@@ -50,22 +51,26 @@ export default function ReferPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kycModalOpen, setKycModalOpen] = useState(false);
 
-  // Generated Referral Link (supports custom code or custom full URL)
-  const rawCodeOrUrl = partner?.teamCode || partner?.id?.toUpperCase() || 'PARTNER';
-  const isFullUrl = rawCodeOrUrl.startsWith('http://') || rawCodeOrUrl.startsWith('https://');
-  const referralCode = isFullUrl ? 'CUSTOM-LINK' : rawCodeOrUrl;
-  const referralUrl = isFullUrl
-    ? rawCodeOrUrl
-    : (typeof window !== 'undefined'
-        ? `${window.location.origin}/register?ref=${rawCodeOrUrl}`
-        : `https://app.primescore.in/register?ref=${rawCodeOrUrl}`);
+  // Lead Submitted Reward Popup State
+  const [rewardModalOpen, setRewardModalOpen] = useState(false);
+  const [submittedCustomerName, setSubmittedCustomerName] = useState('');
+  const [submittedService, setSubmittedService] = useState('');
 
-  const handleCopyLink = () => {
+  // Generated Referral Links
+  const userRefCode = partner?.userReferralCode || 'PSMKMVLN';
+  const clientReferralUrl = `https://dashboard.primescore.in/ref/${userRefCode}`;
+
+  const teamCode = partner?.teamCode || 'IND-HAR-509';
+  const subAgentReferralUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/register?ref=${teamCode}`
+    : `https://partner.primescore.in/register?ref=${teamCode}`;
+
+  const handleCopyLink = (url: string) => {
     if (partner?.status !== 'kyc_approved') {
       setKycModalOpen(true);
       return;
     }
-    navigator.clipboard.writeText(referralUrl);
+    navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
   };
@@ -145,10 +150,10 @@ export default function ReferPage() {
         ctx.fillStyle = '#0F1A4E';
         ctx.font = 'bold 36px "Space Grotesk", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`PRIMESCORE PARTNER • ${referralCode}`, size / 2, size + 80);
+        ctx.fillText(`PRIMESCORE PARTNER • ${userRefCode}`, size / 2, size + 80);
       }
 
-      const filename = `primescore-qr-${referralCode.toLowerCase()}`;
+      const filename = `primescore-qr-${userRefCode.toLowerCase()}`;
 
       if (format === 'png') {
         const image = canvas.toDataURL('image/png');
@@ -256,6 +261,24 @@ export default function ReferPage() {
         ...referrals,
       ]);
 
+      // Send automated welcome email to customer with their dashboard referral tracking link
+      if (customerEmail.trim()) {
+        fetch('/api/send-lead-welcome-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerEmail: customerEmail.trim(),
+            customerName: customerName.trim(),
+            service,
+            partnerName: partner.name,
+            userReferralCode: userRefCode,
+          }),
+        }).catch((e) => console.warn('Customer welcome email dispatch error:', e));
+      }
+
+      const targetName = customerName.trim();
+      const targetService = service;
+
       // Reset Form
       setCustomerName('');
       setCustomerPhone('');
@@ -264,8 +287,9 @@ export default function ReferPage() {
       setNotes('');
       setErrors({});
 
-      setSuccessToast(`Referral submitted successfully! Our advisors will contact ${customerName.trim()} within 2 business hours.`);
-      setTimeout(() => setSuccessToast(null), 5000);
+      setSubmittedCustomerName(targetName);
+      setSubmittedService(targetService);
+      setRewardModalOpen(true);
     } catch (err) {
       console.error('Referral submission error:', err);
       setErrors({ submit: 'An unexpected error occurred. Please try again.' });
@@ -401,7 +425,7 @@ export default function ReferPage() {
 
         <div className="relative z-10 shrink-0">
           <button
-            onClick={handleCopyLink}
+            onClick={() => handleCopyLink(clientReferralUrl)}
             className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
           >
             <Copy size={16} weight="bold" />
@@ -609,17 +633,17 @@ export default function ReferPage() {
             {/* Referral URL Box */}
             <div className="space-y-2">
               <span className="text-[10px] uppercase tracking-wider font-bold text-slate-300 block font-mono-num">
-                Your Unique Partner Referral URL
+                Your Unique Client Referral URL
               </span>
               <div className="flex items-center gap-2 bg-[#091136] p-2.5 border border-white/20 rounded-xl">
                 <input
                   type="text"
                   readOnly
-                  value={referralUrl}
+                  value={clientReferralUrl}
                   className="w-full bg-transparent text-xs font-mono-num font-bold text-[#F5C518] focus:outline-none"
                 />
                 <button
-                  onClick={handleCopyLink}
+                  onClick={() => handleCopyLink(clientReferralUrl)}
                   className="px-3.5 py-2 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs rounded-lg shrink-0 flex items-center gap-1.5 transition-all shadow-sm"
                 >
                   <Copy size={14} weight="bold" />
@@ -640,7 +664,7 @@ export default function ReferPage() {
                 className="p-5 bg-white rounded-2xl border-2 border-[#F5C518] shadow-lg flex flex-col items-center gap-2.5 max-w-[220px]"
               >
                 <QRCodeSVG
-                  value={referralUrl}
+                  value={clientReferralUrl}
                   size={160}
                   bgColor={"#FFFFFF"}
                   fgColor={"#0F1A4E"}
@@ -656,7 +680,7 @@ export default function ReferPage() {
                   }}
                 />
                 <div className="text-[10px] font-bold text-[#0F1A4E] uppercase tracking-wider font-mono-num border-t border-slate-100 pt-1.5 w-full text-center">
-                  Primescore Partner &bull; {referralCode}
+                  Primescore Partner &bull; {userRefCode}
                 </div>
               </div>
 
@@ -665,15 +689,61 @@ export default function ReferPage() {
               </p>
             </div>
           </div>
+
+          {/* TEAM LEADER EXCLUSIVE CARD: Recruit Sub-Agents Link & QR */}
+          {partner?.role === 'team_leader' && (
+            <Card className="p-6 space-y-4 border-2 border-amber-500 bg-amber-50/50">
+              <div className="flex items-center gap-2.5 border-b border-amber-200 pb-3">
+                <UserPlus size={22} className="text-amber-700" weight="bold" />
+                <div>
+                  <h3 className="font-display font-bold text-base text-amber-950">
+                    Recruit Sub-Agents (Team Leader Network Link)
+                  </h3>
+                  <p className="text-[11px] text-amber-800 font-medium">
+                    Share this link with DSAs and agents to join under your network code <strong className="font-mono">{teamCode}</strong> and earn 10% override commissions.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-amber-900 block font-mono">
+                  Sub-Agent Partner Onboarding Link
+                </span>
+                <div className="flex items-center gap-2 bg-white p-2.5 border border-amber-300 rounded-xl">
+                  <input
+                    type="text"
+                    readOnly
+                    value={subAgentReferralUrl}
+                    className="w-full bg-transparent text-xs font-mono font-bold text-[#1B2A72] focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleCopyLink(subAgentReferralUrl)}
+                    className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-display font-bold text-xs rounded-lg shrink-0 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                  >
+                    <Copy size={14} weight="bold" />
+                    <span>Copy</span>
+                  </button>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
-
 
       {/* KYC Under Review Alert Modal — keep for programmatic open from buttons */}
       <KycUnderReviewModal
         isOpen={kycModalOpen}
         onClose={() => setKycModalOpen(false)}
         joinedAt={partner?.kycSubmittedAt || partner?.joinedAt}
+      />
+
+      {/* Lead Submitted Reward Bait Modal */}
+      <LeadSubmittedRewardModal
+        isOpen={rewardModalOpen}
+        onClose={() => setRewardModalOpen(false)}
+        customerName={submittedCustomerName}
+        service={submittedService}
+        totalPoints={usePartnerStore.getState().totalPoints}
       />
     </div>
   );

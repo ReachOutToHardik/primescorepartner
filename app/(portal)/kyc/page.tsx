@@ -368,8 +368,8 @@ export default function KYCPage() {
           <div className="bg-white border border-[var(--border)] p-6 rounded-xs shadow-xs space-y-4">
             <h2 className="font-display text-lg font-bold text-[var(--ink)] flex items-center justify-between border-b border-gray-100 pb-3">
               <span>Account Status Summary</span>
-              <span className="text-xs font-mono-num font-bold text-[var(--navy)] bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100">
-                ID: {partner?.id || 'demo'}
+              <span className="text-xs font-mono-num font-bold text-[#1B2A72] bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100 shadow-2xs">
+                Partner Code: {partner?.teamCode || `PS-${(partner?.id || '884').substring(0, 6).toUpperCase()}`}
               </span>
             </h2>
 

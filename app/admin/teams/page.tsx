@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePartnerStore } from '@/lib/store';
+import { usePartnerStore, Partner } from '@/lib/store';
 import { useAdminStore } from '@/lib/admin-store';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { TablePagination } from '@/components/ui/TablePagination';
+import { TransferTeamModal } from '@/components/admin/TransferTeamModal';
 import { 
   UsersThree, 
   Crown, 
@@ -23,9 +24,54 @@ import {
 export default function AdminTeamsPage() {
   const { partners } = useAdminStore();
   const { teamMembers, partner } = usePartnerStore();
-  const [activeTab, setActiveTab] = useState<'leaders' | 'individuals'>('leaders');
+  const [activeTab, setActiveTab] = useState<'individuals' | 'leaders'>('individuals');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLeaderId, setExpandedLeaderId] = useState<string | null>(null);
+  const [selectedPartnerForTransfer, setSelectedPartnerForTransfer] = useState<Partner | null>(null);
+
+  const handlePromoteToTeamLeader = async (p: Partner, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const namePart = (p.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+      const codeSuffix = p.id.substring(0, 4).toUpperCase();
+      const newTeamCode = p.teamCode || `TL-${namePart}-${codeSuffix}`;
+
+      await supabase
+        .from('profiles')
+        .update({ role: 'team_leader', team_code: newTeamCode })
+        .eq('id', p.id);
+
+      const updated = useAdminStore.getState().partners.map((item) =>
+        item.id === p.id ? { ...item, role: 'team_leader' as any, teamCode: newTeamCode } : item
+      );
+      useAdminStore.setState({ partners: updated });
+      alert(`Successfully promoted "${p.name}" to Team Leader! Team Code: ${newTeamCode}`);
+    } catch (err) {
+      console.error('Promotion error:', err);
+      alert('Could not promote partner to Team Leader.');
+    }
+  };
+
+  const handleDemoteToIndividual = async (p: Partner, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase
+        .from('profiles')
+        .update({ role: 'individual' })
+        .eq('id', p.id);
+
+      const updated = useAdminStore.getState().partners.map((item) =>
+        item.id === p.id ? { ...item, role: 'individual' as any } : item
+      );
+      useAdminStore.setState({ partners: updated });
+      alert(`Demoted "${p.name}" to Individual DSA.`);
+    } catch (err) {
+      console.error('Demotion error:', err);
+      alert('Could not demote partner.');
+    }
+  };
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +98,7 @@ export default function AdminTeamsPage() {
       (p.referredByLeaderName && p.referredByLeaderName.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-  const activeList = activeTab === 'leaders' ? teamLeadersList : individualPartnersList;
+  const activeList = activeTab === 'individuals' ? individualPartnersList : teamLeadersList;
   const totalRecords = activeList.length;
   const totalPages = Math.ceil(totalRecords / pageSize);
   const paginatedList = activeList.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -74,23 +120,12 @@ export default function AdminTeamsPage() {
             Teams & Network Members
           </h1>
           <p className="text-sm text-[var(--ink-muted)]">
-            Check Team Leaders and sub-agents versus Individual DSA partners.
+            Check Individual DSA partners versus Team Leaders and sub-agents.
           </p>
         </div>
 
         {/* Navigation Tabs */}
         <div className="flex bg-[var(--surface-2)] p-1 rounded-xl font-medium text-xs border border-[var(--border)]">
-          <button
-            onClick={() => { setActiveTab('leaders'); setCurrentPage(1); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
-              activeTab === 'leaders'
-                ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
-                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
-            }`}
-          >
-            <Crown className="w-4 h-4 text-amber-500" weight="fill" />
-            Team Leaders Directory ({teamLeadersList.length})
-          </button>
           <button
             onClick={() => { setActiveTab('individuals'); setCurrentPage(1); }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
@@ -101,6 +136,17 @@ export default function AdminTeamsPage() {
           >
             <User className="w-4 h-4 text-blue-500" weight="fill" />
             Individual DSAs ({individualPartnersList.length})
+          </button>
+          <button
+            onClick={() => { setActiveTab('leaders'); setCurrentPage(1); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
+              activeTab === 'leaders'
+                ? 'bg-white text-[var(--navy)] font-bold shadow-xs'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
+            }`}
+          >
+            <Crown className="w-4 h-4 text-amber-500" weight="fill" />
+            Team Leaders ({teamLeadersList.length})
           </button>
         </div>
       </div>
@@ -206,6 +252,10 @@ export default function AdminTeamsPage() {
                 ) : (
                   paginatedList.map((leader) => {
                     const isExpanded = expandedLeaderId === leader.id;
+                    const directSubAgents = partners.filter(
+                      (p) => p.id !== leader.id && (p.referredByLeaderId === leader.id || (leader.teamCode && p.referredByLeaderId === leader.teamCode))
+                    );
+
                     return (
                       <React.Fragment key={leader.id}>
                         <tr
@@ -244,7 +294,7 @@ export default function AdminTeamsPage() {
                               onClick={(e) => toggleExpand(leader.id, e)}
                               className="flex items-center gap-1 hover:underline text-left cursor-pointer"
                             >
-                              <span>{teamMembers.length} Active Sub-Agents</span>
+                              <span>{directSubAgents.length} Active Sub-Agents</span>
                               {isExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
                             </button>
                           </td>
@@ -255,9 +305,16 @@ export default function AdminTeamsPage() {
                             </Badge>
                           </td>
 
-                          <td className="px-6 py-4 text-right">
-                            <Button variant="primary" size="sm">
-                              Inspect Leader Page <ArrowRight className="w-3.5 h-3.5 ml-1 text-white" />
+                          <td className="px-6 py-4 text-right flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDemoteToIndividual(leader, e)}
+                              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                            >
+                              Demote to Individual DSA
+                            </button>
+                            <Button variant="primary" size="sm" onClick={() => window.location.href = `/admin/kyc/${leader.id}`}>
+                              Inspect Leader Page
                             </Button>
                           </td>
                         </tr>
@@ -269,26 +326,30 @@ export default function AdminTeamsPage() {
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                   <h4 className="font-display font-bold text-xs text-amber-900 flex items-center gap-1.5">
-                                    <UsersThree size={16} /> Direct Sub-Agents in {leader.name}&apos;s Team ({teamMembers.length})
+                                    <UsersThree size={16} /> Direct Sub-Agents in {leader.name}&apos;s Team ({directSubAgents.length})
                                   </h4>
                                   <span className="text-[11px] text-amber-700 font-semibold">
                                     Leader earns 10% override points on sub-agent lead conversions
                                   </span>
                                 </div>
 
-                                {teamMembers.length === 0 ? (
+                                {directSubAgents.length === 0 ? (
                                   <p className="text-xs text-amber-700 italic">No sub-agents currently enrolled under this leader code.</p>
                                 ) : (
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                    {teamMembers.map((sub) => (
-                                      <div key={sub.id} className="bg-white p-3 rounded-xl border border-amber-200 flex items-center justify-between text-xs">
+                                    {directSubAgents.map((sub) => (
+                                      <div
+                                        key={sub.id}
+                                        onClick={() => window.location.href = `/admin/kyc/${sub.id}`}
+                                        className="bg-white p-3 rounded-xl border border-amber-200 hover:border-amber-400 flex items-center justify-between text-xs cursor-pointer transition-all shadow-2xs"
+                                      >
                                         <div>
                                           <div className="font-bold text-slate-900">{sub.name}</div>
-                                          <div className="text-[11px] text-slate-500">{sub.phone} • {sub.city}</div>
+                                          <div className="text-[11px] text-slate-500">{sub.email} &bull; {sub.city}</div>
                                         </div>
                                         <div className="text-right">
-                                          <span className="font-bold font-mono text-emerald-600">+{sub.overridePointsEarned} Pts</span>
-                                          <div className="text-[10px] text-slate-400">Leader Override</div>
+                                          <span className="font-bold font-mono text-emerald-600">{sub.primePoints || 0} Pts</span>
+                                          <div className="text-[10px] text-slate-400">Total Points</div>
                                         </div>
                                       </div>
                                     ))}
@@ -400,9 +461,26 @@ export default function AdminTeamsPage() {
                         </Badge>
                       </td>
 
-                      <td className="px-6 py-4 text-right">
-                        <Button variant="primary" size="sm">
-                          View Individual Page <ArrowRight className="w-3.5 h-3.5 ml-1 text-white" />
+                      <td className="px-6 py-4 text-right flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={(e) => handlePromoteToTeamLeader(agent, e)}
+                          className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                        >
+                          Promote to Team Leader
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPartnerForTransfer(agent);
+                          }}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                        >
+                          Assign to Team Leader
+                        </button>
+                        <Button variant="primary" size="sm" onClick={() => window.location.href = `/admin/kyc/${agent.id}`}>
+                          View Individual Page
                         </Button>
                       </td>
                     </tr>
@@ -422,6 +500,13 @@ export default function AdminTeamsPage() {
           />
         </Card>
       )}
+
+      {/* TRANSFER TEAM MODAL */}
+      <TransferTeamModal
+        partner={selectedPartnerForTransfer}
+        isOpen={Boolean(selectedPartnerForTransfer)}
+        onClose={() => setSelectedPartnerForTransfer(null)}
+      />
     </div>
   );
 }

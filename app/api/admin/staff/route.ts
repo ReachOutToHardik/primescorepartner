@@ -11,7 +11,7 @@ const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
 export async function POST(req: Request) {
   try {
     const adminHeader = req.headers.get('x-admin-password');
-    const masterPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+    const masterPassword = process.env.ADMIN_PASSWORD || 'Primescore@Admin2026';
 
     if (adminHeader !== masterPassword) {
       return NextResponse.json({ error: 'Unauthorized admin request.' }, { status: 401 });
@@ -31,7 +31,10 @@ export async function POST(req: Request) {
           email: email.trim().toLowerCase(),
           password: password || 'Staff@2026',
           role: role || 'operations_admin',
-          allowed_pages: allowedPages || ['dashboard', 'kyc', 'referrals', 'teams', 'analytics', 'gift-cards', 'services', 'rewards-config', 'notifications', 'settings'],
+          allowed_pages: allowedPages || [
+            'dashboard', 'overview_kpis', 'overview_chart', 'overview_distribution', 'overview_actions',
+            'kyc', 'referrals', 'teams', 'analytics', 'gift-cards', 'services', 'rewards-config', 'notifications', 'settings'
+          ],
           is_active: true,
           last_login: new Date().toISOString(),
         },
@@ -53,7 +56,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const adminHeader = req.headers.get('x-admin-password');
-    const masterPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+    const masterPassword = process.env.ADMIN_PASSWORD || 'Primescore@Admin2026';
 
     if (adminHeader !== masterPassword) {
       return NextResponse.json({ error: 'Unauthorized admin request.' }, { status: 401 });
@@ -94,7 +97,7 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const adminHeader = req.headers.get('x-admin-password');
-    const masterPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+    const masterPassword = process.env.ADMIN_PASSWORD || 'Primescore@Admin2026';
 
     if (adminHeader !== masterPassword) {
       return NextResponse.json({ error: 'Unauthorized admin request.' }, { status: 401 });

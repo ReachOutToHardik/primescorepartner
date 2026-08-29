@@ -4,7 +4,7 @@ import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAdminStore } from '@/lib/admin-store';
-import { ReferralStatus } from '@/lib/store';
+import { ReferralStatus, calculateTier, getReferredUserEnrollmentPoints, getCaseCommissionRate } from '@/lib/store';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -25,13 +25,15 @@ import {
   Warning
 } from '@phosphor-icons/react';
 import { Modal } from '@/components/ui/Modal';
+import { PartnerViewModal } from '@/components/admin/PartnerViewModal';
+import { CompleteCaseModal } from '@/components/admin/CompleteCaseModal';
 
 const ALL_STATUSES: { key: ReferralStatus; label: string }[] = [
   { key: 'submitted', label: 'Submitted (New Lead Received)' },
   { key: 'received', label: 'Received & Assigned to Operations Advisor' },
-  { key: 'enrolled', label: 'Enrolled in Bureau Rectification Plan' },
+  { key: 'enrolled', label: 'Enrolled on Platform Dashboard' },
   { key: 'in_progress', label: 'In Progress (Disputes Filed with Bureaus)' },
-  { key: 'completed', label: 'Completed (+500 Reward Points Credited)' },
+  { key: 'completed', label: 'Completed (Case Closed & Commission Credited)' },
   { key: 'rejected', label: 'Rejected Case' },
 ];
 
@@ -58,7 +60,8 @@ const PIPELINE_STAGES: {
     key: 'enrolled',
     stepNum: 3,
     title: '3. Client Enrolled',
-    desc: 'Customer onboarded & credit repair package selected.',
+    desc: 'Customer onboarded on dashboard. Partner awarded tier enrollment points.',
+    pointsText: 'Enrollment Pts (100/125/150)',
   },
   {
     key: 'in_progress',
@@ -69,9 +72,9 @@ const PIPELINE_STAGES: {
   {
     key: 'completed',
     stepNum: 5,
-    title: '5. Case Completed & Rewarded',
-    desc: 'Rectification complete & partner awarded +500 PrimePoints.',
-    pointsText: '+500 Pts Credited',
+    title: '5. Case Completed & Commission Credited',
+    desc: 'Rectification complete & partner awarded tier percentage commission.',
+    pointsText: 'Tier % Commission',
   },
 ];
 
@@ -88,6 +91,9 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
   const [editingStepKey, setEditingStepKey] = useState<string | null>(null);
   const [stepCustomNote, setStepCustomNote] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [showPartnerModal, setShowPartnerModal] = useState(false);
+  const [completeModalOpen, setCompleteModalOpen] = useState(false);
 
   if (!refCase) {
     return (
@@ -104,7 +110,106 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
   const referringPartner = partners.find((p) => p.id === refCase.partnerId);
 
   const handleSaveStatus = () => {
-    updateReferralStatus(refCase.id, newStatus, statusNote);
+    handleStageTransition(newStatus, statusNote);
+  };
+
+  const handleStageTransition = async (targetKey: ReferralStatus, customNote?: string) => {
+    if (targetKey === 'completed') {
+      if (confirm('Are you sure you want to mark this case as Completed and calculate commission points for the partner?')) {
+        setCompleteModalOpen(true);
+      }
+      return;
+    }
+
+    if (targetKey === 'enrolled') {
+      const currentPartnerPts = referringPartner?.primePoints || 0;
+      const partnerTier = calculateTier(currentPartnerPts);
+      const enrollmentPts = getReferredUserEnrollmentPoints(partnerTier);
+      const note = customNote || statusNote || `Enrolled on dashboard. Awarded ${enrollmentPts} Pts to partner.`;
+
+      await updateReferralStatus(refCase.id, 'enrolled', note);
+
+      // Guard: only credit once
+      if (!refCase.pointsEarned || refCase.pointsEarned === 0) {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const now = new Date().toISOString();
+
+          await supabase
+            .from('referrals')
+            .update({
+              status: 'enrolled',
+              current_stage: 'enrolled',
+              points_earned: enrollmentPts,
+              partner_points_earned: enrollmentPts,
+              updated_at: now,
+            })
+            .eq('id', refCase.id);
+
+          // 1. Fetch current profile balance fresh from DB
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('prime_points, lifetime_points_earned')
+            .eq('id', refCase.partnerId)
+            .single();
+          const currentBal = profileData?.prime_points ?? currentPartnerPts;
+          const currentLifetime = profileData?.lifetime_points_earned ?? 0;
+          const newBalance = currentBal + enrollmentPts;
+
+          // 2. Update referral row
+          await supabase
+            .from('referrals')
+            .update({
+              status: 'enrolled',
+              current_stage: 'enrolled',
+              points_earned: enrollmentPts,
+              partner_points_earned: enrollmentPts,
+              updated_at: now,
+            })
+            .eq('id', refCase.id);
+
+          // 3. Credit tier-based points + lifetime_points_earned
+          await supabase
+            .from('profiles')
+            .update({
+              prime_points: newBalance,
+              lifetime_points_earned: currentLifetime + enrollmentPts,
+            })
+            .eq('id', refCase.partnerId);
+
+          await supabase
+            .from('point_transactions')
+            .insert({
+              partner_id: refCase.partnerId,
+              referral_id: refCase.id,
+              points_change: enrollmentPts,
+              amount: enrollmentPts,
+              transaction_type: 'enrolled_earned',
+              title: `Referred Client Enrolled: ${refCase.customerName} (+${enrollmentPts} Pts)`,
+              description: `Referred Client Enrolled: ${refCase.customerName} (+${enrollmentPts} Pts)`,
+              balance_after: newBalance,
+              created_at: now,
+            });
+
+          useAdminStore.setState((state) => ({
+            partners: state.partners.map((p) =>
+              p.id === refCase.partnerId ? { ...p, primePoints: newBalance } : p
+            ),
+            referrals: state.referrals.map((r) =>
+              r.id === refCase.id ? { ...r, status: 'enrolled', pointsEarned: enrollmentPts } : r
+            ),
+          }));
+        } catch (e) {
+          console.error('Failed to grant enrollment points:', e);
+        }
+      }
+
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 4000);
+      return;
+    }
+
+    await updateReferralStatus(refCase.id, targetKey, customNote || statusNote || `Updated status to ${targetKey}`);
     setStatusNote('');
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 4000);
@@ -196,11 +301,16 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
             <ShieldCheck className="w-5 h-5 text-[var(--navy)]" /> Referring Partner Info
           </h3>
           <div className="space-y-3 text-xs font-mono-num">
-            <div className="flex justify-between py-1 border-b border-gray-100">
+            <div className="flex justify-between items-center py-1 border-b border-gray-100">
               <span className="text-[var(--ink-muted)] font-sans">Partner Name</span>
-              <span className="font-bold font-sans text-[var(--navy)]">
-                {referringPartner?.name || 'Partner'}
-              </span>
+              <button
+                type="button"
+                onClick={() => setShowPartnerModal(true)}
+                className="font-bold font-sans text-[#1B2A72] hover:text-[#E63329] underline hover:no-underline transition-colors cursor-pointer text-xs"
+                title="Click to view partner profile & credentials"
+              >
+                {referringPartner?.name || 'Hardik Joshi'}
+              </button>
             </div>
             <div className="flex justify-between py-1 border-b border-gray-100">
               <span className="text-[var(--ink-muted)] font-sans">Partner Phone</span>
@@ -349,11 +459,28 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
                             ✓ Done
                           </span>
                         )}
-                        {stg.pointsText && (
-                          <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">
-                            {stg.pointsText}
-                          </span>
-                        )}
+                        {(() => {
+                          const partnerTier = calculateTier(referringPartner?.primePoints || 0);
+                          const partnerEnrollmentPts = getReferredUserEnrollmentPoints(partnerTier);
+                          const partnerCommissionRate = getCaseCommissionRate(partnerTier);
+
+                          let badgeLabel = stg.pointsText;
+                          if (stg.key === 'enrolled') {
+                            badgeLabel = `+${partnerEnrollmentPts} Pts (${partnerTier} Tier)`;
+                          } else if (stg.key === 'completed') {
+                            badgeLabel = refCase.pointsEarned > 0
+                              ? `+${refCase.pointsEarned} Pts Credited`
+                              : `${partnerCommissionRate}% Commission (${partnerTier} Tier)`;
+                          }
+
+                          if (!badgeLabel) return null;
+
+                          return (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">
+                              {badgeLabel}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <p className="text-xs text-slate-600 mt-1 leading-relaxed">{stg.desc}</p>
                       
@@ -380,10 +507,7 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
                               variant="primary"
                               size="sm"
                               onClick={() => {
-                                updateReferralStatus(refCase.id, nextStageKey, statusNote || `Completed ${stg.title}`);
-                                setStatusNote('');
-                                setSavedSuccess(true);
-                                setTimeout(() => setSavedSuccess(false), 4000);
+                                handleStageTransition(nextStageKey, statusNote || `Completed ${stg.title}`);
                               }}
                               className="text-xs font-bold cursor-pointer"
                             >
@@ -395,9 +519,7 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  updateReferralStatus(refCase.id, prevStageKey, `Reverted back to Step ${index}`);
-                                  setSavedSuccess(true);
-                                  setTimeout(() => setSavedSuccess(false), 4000);
+                                  handleStageTransition(prevStageKey, `Reverted back to Step ${index}`);
                                 }}
                                 className="text-xs font-semibold border-slate-300 text-slate-700 hover:bg-slate-100"
                                 title="Undo step and go back to previous stage"
@@ -419,9 +541,7 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
                               type="button"
                               onClick={() => {
                                 if (confirm(`Move case status back to Step ${stg.stepNum} (${stg.title})?`)) {
-                                  updateReferralStatus(refCase.id, stg.key, `Reverted back to ${stg.title}`);
-                                  setSavedSuccess(true);
-                                  setTimeout(() => setSavedSuccess(false), 4000);
+                                  handleStageTransition(stg.key, `Reverted back to ${stg.title}`);
                                 }
                               }}
                               className="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
@@ -430,23 +550,6 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
                               ↩ Move Back to Here
                             </button>
                           </div>
-                        )}
-
-                        {/* Future Step Controls */}
-                        {!isPassed && !isCurrent && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              updateReferralStatus(refCase.id, stg.key, statusNote || `Jumped to ${stg.title}`);
-                              setStatusNote('');
-                              setSavedSuccess(true);
-                              setTimeout(() => setSavedSuccess(false), 4000);
-                            }}
-                            className="text-xs font-bold cursor-pointer"
-                          >
-                            Jump to Step {stg.stepNum} ➔
-                          </Button>
                         )}
 
                         {/* Add/Edit Note Toggle for Step */}
@@ -549,19 +652,38 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2 pt-2">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+              To enable deletion options, type <span className="text-red-600 font-mono font-bold">DELETE</span> below:
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="w-full p-3 text-sm font-mono font-bold border border-slate-300 rounded-xl focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 text-slate-900 placeholder:font-sans uppercase"
+            />
+          </div>
+
+          <div className="space-y-3 pt-1">
             <button
               type="button"
+              disabled={deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
               onClick={async () => {
+                if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') return;
                 await deleteReferral(refCase.id, true);
                 setShowDeleteModal(false);
                 router.push('/admin/referrals');
               }}
-              className="w-full p-4 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-left transition-all group cursor-pointer"
+              className={`w-full p-4 rounded-xl border text-left transition-all group ${
+                deleteConfirmText.trim().toUpperCase() === 'DELETE'
+                  ? 'border-red-300 bg-red-50 hover:bg-red-100 cursor-pointer'
+                  : 'border-slate-200 bg-slate-100 opacity-50 cursor-not-allowed'
+              }`}
             >
               <div className="font-bold text-red-900 text-sm flex items-center justify-between">
                 <span>Option 1: Reverse Points (-{refCase.pointsEarned || 500} Pts) & Delete Lead</span>
-                <span className="text-xs bg-red-200 px-2 py-0.5 rounded-md text-red-900">Recommended</span>
+                <span className="text-xs bg-red-200 px-2 py-0.5 rounded-md text-red-900 font-bold">Recommended</span>
               </div>
               <p className="text-xs text-red-700 mt-1">
                 Deducts {refCase.pointsEarned || 500} points from partner&apos;s account balance, records a reversal in point_transactions table, and deletes the lead.
@@ -570,12 +692,18 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
 
             <button
               type="button"
+              disabled={deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
               onClick={async () => {
+                if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') return;
                 await deleteReferral(refCase.id, false);
                 setShowDeleteModal(false);
                 router.push('/admin/referrals');
               }}
-              className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all group cursor-pointer"
+              className={`w-full p-4 rounded-xl border text-left transition-all group ${
+                deleteConfirmText.trim().toUpperCase() === 'DELETE'
+                  ? 'border-slate-300 bg-white hover:bg-slate-50 cursor-pointer shadow-2xs'
+                  : 'border-slate-200 bg-slate-100 opacity-50 cursor-not-allowed'
+              }`}
             >
               <div className="font-bold text-slate-900 text-sm">
                 Option 2: Keep Points (Delete Lead Only)
@@ -593,6 +721,37 @@ export default function LeadCaseDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </Modal>
+
+      {/* Partner Profile View Modal */}
+      <PartnerViewModal
+        partner={referringPartner || (refCase ? {
+          id: refCase.partnerId || 'p-1',
+          name: 'Hardik Joshi',
+          email: 'hardik@primescore.in',
+          phone: '1234567899',
+          profession: 'Direct Selling Agent (DSA)',
+          role: 'team_leader',
+          status: 'kyc_approved',
+          city: refCase.city || 'Jaipur, Rajasthan',
+          partnerCode: 'PS-HARDIK-884',
+          teamCode: 'IND-HAR-509',
+          points: 500,
+          kycStatus: 'approved',
+          joinedAt: new Date().toISOString()
+        } as any : null)}
+        isOpen={showPartnerModal}
+        onClose={() => setShowPartnerModal(false)}
+      />
+
+      {/* Complete Case Modal */}
+      <CompleteCaseModal
+        isOpen={completeModalOpen}
+        onClose={() => setCompleteModalOpen(false)}
+        referralId={refCase.id}
+        customerName={refCase.customerName}
+        partnerId={refCase.partnerId}
+        initialServiceAmount={5000}
+      />
     </div>
   );
 }

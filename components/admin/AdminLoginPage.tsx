@@ -9,12 +9,16 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsSubmitting(true);
 
-    const success = adminLogin(email, password);
+    const success = await adminLogin(email, password);
+    setIsSubmitting(false);
+
     if (!success) {
       setError('Incorrect administrator email or password. Please verify your staff credentials.');
     }
@@ -90,9 +94,10 @@ export default function AdminLoginPage() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-60"
             >
-              <span>Authenticate & Access HQ</span>
+              <span>{isSubmitting ? 'Verifying Staff Credentials...' : 'Authenticate & Access HQ'}</span>
               <ArrowRight size={18} weight="bold" className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>

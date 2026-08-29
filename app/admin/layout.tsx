@@ -1,29 +1,30 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminLoginPage from '@/components/admin/AdminLoginPage';
+import { UnauthorizedAccessGuard } from '@/components/admin/UnauthorizedAccessGuard';
 import { useAdminStore } from '@/lib/admin-store';
 import { useSupabaseSync } from '@/lib/useSupabaseSync';
+import { isPathAuthorized } from '@/lib/admin-permissions';
 import { SignOut } from '@phosphor-icons/react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   useSupabaseSync();
-  const { isAuthenticated, adminLogout, isLoadingData } = useAdminStore();
+  const pathname = usePathname() || '/admin';
+  const { isAuthenticated, adminLogout, isLoadingData, adminEmail, staff } = useAdminStore();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
 
     // Enforce sessionStorage-only admin sessions.
-    // If the admin session key is NOT found in sessionStorage, force logout.
-    // This means closing the browser tab/window will require re-login.
     const sessionKey = 'primescore-admin-store-v7';
     const hasSession = typeof window !== 'undefined'
       && window.sessionStorage.getItem(sessionKey) !== null;
 
     if (!hasSession) {
-      // Clear any stale localStorage admin session and force logout state
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem('primescore-admin-store-v7');
         window.localStorage.removeItem('primescore-admin-store-v6');
@@ -44,6 +45,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <AdminLoginPage />;
   }
 
+  const isAllowed = isPathAuthorized(pathname, adminEmail, staff);
+  const currentStaff = staff.find((s) => s.email.toLowerCase() === (adminEmail || '').toLowerCase());
+
   return (
     <div className="min-h-screen flex bg-[var(--surface)] font-body text-[var(--ink)] antialiased">
       <AdminSidebar />
@@ -54,7 +58,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <img src="/logo.png" alt="Primescore Logo" className="h-8 object-contain md:hidden" />
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <h2 className="font-display font-bold text-sm text-[var(--navy-deep)] tracking-tight">
-              Primescore Operations HQ
+              Primescore Partner Portal
             </h2>
             {isLoadingData && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 text-[#1B2A72] text-[11px] font-bold rounded-full animate-pulse">
@@ -66,7 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-bold bg-[#1B2A72] text-white font-mono px-3 py-1 rounded-full uppercase tracking-wider shadow-2xs">
-              Super Admin Mode
+              {currentStaff?.role ? currentStaff.role.replace('_', ' ') : 'Super Admin Mode'}
             </span>
             <button
               onClick={() => {
@@ -84,73 +88,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Main Content Area */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 max-w-7xl w-full mx-auto">
           <div className="w-full animate-fade-in">
-            {(() => {
-              const { pathname } = window ? { pathname: window.location.pathname } : { pathname: '' };
-              const { adminEmail, staff } = useAdminStore.getState();
-              const currentStaff = staff.find(
-                (s) => s.email.toLowerCase() === (adminEmail || 'sawai@primescore.in').toLowerCase()
-              );
-
-              const isSuperAdmin = !currentStaff || currentStaff.role === 'super_admin';
-              const allowedPages = currentStaff?.allowedPages || [
-                'dashboard',
-                'kyc',
-                'referrals',
-                'teams',
-                'analytics',
-                'gift-cards',
-                'services',
-                'rewards-config',
-                'notifications',
-                'settings',
-              ];
-
-              // Path to Page ID mapping
-              let pageId = 'dashboard';
-              if (pathname.includes('/admin/kyc')) pageId = 'kyc';
-              else if (pathname.includes('/admin/referrals')) pageId = 'referrals';
-              else if (pathname.includes('/admin/teams')) pageId = 'teams';
-              else if (pathname.includes('/admin/analytics')) pageId = 'analytics';
-              else if (pathname.includes('/admin/gift-cards')) pageId = 'gift-cards';
-              else if (pathname.includes('/admin/services')) pageId = 'services';
-              else if (pathname.includes('/admin/rewards-config')) pageId = 'rewards-config';
-              else if (pathname.includes('/admin/notifications')) pageId = 'notifications';
-              else if (pathname.includes('/admin/settings')) pageId = 'settings';
-
-              const isAllowed = isSuperAdmin || allowedPages.includes(pageId);
-
-              if (!isAllowed) {
-                const firstAllowedPage = allowedPages[0] || 'dashboard';
-                const firstAllowedHref = firstAllowedPage === 'dashboard' ? '/admin' : `/admin/${firstAllowedPage}`;
-
-                return (
-                  <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-white border border-red-200 rounded-2xl shadow-sm space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 text-3xl">
-                      🔒
-                    </div>
-                    <div className="space-y-1 max-w-md">
-                      <h2 className="text-xl font-extrabold text-slate-900 font-display">
-                        403 Access Denied
-                      </h2>
-                      <p className="text-sm text-slate-600 font-body">
-                        You do not have permission to view or manage the <strong className="text-slate-900 uppercase font-mono">{pageId}</strong> page.
-                      </p>
-                      <p className="text-xs text-slate-400 font-body pt-1">
-                        Please contact your Super Admin if you need access to this section.
-                      </p>
-                    </div>
-                    <a
-                      href={firstAllowedHref}
-                      className="px-5 py-2.5 bg-[#1B2A72] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#0F1A4E] transition-all"
-                    >
-                      Return to My Allowed Work Pages &rarr;
-                    </a>
-                  </div>
-                );
-              }
-
-              return children;
-            })()}
+            {isAllowed ? (
+              children
+            ) : (
+              <UnauthorizedAccessGuard
+                userRole={currentStaff?.role || 'Restricted Staff'}
+                adminEmail={adminEmail}
+              />
+            )}
           </div>
         </main>
       </div>

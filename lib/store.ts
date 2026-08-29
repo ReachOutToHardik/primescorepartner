@@ -6,6 +6,35 @@ export type PartnerStatus = 'pending_kyc' | 'kyc_submitted' | 'kyc_approved' | '
 export type ReferralStatus = 'submitted' | 'received' | 'enrolled' | 'in_progress' | 'completed' | 'rejected';
 export type Tier = 'Silver' | 'Gold' | 'Platinum';
 
+export const calculateTier = (points: number): Tier => {
+  if (points >= 50000) return 'Platinum';
+  if (points >= 20000) return 'Gold';
+  return 'Silver';
+};
+
+export const getReferredUserEnrollmentPoints = (tier: Tier): number => {
+  switch (tier) {
+    case 'Platinum': return 150;
+    case 'Gold': return 125;
+    case 'Silver':
+    default: return 100;
+  }
+};
+
+export const getCaseCommissionRate = (tier: Tier): number => {
+  switch (tier) {
+    case 'Platinum': return 15; // 15%
+    case 'Gold': return 12;     // 12%
+    case 'Silver':
+    default: return 10;        // 10%
+  }
+};
+
+export const calculateCaseCompletionPoints = (tier: Tier, serviceAmount: number): number => {
+  const rate = getCaseCommissionRate(tier);
+  return Math.round((serviceAmount || 0) * (rate / 100));
+};
+
 export interface TeamMemberReferral {
   id: string;
   customerName: string;
@@ -59,6 +88,9 @@ export interface Partner {
   referredByLeaderName?: string;
   referredByLeaderId?: string;
   primePoints?: number;
+  lifetimePoints?: number; // total points ever earned (not deducted by redemptions)
+  userReferralCode?: string;
+  aadhaar?: string;
 }
 
 export interface Referral {
@@ -99,7 +131,7 @@ interface PartnerStore {
   setReferrals: (referrals: Referral[]) => void;
   setRedemptions: (redemptions: RedemptionRecord[]) => void;
   setTeamMembers: (members: TeamMember[]) => void;
-  setTotalPoints: (points: number) => void;
+  setTotalPoints: (points: number, lifetimePoints?: number) => void;
   addReferral: (referral: Omit<Referral, 'id' | 'createdAt' | 'updatedAt' | 'pointsEarned' | 'statusHistory' | 'partnerId'>) => void;
   updateReferralStatus: (id: string, status: ReferralStatus, note?: string) => void;
   redeemGiftCard: (brand: string, denomination: number, pointsRequired: number) => { success: boolean; voucherCode?: string; message?: string };
@@ -127,11 +159,16 @@ export const usePartnerStore = create<PartnerStore>()(
 
       setTeamMembers: (teamMembers) => set({ teamMembers }),
 
-      setTotalPoints: (totalPoints) => set({ totalPoints }),
+      // Tier is based on lifetime_points_earned so redemptions don't cause tier drops
+      setTotalPoints: (points, lifetimePoints) => set({
+        totalPoints: points,
+        tier: calculateTier(lifetimePoints !== undefined ? lifetimePoints : points),
+      }),
 
       addReferral: (newRef) => {
         const { referrals, partner } = get();
-        const id = `REF-${new Date().getFullYear()}-${String(referrals.length + 1).padStart(3, '0')}`;
+        // Use crypto.randomUUID to avoid ID collisions with DB entries
+        const id = `REF-${new Date().getFullYear()}-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
         const now = new Date().toISOString();
 
         const referral: Referral = {
@@ -151,20 +188,17 @@ export const usePartnerStore = create<PartnerStore>()(
       },
 
       updateReferralStatus: (id, status, note) => {
-        const { referrals, totalPoints } = get();
+        const { referrals } = get();
         const now = new Date().toISOString();
 
         const updatedReferrals = referrals.map((r) => {
           if (r.id === id) {
-            let pointsEarned = r.pointsEarned;
-            if (status === 'enrolled' && r.status !== 'enrolled') pointsEarned += 20;
-            if (status === 'completed' && r.status !== 'completed') pointsEarned += 500;
-
+            // Points are managed exclusively by DB writes in admin-store.
+            // Do NOT mutate pointsEarned here to avoid stale/double-credit.
             return {
               ...r,
               status,
               updatedAt: now,
-              pointsEarned,
               statusHistory: [
                 ...r.statusHistory,
                 { status, date: now, note: note || `Status updated to ${status}` },
@@ -174,12 +208,7 @@ export const usePartnerStore = create<PartnerStore>()(
           return r;
         });
 
-        let newPoints = totalPoints;
-        const targetRef = referrals.find((r) => r.id === id);
-        if (targetRef && targetRef.status !== 'completed' && status === 'completed') newPoints += 500;
-        else if (targetRef && targetRef.status !== 'enrolled' && status === 'enrolled') newPoints += 20;
-
-        set({ referrals: updatedReferrals, totalPoints: newPoints });
+        set({ referrals: updatedReferrals });
       },
 
       redeemGiftCard: (brand, denomination, pointsRequired) => {
@@ -211,11 +240,12 @@ export const usePartnerStore = create<PartnerStore>()(
         return { success: true, voucherCode };
       },
 
-      onboardTeamMember: (memberData) => {
-        const { teamMembers, totalPoints } = get();
+      onboardTeamMember: async (memberData) => {
+        const { teamMembers, totalPoints, partner } = get();
+        const memberId = `TM-${String(teamMembers.length + 1).padStart(3, '0')}`;
         const newMember: TeamMember = {
           ...memberData,
-          id: `TM-${String(teamMembers.length + 1).padStart(3, '0')}`,
+          id: memberId,
           joinedAt: new Date().toISOString(),
           casesCount: 0,
           totalMemberPoints: 0,
@@ -228,6 +258,36 @@ export const usePartnerStore = create<PartnerStore>()(
           teamMembers: [newMember, ...teamMembers],
           totalPoints: totalPoints + 20,
         });
+
+        // Async sync to Supabase DB profiles table
+        // Note: For proper Supabase Auth account creation, use /api/admin/partners/create instead.
+        try {
+          const { supabase } = await import('./supabase');
+          await supabase.from('profiles').upsert(
+            [
+              {
+                id: crypto.randomUUID(),
+                name: memberData.name.trim(),
+                email: memberData.email.trim().toLowerCase(),
+                phone: memberData.phone.trim(),
+                profession: memberData.profession,
+                city: memberData.city.trim(),
+                state: memberData.city.trim() ? '' : 'Maharashtra', // don't hardcode state
+                role: 'team_member',
+                status: memberData.status || 'kyc_approved',
+                team_code: partner?.teamCode || 'TL-MEMBER',
+                referred_by_leader_id: partner?.id || null,
+                is_email_verified: true,
+                prime_points: 100,
+                lifetime_points_earned: 100,
+                kyc_submitted_at: new Date().toISOString(),
+              },
+            ],
+            { onConflict: 'email' }
+          );
+        } catch (e) {
+          console.warn('Sub-agent DB sync note:', e);
+        }
       },
 
       updateTeamMemberStatus: (id, status) => {

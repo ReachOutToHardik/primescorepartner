@@ -24,11 +24,17 @@ import {
   Sparkle,
   Gift,
   Warning,
-  Bell
+  Bell,
+  Pencil,
+  Trash
 } from '@phosphor-icons/react';
 
 const PERMISSION_PAGES = [
-  { id: 'dashboard', label: 'HQ Overview & Stats' },
+  { id: 'dashboard', label: 'HQ Overview (Tab Access)' },
+  { id: 'overview_kpis', label: 'Overview: Top Metric Cards' },
+  { id: 'overview_chart', label: 'Overview: Monthly Revenue Chart' },
+  { id: 'overview_distribution', label: 'Overview: Lead Pipeline Distribution' },
+  { id: 'overview_actions', label: 'Overview: Quick Action Cards' },
   { id: 'kyc', label: 'Partner Verification & KYC' },
   { id: 'referrals', label: 'Referral Leads & Cases' },
   { id: 'teams', label: 'Team Leaders & DSAs' },
@@ -199,11 +205,16 @@ export default function AdminSettingsPage() {
       {/* TAB 1: Admin Staff RBAC Roles */}
       {activeTab === 'staff' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-4">
             <h2 className="font-display font-bold text-base text-[var(--navy-deep)]">Admin User Permissions & Access Control</h2>
-            <Button variant="primary" size="sm" onClick={() => setStaffModalOpen(true)}>
-              <Plus size={16} className="mr-1" /> Add Staff Member
-            </Button>
+            <button
+              type="button"
+              onClick={() => setStaffModalOpen(true)}
+              className="px-4 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white text-xs font-bold font-display rounded-xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <Plus size={16} weight="bold" />
+              <span>Add Staff Member</span>
+            </button>
           </div>
 
           <Card className="overflow-hidden">
@@ -220,68 +231,77 @@ export default function AdminSettingsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)] font-mono-num">
-                  {staff.map((u) => (
-                    <tr key={u.id} className="hover:bg-[var(--surface-2)] transition-colors">
-                      <td className="px-6 py-4 font-sans font-bold text-[var(--ink)]">
-                        <div>{u.name}</div>
-                        <div className="text-xs font-mono font-normal text-[var(--ink-muted)]">{u.email} • {u.id}</div>
-                      </td>
-                      <td className="px-6 py-4 font-sans text-xs">
-                        <Badge variant={u.role === 'super_admin' ? 'amber' : 'blue'}>
-                          {u.role.replace('_', ' ').toUpperCase()}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 font-sans text-xs">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                          {u.role === 'super_admin' ? 'All 10 Pages Allowed' : `${u.allowedPages?.length || 0} / 10 Pages Allowed`}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-sans text-xs text-[var(--ink-muted)]">
-                        {new Date(u.lastLogin).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={u.isActive ? 'green' : 'gray'}>
-                          {u.isActive ? 'Active' : 'Disabled'}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditStaff(u)}
-                            className="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors cursor-pointer"
-                            title="Edit Staff Permissions"
-                          >
-                            ✏️ Edit
-                          </button>
+                  {staff.map((u, index) => {
+                    const cleanStaffCode = u.id.startsWith('ADM-') 
+                      ? u.id 
+                      : `PS-STAFF-${String(index + 1).padStart(3, '0')}`;
 
-                          <Button
-                            variant={u.isActive ? 'danger' : 'secondary'}
-                            size="sm"
-                            onClick={() => toggleStaffStatus(u.id)}
-                            disabled={u.role === 'super_admin'}
-                          >
-                            {u.isActive ? 'Revoke' : 'Restore'}
-                          </Button>
-
-                          {u.role !== 'super_admin' && (
+                    return (
+                      <tr key={u.id} className="hover:bg-[var(--surface-2)] transition-colors">
+                        <td className="px-6 py-4 font-sans font-bold text-[var(--ink)]">
+                          <div>{u.name}</div>
+                          <div className="text-xs font-mono font-normal text-[var(--ink-muted)]">
+                            {u.email} • {cleanStaffCode}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-sans text-xs">
+                          <Badge variant={u.role === 'super_admin' ? 'amber' : 'blue'}>
+                            {u.role.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 font-sans text-xs">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            {u.role === 'super_admin' ? 'All Pages Allowed' : `${u.allowedPages?.length || 0} / ${PERMISSION_PAGES.length} Allowed`}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-sans text-xs text-[var(--ink-muted)] whitespace-nowrap">
+                          {new Date(u.lastLogin).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge variant={u.isActive ? 'green' : 'gray'}>
+                            {u.isActive ? 'Active' : 'Disabled'}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
-                              onClick={() => {
-                                setDeleteStaffId(u.id);
-                                setDeleteStaffName(u.name);
-                                setDeleteModalOpen(true);
-                              }}
-                              className="px-2 py-1 text-xs font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors cursor-pointer"
-                              title="Delete Staff Account"
+                              onClick={() => handleOpenEditStaff(u)}
+                              className="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors cursor-pointer flex items-center gap-1"
+                              title="Edit Staff Permissions"
                             >
-                              🗑
+                              <Pencil size={12} weight="bold" />
+                              <span>Edit</span>
                             </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+
+                            <Button
+                              variant={u.isActive ? 'danger' : 'secondary'}
+                              size="sm"
+                              onClick={() => toggleStaffStatus(u.id)}
+                              disabled={u.role === 'super_admin'}
+                            >
+                              {u.isActive ? 'Revoke' : 'Restore'}
+                            </Button>
+
+                            {u.role !== 'super_admin' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeleteStaffId(u.id);
+                                  setDeleteStaffName(u.name);
+                                  setDeleteModalOpen(true);
+                                }}
+                                className="p-1 text-xs font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors cursor-pointer flex items-center justify-center"
+                                title="Delete Staff Account"
+                              >
+                                <Trash size={14} weight="bold" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

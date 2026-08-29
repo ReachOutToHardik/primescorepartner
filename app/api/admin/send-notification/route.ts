@@ -15,7 +15,7 @@ const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
 export async function POST(req: Request) {
   try {
     const adminPasswordHeader = req.headers.get('x-admin-password');
-    const masterPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    const masterPassword = process.env.ADMIN_PASSWORD;
 
     // Verify admin authentication header
     if (!masterPassword || adminPasswordHeader !== masterPassword) {

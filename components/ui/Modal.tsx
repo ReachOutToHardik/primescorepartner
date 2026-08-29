@@ -10,7 +10,7 @@ export interface ModalProps {
   description?: React.ReactNode;
   children?: React.ReactNode;
   footer?: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
   showCloseButton?: boolean;
   closeOnBackdropClick?: boolean;
   closeOnEsc?: boolean;

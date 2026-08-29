@@ -368,55 +368,58 @@ export default function RewardsConfigPage() {
               </h2>
             </div>
 
-            {/* Tier Multipliers */}
+            {/* Tier Rates & Thresholds */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tier Multipliers</h3>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                  <span className="text-xs font-bold text-slate-700">Silver Tier</span>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      step={0.1}
-                      min={1.0}
-                      max={3.0}
-                      value={formData.tierMultipliers.silver}
-                      onChange={(e) => handleNestedChange('tierMultipliers', 'silver', parseFloat(e.target.value) || 1.0)}
-                      className="w-full p-1.5 text-xs font-bold bg-white border border-slate-300 rounded-md"
-                    />
-                    <span className="text-xs font-bold text-slate-500">x</span>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Partner Reward Tiers &amp; Commission Percentages</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900">Silver Tier</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-500">0 – 19,999 Pts</span>
+                  </div>
+                  <div className="text-xs space-y-1 text-slate-600 font-medium">
+                    <div className="flex justify-between">
+                      <span>Referred User Enrollment:</span>
+                      <strong className="text-slate-900">100 Pts</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Case Completion Rate:</span>
+                      <strong className="text-slate-900">10% of Case Amount</strong>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-xl space-y-1">
-                  <span className="text-xs font-bold text-amber-900">Gold Tier</span>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      step={0.1}
-                      min={1.0}
-                      max={3.0}
-                      value={formData.tierMultipliers.gold}
-                      onChange={(e) => handleNestedChange('tierMultipliers', 'gold', parseFloat(e.target.value) || 1.2)}
-                      className="w-full p-1.5 text-xs font-bold bg-white border border-amber-300 rounded-md text-amber-900"
-                    />
-                    <span className="text-xs font-bold text-amber-700">x</span>
+                <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-900">Gold Tier</span>
+                    <span className="text-[10px] font-mono font-bold text-amber-700">20,000 – 49,999 Pts</span>
+                  </div>
+                  <div className="text-xs space-y-1 text-amber-800 font-medium">
+                    <div className="flex justify-between">
+                      <span>Referred User Enrollment:</span>
+                      <strong className="text-amber-950">125 Pts</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Case Completion Rate:</span>
+                      <strong className="text-amber-950">12% of Case Amount</strong>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-3 bg-indigo-50/50 border border-indigo-200 rounded-xl space-y-1">
-                  <span className="text-xs font-bold text-indigo-900">Platinum Tier</span>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      step={0.1}
-                      min={1.0}
-                      max={3.0}
-                      value={formData.tierMultipliers.platinum}
-                      onChange={(e) => handleNestedChange('tierMultipliers', 'platinum', parseFloat(e.target.value) || 1.5)}
-                      className="w-full p-1.5 text-xs font-bold bg-white border border-indigo-300 rounded-md text-indigo-900"
-                    />
-                    <span className="text-xs font-bold text-indigo-700">x</span>
+                <div className="p-4 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-900">Platinum Tier</span>
+                    <span className="text-[10px] font-mono font-bold text-indigo-700">50,000+ Pts</span>
+                  </div>
+                  <div className="text-xs space-y-1 text-indigo-800 font-medium">
+                    <div className="flex justify-between">
+                      <span>Referred User Enrollment:</span>
+                      <strong className="text-indigo-950">150 Pts</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Case Completion Rate:</span>
+                      <strong className="text-indigo-950">15% of Case Amount</strong>
+                    </div>
                   </div>
                 </div>
               </div>

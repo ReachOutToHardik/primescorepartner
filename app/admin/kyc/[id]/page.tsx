@@ -33,7 +33,9 @@ import {
   ArrowRight,
   DownloadSimple,
   ArrowSquareOut,
-  Key
+  Key,
+  Pencil,
+  Trash
 } from '@phosphor-icons/react';
 
 export interface KycDocRecord {
@@ -47,14 +49,19 @@ export interface KycDocRecord {
   uploaded_at: string;
 }
 
+import { DeleteConfirmationModal } from '@/components/admin/DeleteConfirmationModal';
+import { TransferTeamModal } from '@/components/admin/TransferTeamModal';
+
 export default function PartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { partners, referrals, approveKyc, rejectKyc, incrementProfileViews } = useAdminStore();
+  const { partners, referrals, approveKyc, rejectKyc, deletePartner, incrementProfileViews } = useAdminStore();
   const { teamMembers } = usePartnerStore();
 
   const partner = partners.find((p) => p.id === id);
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [resetPassModalOpen, setResetPassModalOpen] = useState(false);
   const [dbDocuments, setDbDocuments] = useState<KycDocRecord[]>([]);
@@ -203,29 +210,35 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
   else if (totalPts >= 5000) tier = 'Gold';
 
   const isTeamLeader = partner.role === 'team_leader';
-  const subAgents = isTeamLeader ? teamMembers : [];
+  const subAgents = isTeamLeader
+    ? partners.filter((p) => p.id !== partner.id && (p.referredByLeaderId === partner.id || (partner.teamCode && p.referredByLeaderId === partner.teamCode)))
+    : [];
 
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [codeLinkInput, setCodeLinkInput] = useState('');
+  const [userRefCodeModalInput, setUserRefCodeModalInput] = useState('');
+
+  // Inline Code Editing States
+  const [isEditingUserCode, setIsEditingUserCode] = useState(false);
+  const [userCodeInput, setUserCodeInput] = useState((partner as any)?.userReferralCode || 'PSMKMVLN');
+
+  const [isEditingTeamCode, setIsEditingTeamCode] = useState(false);
+  const [teamCodeInput, setTeamCodeInput] = useState(partner?.teamCode || '');
 
   const handleOpenApproveModal = () => {
     const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
     const codeSuffix = partner.id.substring(0, 4).toUpperCase();
-    const autoCode = partner.teamCode || `PS-${namePart}-${codeSuffix}`;
+    const autoCode = partner.teamCode || `IND-${namePart}-${codeSuffix}`;
     setCodeLinkInput(autoCode);
+    setUserRefCodeModalInput((partner as any)?.userReferralCode || 'PSMKMVLN');
     setApproveModalOpen(true);
   };
 
   const handleConfirmApprove = async () => {
-    const finalCode = codeLinkInput.trim().toUpperCase() || 'PARTNER';
-    await approveKyc(partner.id, finalCode);
+    const finalTeamCode = codeLinkInput.trim().toUpperCase() || 'IND-HAR-509';
+    const finalUserRefCode = userRefCodeModalInput.trim().toUpperCase() || 'PSMKMVLN';
+    await approveKyc(partner.id, finalTeamCode, finalUserRefCode);
     setApproveModalOpen(false);
-  };
-
-  const handleAutoGenerateCode = () => {
-    const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
-    const randomNum = Math.floor(100 + Math.random() * 900);
-    setCodeLinkInput(`PS-${namePart}-${randomNum}`);
   };
 
   const handleRejectConfirm = () => {
@@ -233,6 +246,88 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
       rejectKyc(partner.id, rejectReason);
       setRejectModalOpen(false);
       setRejectReason('');
+    }
+  };
+
+  const handleMoveToPending = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.from('profiles').update({ status: 'kyc_submitted' }).eq('id', partner.id);
+      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, status: 'kyc_submitted' as any } : p);
+      useAdminStore.setState({ partners: updated });
+      alert(`Moved partner "${partner.name}" back to Pending Review!`);
+    } catch (err) {
+      console.error('Move to pending error:', err);
+    }
+  };
+
+  const handleSaveUserCode = async () => {
+    const code = userCodeInput.trim().toUpperCase() || 'PSMKMVLN';
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.from('profiles').update({ user_referral_code: code }).eq('id', partner.id);
+      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, userReferralCode: code } : p);
+      useAdminStore.setState({ partners: updated });
+      setIsEditingUserCode(false);
+      alert(`Updated User Referral Code to ${code}!`);
+    } catch (err) {
+      console.error('User code save error:', err);
+    }
+  };
+
+  const handleSaveTeamCode = async () => {
+    const code = teamCodeInput.trim().toUpperCase() || partner.teamCode;
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.from('profiles').update({ team_code: code }).eq('id', partner.id);
+      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, teamCode: code } : p);
+      useAdminStore.setState({ partners: updated });
+      setIsEditingTeamCode(false);
+      alert(`Updated Team Network Code to ${code}!`);
+    } catch (err) {
+      console.error('Team code save error:', err);
+    }
+  };
+
+  const handlePromoteToTeamLeader = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+      const codeSuffix = partner.id.substring(0, 4).toUpperCase();
+      const newTeamCode = partner.teamCode || `TL-${namePart}-${codeSuffix}`;
+
+      await supabase
+        .from('profiles')
+        .update({ role: 'team_leader', team_code: newTeamCode })
+        .eq('id', partner.id);
+
+      const updated = useAdminStore.getState().partners.map((p) =>
+        p.id === partner.id ? { ...p, role: 'team_leader' as any, teamCode: newTeamCode } : p
+      );
+      useAdminStore.setState({ partners: updated });
+      alert(`Successfully promoted "${partner.name}" to Team Leader! Team Code: ${newTeamCode}`);
+    } catch (err) {
+      console.error('Promotion error:', err);
+      alert('Could not promote partner to Team Leader.');
+    }
+  };
+
+  const handleDemoteToIndividual = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase
+        .from('profiles')
+        .update({ role: 'individual' })
+        .eq('id', partner.id);
+
+      const updated = useAdminStore.getState().partners.map((p) =>
+        p.id === partner.id ? { ...p, role: 'individual' as any } : p
+      );
+      useAdminStore.setState({ partners: updated });
+      alert(`Demoted "${partner.name}" to Individual DSA.`);
+    } catch (err) {
+      console.error('Demotion error:', err);
+      alert('Could not demote partner.');
     }
   };
 
@@ -260,14 +355,16 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
             <span>Reset Password</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setAdjustPointsModalOpen(true)}
-            className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
-          >
-            <Coins size={18} weight="fill" className="shrink-0 text-amber-200" />
-            <span>Add / Adjust PrimePoints</span>
-          </button>
+          {partner.status !== 'kyc_rejected' && (
+            <button
+              type="button"
+              onClick={() => setAdjustPointsModalOpen(true)}
+              className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+            >
+              <Coins size={18} weight="fill" className="shrink-0 text-amber-200" />
+              <span>Add / Adjust PrimePoints</span>
+            </button>
+          )}
 
           {partner.status === 'kyc_submitted' && (
             <>
@@ -289,8 +386,75 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
               </button>
             </>
           )}
+
+          {partner.status === 'kyc_rejected' && (
+            <>
+              <button
+                type="button"
+                onClick={handleOpenApproveModal}
+                className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+              >
+                <CheckCircle size={18} weight="fill" className="shrink-0 text-white" />
+                <span>Approve Partner</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleMoveToPending}
+                className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+              >
+                <UserCheck size={18} weight="bold" className="shrink-0 text-white" />
+                <span>Move to Pending Review</span>
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setDeleteModalOpen(true)}
+            className="whitespace-nowrap font-display font-bold text-xs flex items-center gap-2 px-3.5 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl transition-all cursor-pointer shrink-0"
+            title="Delete Partner Account"
+          >
+            <Trash size={16} weight="bold" className="shrink-0 text-red-600" />
+            <span>Delete</span>
+          </button>
         </div>
       </div>
+
+      {/* REJECTION REASON BANNER (Rendered only if partner.status === 'kyc_rejected') */}
+      {partner.status === 'kyc_rejected' && (
+        <Card className="p-5 bg-red-50 border-2 border-red-200 text-red-950 space-y-3 rounded-2xl shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <XCircle size={28} className="text-red-600 shrink-0 mt-0.5" weight="fill" />
+              <div>
+                <h3 className="font-display font-bold text-base text-red-900">
+                  Partner Application Rejected
+                </h3>
+                <p className="text-xs text-red-800 mt-1 font-medium leading-relaxed">
+                  <strong>Reason:</strong> {partner.rejectionReason || 'Identity details or verification credentials did not meet system criteria.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleOpenApproveModal}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+              >
+                Approve Now
+              </button>
+              <button
+                type="button"
+                onClick={handleMoveToPending}
+                className="px-3.5 py-2 bg-white border border-red-300 text-red-800 hover:bg-red-100 text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+              >
+                Move to Pending Review
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Main Profile Header Banner with Avatar */}
       <Card className="p-6 bg-gradient-to-r from-[var(--navy-deep)] to-[var(--navy)] text-white relative overflow-hidden shadow-lg">
@@ -379,16 +543,104 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
               <span className="font-bold text-[var(--navy)] font-mono">{partner.pan || 'UNAVAILABLE'}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-gray-100">
+              <span className="text-[var(--ink-muted)] font-sans">Aadhaar Card Number</span>
+              <span className="font-mono font-bold text-slate-900">
+                {partner.aadhaar || (partner as any).aadhaar || 'XXXX XXXX XXXX'}
+              </span>
+            </div>
+            {/* User Referral Code (Client Link Code) */}
+            <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
+              <span className="text-[var(--ink-muted)] font-sans flex items-center gap-1">
+                <span>User Referral Code (Client Link)</span>
+              </span>
+              {isEditingUserCode ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={userCodeInput}
+                    onChange={(e) => setUserCodeInput(e.target.value.toUpperCase())}
+                    className="px-2 py-1 text-xs font-mono font-bold border border-slate-300 rounded bg-white text-[#1B2A72] uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveUserCode}
+                    className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded cursor-pointer"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingUserCode(false)}
+                    className="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-bold rounded cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-[#1B2A72] text-sm">
+                    {(partner as any).userReferralCode || 'PSMKMVLN'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingUserCode(true)}
+                    className="p-1 text-slate-400 hover:text-[#1B2A72] transition-colors cursor-pointer"
+                    title="Edit User Referral Code"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Team Network Code */}
+            <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
+              <span className="text-[var(--ink-muted)] font-sans">Team Network Code</span>
+              {isEditingTeamCode ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={teamCodeInput}
+                    onChange={(e) => setTeamCodeInput(e.target.value.toUpperCase())}
+                    className="px-2 py-1 text-xs font-mono font-bold border border-slate-300 rounded bg-white text-slate-900 uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveTeamCode}
+                    className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded cursor-pointer"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingTeamCode(false)}
+                    className="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-bold rounded cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-gray-800">{partner.teamCode || 'IND-HAR-509'}</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingTeamCode(true)}
+                    className="p-1 text-slate-400 hover:text-gray-800 transition-colors cursor-pointer"
+                    title="Edit Team Code"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between py-1 border-b border-gray-100">
               <span className="text-[var(--ink-muted)] font-sans">Bank Name</span>
               <span className="font-sans font-semibold text-[var(--ink)]">{partner.bankName || 'HDFC Bank'}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-gray-100">
               <span className="text-[var(--ink-muted)] font-sans">Account & IFSC Code</span>
               <span className="font-mono">{partner.bankAccountNo || 'N/A'} • {partner.bankIfsc || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-gray-100">
-              <span className="text-[var(--ink-muted)] font-sans">Team Network Code</span>
-              <span className="font-mono font-bold text-gray-800">{partner.teamCode}</span>
             </div>
             <div className="flex justify-between py-1">
               <span className="text-[var(--ink-muted)] font-sans">Account Created Date</span>
@@ -398,103 +650,116 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         </Card>
       </div>
 
-      {/* VERIFIED DOCUMENTS SECTION (Supabase Storage Integration) */}
-      <Card className="p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-          <h3 className="font-display font-bold text-base text-[var(--navy-deep)] flex items-center gap-2">
-            <IdentificationCard className="w-5 h-5 text-[var(--navy)]" /> Identity Proofs & Storage Documents (`kyc-documents` Bucket)
-          </h3>
-          <span className="text-xs font-mono font-semibold text-slate-500">
-            {dbDocuments.length} Uploaded File(s)
-          </span>
-        </div>
+      {/* Team & Role Management Card */}
+      {(() => {
+        const assignedLeader = partners.find(
+          (p) => p.id === partner.referredByLeaderId || (p.teamCode && p.teamCode === partner.referredByLeaderId)
+        );
+        const currentLeaderName = partner.referredByLeaderName || assignedLeader?.name;
 
-        {isLoadingDocs ? (
-          <div className="p-8 text-center text-slate-400">
-            <div className="w-6 h-6 border-2 border-slate-300 border-t-[var(--navy)] rounded-full animate-spin mx-auto mb-2" />
-            <p className="text-xs font-semibold">Loading documents from Supabase Storage...</p>
-          </div>
-        ) : dbDocuments.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Fallback storage URLs if dbDocuments array is empty */}
-            <div className="p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-blue-600 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-[var(--ink)] font-display">PAN_Card_Front.pdf</p>
-                  <p className="text-[10px] text-[var(--ink-muted)] font-mono">PAN: {partner.pan || 'N/A'}</p>
-                </div>
+        return (
+          <Card className="p-6 space-y-5 border border-slate-200/80 shadow-xs bg-white rounded-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-display font-bold text-base text-slate-900">
+                  Team &amp; Role Management
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Manage account classification, team leader privileges, and network assignments.
+                </p>
               </div>
-              <button
-                onClick={() => setPreviewDoc({
-                  url: `https://duehdrdffguwvipgqywh.supabase.co/storage/v1/object/public/kyc-documents/${partner.id}/pan_${partner.pan}.pdf`,
-                  title: `PAN Card Proof (${partner.pan || 'PDF'})`
-                })}
-                className="px-3 py-1.5 bg-white border border-[var(--border)] hover:bg-slate-50 text-[var(--navy)] text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-              >
-                <Eye size={14} />
-                <span>View Doc</span>
-              </button>
+
+              <Badge variant={partner.role === 'team_leader' ? 'amber' : 'blue'}>
+                {partner.role === 'team_leader' ? 'Team Leader' : 'Individual DSA'}
+              </Badge>
             </div>
 
-            <div className="p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-emerald-600 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-[var(--ink)] font-display">Aadhaar_Identity_Proof.pdf</p>
-                  <p className="text-[10px] text-[var(--ink-muted)] font-mono">Verified Government ID</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Box 1: Account Role & Promotion */}
+              <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3 flex flex-col justify-between">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Account Classification
+                  </span>
+                  <div className="font-display font-bold text-sm text-slate-900">
+                    {partner.role === 'team_leader' ? 'Team Leader Account' : 'Individual DSA Partner'}
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed pt-0.5">
+                    {partner.role === 'team_leader'
+                      ? 'Authorized to recruit sub-agents under their network and earn 10% override points.'
+                      : 'Direct referral partner. Can be promoted to Team Leader at any time.'}
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  {partner.role === 'individual' ? (
+                    <button
+                      type="button"
+                      onClick={handlePromoteToTeamLeader}
+                      className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center"
+                    >
+                      Promote to Team Leader
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleDemoteToIndividual}
+                      className="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center"
+                    >
+                      Demote to Individual DSA
+                    </button>
+                  )}
                 </div>
               </div>
-              <button
-                onClick={() => setPreviewDoc({
-                  url: `https://duehdrdffguwvipgqywh.supabase.co/storage/v1/object/public/kyc-documents/${partner.id}/aadhaar_doc.pdf`,
-                  title: 'Aadhaar Identity Proof (PDF)'
-                })}
-                className="px-3 py-1.5 bg-white border border-[var(--border)] hover:bg-slate-50 text-[var(--navy)] text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-              >
-                <Eye size={14} />
-                <span>View Doc</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {dbDocuments.map((doc) => {
-              const isPdf = doc.file_url.endsWith('.pdf');
-              const docTitle = doc.document_type.replace('_', ' ').toUpperCase();
-              return (
-                <div key={doc.id} className="p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] flex items-center justify-between">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <FileText className={`w-8 h-8 shrink-0 ${isPdf ? 'text-rose-600' : 'text-blue-600'}`} />
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-[var(--ink)] font-display truncate">{docTitle}</p>
-                      <p className="text-[10px] text-[var(--ink-muted)] font-mono truncate">
-                        {doc.document_number ? `No: ${doc.document_number}` : 'Uploaded Document'}
+
+              {/* Box 2: Assigned Team Network */}
+              <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3 flex flex-col justify-between">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Assigned Team Network
+                  </span>
+                  {currentLeaderName ? (
+                    <div className="flex items-center gap-2.5 pt-1">
+                      <div className="w-8 h-8 rounded-full bg-[#1B2A72] text-white font-bold text-xs flex items-center justify-center font-display shrink-0 shadow-2xs">
+                        {currentLeaderName.substring(0, 1)}
+                      </div>
+                      <div>
+                        <div className="font-display font-bold text-sm text-slate-900">
+                          {currentLeaderName}
+                        </div>
+                        {assignedLeader?.teamCode && (
+                          <div className="text-[11px] font-mono text-slate-500">
+                            Code: {assignedLeader.teamCode}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="font-display font-bold text-sm text-slate-700 pt-1">
+                        Standalone Partner
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed pt-0.5">
+                        Not currently assigned under any Team Leader network.
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => setPreviewDoc({ url: doc.file_url, title: docTitle })}
-                      className="px-3 py-1.5 bg-white border border-[var(--border)] hover:bg-slate-50 text-[var(--navy)] text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <Eye size={14} />
-                      <span>View</span>
-                    </button>
-                    <a href={doc.file_url} target="_blank" rel="noopener noreferrer" download>
-                      <button className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors" title="Open in new tab">
-                        <ArrowSquareOut size={16} />
-                      </button>
-                    </a>
-                  </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
 
-      {/* Network Roster Section (If Team Leader) */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setTransferModalOpen(true)}
+                    className="w-full py-2.5 px-4 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center"
+                  >
+                    {currentLeaderName ? 'Transfer to Another Team Leader' : 'Assign to Team Leader'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
       {isTeamLeader && (
         <Card className="p-6 space-y-4 border-l-4 border-amber-500">
           <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
@@ -513,7 +778,7 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
                   <span className="text-[var(--ink-muted)] ml-2 font-sans">{sub.profession}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="font-bold text-emerald-600">+{sub.overridePointsEarned} pts Override</span>
+                  <span className="font-bold text-emerald-600">+{sub.primePoints || 0} Pts Total</span>
                   <Badge variant={sub.status === 'kyc_approved' ? 'green' : 'amber'}>
                     {sub.status}
                   </Badge>
@@ -524,6 +789,84 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         </Card>
       )}
 
+      {/* REFERRALS & LEADS SUBMITTED BY PARTNER */}
+      {(() => {
+        const partnerReferrals = referrals.filter(
+          (r) => r.partnerId === partner.id
+        );
+
+        return (
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+              <div>
+                <h3 className="font-display font-bold text-base text-[var(--navy-deep)] flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#1B2A72]" weight="bold" />
+                  Client Referral Leads Submitted ({partnerReferrals.length})
+                </h3>
+                <p className="text-xs text-[var(--ink-muted)]">
+                  Live database of client dispute and credit rectification referrals registered by {partner.name}.
+                </p>
+              </div>
+              <Badge variant={partnerReferrals.length > 0 ? 'green' : 'gray'}>
+                {partnerReferrals.length > 0 ? `${partnerReferrals.length} Cases Submitted` : 'No Cases Yet'}
+              </Badge>
+            </div>
+
+            {partnerReferrals.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 space-y-2 bg-slate-50 rounded-xl border border-slate-200/80">
+                <FileText size={32} className="mx-auto text-slate-300" />
+                <p className="font-bold text-xs text-slate-700">No Referrals Registered Yet</p>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  When this partner submits client lead referrals through their dashboard, all lead cases will display here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider font-display">
+                    <tr>
+                      <th className="px-4 py-3 font-bold">Case Ref ID</th>
+                      <th className="px-4 py-3 font-bold">Customer Name & Phone</th>
+                      <th className="px-4 py-3 font-bold">Requested Service</th>
+                      <th className="px-4 py-3 font-bold">Location</th>
+                      <th className="px-4 py-3 font-bold">Status</th>
+                      <th className="px-4 py-3 font-bold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200/80 font-mono-num bg-white text-xs">
+                    {partnerReferrals.map((ref) => (
+                      <tr key={ref.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-mono font-bold text-[#1B2A72]">{ref.id}</td>
+                        <td className="px-4 py-3 font-sans font-bold text-slate-900">
+                          <div>{ref.customerName}</div>
+                          <div className="text-[11px] font-mono font-normal text-slate-500">{ref.customerPhone}</div>
+                        </td>
+                        <td className="px-4 py-3 font-sans font-semibold text-slate-700">{ref.service}</td>
+                        <td className="px-4 py-3 font-sans text-slate-600">{ref.city}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant={ref.status === 'completed' ? 'green' : ref.status === 'rejected' ? 'red' : 'blue'}>
+                            {ref.status.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          <Link
+                            href={`/admin/referrals/${ref.id}`}
+                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-[#1B2A72] font-bold text-[11px] rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Inspect Case</span>
+                            <ArrowRight size={12} />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        );
+      })()}
+
       {/* APPROVE PARTNER MODAL */}
       <Modal
         isOpen={approveModalOpen}
@@ -532,42 +875,67 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-600">
-            Set a referral code or custom link for <strong>{partner.name}</strong>. You can type your own link, code, or auto-generate one.
+            Provide or auto-generate referral codes for <strong>{partner.name}</strong>.
           </p>
 
+          {/* 1. Client Referral Code (dashboard.primescore.in) */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
-                Referral Code or Custom Link
+                User Referral Code (Client Link Code) *
               </label>
               <button
                 type="button"
-                onClick={handleAutoGenerateCode}
+                onClick={() => {
+                  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                  let c = 'PS';
+                  for (let i = 0; i < 6; i++) c += chars.charAt(Math.floor(Math.random() * chars.length));
+                  setUserRefCodeModalInput(c);
+                }}
                 className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
               >
-                ⚡ Auto-Generate Code
+                ⚡ Auto-Generate
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={userRefCodeModalInput}
+              onChange={(e) => setUserRefCodeModalInput(e.target.value.toUpperCase())}
+              placeholder="e.g. PSMKMVLN"
+              className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-bold text-slate-950 outline-none uppercase"
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              Client Referral Target: <strong className="text-[#1B2A72] font-mono">https://dashboard.primescore.in/ref/{userRefCodeModalInput.trim().toUpperCase() || 'PSMKMVLN'}</strong>
+            </p>
+          </div>
+
+          {/* 2. Team Code / Partner Referral Code */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                Partner Network Team Code (Sub-Agent Code)
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+                  const randomNum = Math.floor(100 + Math.random() * 900);
+                  setCodeLinkInput(`IND-${namePart}-${randomNum}`);
+                }}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+              >
+                ⚡ Auto-Generate
               </button>
             </div>
 
             <input
               type="text"
               value={codeLinkInput}
-              onChange={(e) => setCodeLinkInput(e.target.value)}
-              placeholder="e.g. PS-HARDIK-884 OR https://primescore.in/join?ref=hardik"
-              className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-semibold text-slate-950 outline-none"
+              onChange={(e) => setCodeLinkInput(e.target.value.toUpperCase())}
+              placeholder="e.g. IND-HAR-509"
+              className="w-full p-3 text-sm border border-slate-300 rounded-xl focus:border-[#1B2A72] font-mono font-semibold text-slate-950 outline-none uppercase"
             />
-          </div>
-
-          {/* Live Link Preview */}
-          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-              Final Partner Link & QR Target
-            </span>
-            <div className="font-mono text-xs text-[#1B2A72] font-bold break-all bg-white p-2.5 rounded-lg border border-slate-200">
-              {codeLinkInput.trim().startsWith('http://') || codeLinkInput.trim().startsWith('https://')
-                ? codeLinkInput.trim()
-                : `https://partner.primescore.in/register?ref=${codeLinkInput.trim().toUpperCase() || 'PARTNER'}`}
-            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -575,7 +943,7 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
               Cancel
             </Button>
             <Button variant="primary" onClick={handleConfirmApprove}>
-              Approve Partner & Save Link
+              Approve Partner & Save Credentials
             </Button>
           </div>
         </div>
@@ -689,6 +1057,26 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
         isOpen={resetPassModalOpen}
         onClose={() => setResetPassModalOpen(false)}
         partner={partner}
+      />
+
+      {/* DELETE PARTNER CONFIRMATION MODAL */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={async () => {
+          await deletePartner(partner.id);
+          window.location.href = '/admin/kyc';
+        }}
+        title="Delete Partner Account"
+        itemName={partner.name}
+        description="Permanently delete this partner account, their referral records, and points passbook data."
+      />
+
+      {/* TRANSFER TEAM MODAL */}
+      <TransferTeamModal
+        partner={partner}
+        isOpen={transferModalOpen}
+        onClose={() => setTransferModalOpen(false)}
       />
     </div>
   );

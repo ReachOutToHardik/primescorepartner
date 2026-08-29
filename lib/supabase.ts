@@ -54,17 +54,20 @@ export type Database = {
           name: string;
           email: string;
           phone: string | null;
+          password: string | null;
           profession: string | null;
           city: string | null;
           state: string | null;
           pan: string | null;
+          aadhaar: string | null;
           status: 'pending_kyc' | 'kyc_submitted' | 'kyc_approved' | 'kyc_rejected';
           role: 'individual' | 'team_leader' | 'team_member';
           team_code: string | null;
+          user_referral_code: string | null;
           referred_by_leader_id: string | null;
           prime_points: number;
           lifetime_points_earned: number;
-          tier: string;
+          tier: string | null;
           avatar_url: string | null;
           is_email_verified: boolean;
           kyc_submitted_at: string | null;
@@ -84,7 +87,10 @@ export type Database = {
           service_name: string;
           notes: string | null;
           current_stage: string;
+          status_history: any | null; // JSON array of { status, date, note }
           partner_points_earned: number;
+          points_earned: number | null;
+          service_amount: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -105,12 +111,40 @@ export type Database = {
         Row: {
           id: string;
           partner_id: string;
+          referral_id: string | null;
           transaction_type: string;
           points_change: number;
+          amount: number | null;
           balance_after: number;
           title: string;
+          description: string | null;
           reference_id: string | null;
           created_at: string;
+        };
+      };
+      referral_status_history: {
+        Row: {
+          id: string;
+          referral_id: string;
+          stage: string;
+          note_details: string | null;
+          updated_at: string;
+        };
+      };
+      system_config: {
+        Row: {
+          id: string;
+          submission_points: number | null;
+          enrollment_points: number | null;
+          conversion_points: number | null;
+          team_leader_override_percent: number | null;
+          points_per_inr: number | null;
+          payout_mode: string | null;
+          min_redemption_points: number | null;
+          max_daily_redemption_points: number | null;
+          tier_multipliers: any | null;
+          profession_multipliers: any | null;
+          updated_at: string;
         };
       };
     };

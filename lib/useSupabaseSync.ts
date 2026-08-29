@@ -20,31 +20,40 @@ export function useSupabaseSync() {
       useAdminStore.setState({ isLoadingData: true });
       const { data: dbProfiles, error: profileErr } = await supabase
         .from('profiles')
-        .select('id, name, email, phone, profession, city, state, pan, status, role, team_code, created_at, joined_at, is_email_verified, avatar_url, referred_by_leader_id, prime_points, kyc_submitted_at')
+        .select('id, name, email, phone, profession, city, state, pan, status, role, team_code, created_at, joined_at, is_email_verified, avatar_url, referred_by_leader_id, prime_points, lifetime_points_earned, kyc_submitted_at, aadhaar, user_referral_code')
         .order('created_at', { ascending: false });
 
       if (profileErr) {
         console.error('Admin profile fetch error:', profileErr.message);
       }
 
-      const mappedAdminPartners = (dbProfiles || []).map((p) => ({
-        id: p.id,
-        name: p.name,
-        email: p.email,
-        phone: p.phone || '',
-        profession: p.profession || '',
-        city: p.city || '',
-        state: p.state || '',
-        pan: p.pan || '',
-        status: p.status,
-        role: p.role,
-        teamCode: p.team_code || '',
-        joinedAt: p.joined_at || p.created_at,
-        isEmailVerified: p.is_email_verified !== false,
-        profilePhoto: p.avatar_url || undefined,
-        referredByLeaderId: p.referred_by_leader_id || undefined,
-        primePoints: p.prime_points || 0,
-      }));
+      const mappedAdminPartners = (dbProfiles || []).map((p) => {
+        const leader = (dbProfiles || []).find(
+          (l) => (l.id === p.referred_by_leader_id || (l.team_code && l.team_code === p.referred_by_leader_id))
+        );
+        return {
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          phone: p.phone || '',
+          profession: p.profession || '',
+          city: p.city || '',
+          state: p.state || '',
+          pan: p.pan || '',
+          aadhaar: (p as any).aadhaar || '',
+          status: p.status,
+          role: p.role,
+          teamCode: p.team_code || '',
+          userReferralCode: (p as any).user_referral_code || '',
+          joinedAt: p.joined_at || p.created_at,
+          isEmailVerified: p.is_email_verified !== false,
+          profilePhoto: p.avatar_url || undefined,
+          referredByLeaderId: p.referred_by_leader_id || undefined,
+          referredByLeaderName: leader ? leader.name : undefined,
+          primePoints: p.prime_points || 0,
+          lifetimePoints: (p as any).lifetime_points_earned || 0,
+        };
+      });
       useAdminStore.setState({ partners: mappedAdminPartners });
 
       const { data: dbReferrals, error: refErr } = await supabase
@@ -139,27 +148,37 @@ export function useSupabaseSync() {
         });
       }
 
-      // Fetch live admin staff accounts from Supabase
+      // Fetch live admin staff accounts from Supabase & merge with default Super Admin users
       const { data: dbStaff } = await supabase
         .from('admin_staff')
         .select('*')
         .order('created_at', { ascending: true });
 
-      if (dbStaff && dbStaff.length > 0) {
-        const { ALL_ADMIN_PAGES } = await import('@/lib/admin-store');
-        useAdminStore.setState({
-          staff: dbStaff.map((s) => ({
-            id: s.id,
-            name: s.name,
-            email: s.email,
-            password: s.password,
-            role: s.role || 'operations_admin',
-            allowedPages: s.allowed_pages || ALL_ADMIN_PAGES,
-            lastLogin: s.last_login || s.created_at,
-            isActive: s.is_active !== false,
-          })),
-        });
-      }
+      const { ALL_ADMIN_PAGES, INITIAL_STAFF } = await import('@/lib/admin-store');
+      const dbMappedStaff = (dbStaff || []).map((s) => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        password: s.password,
+        role: s.role || 'operations_admin',
+        allowedPages: s.allowed_pages || ALL_ADMIN_PAGES,
+        lastLogin: s.last_login || s.created_at,
+        isActive: s.is_active !== false,
+      }));
+
+      const mergedStaff = [...(INITIAL_STAFF || [])];
+      dbMappedStaff.forEach((s) => {
+        const idx = mergedStaff.findIndex(
+          (existing) => existing.email.toLowerCase() === s.email.toLowerCase()
+        );
+        if (idx !== -1) {
+          mergedStaff[idx] = s;
+        } else {
+          mergedStaff.push(s);
+        }
+      });
+
+      useAdminStore.setState({ staff: mergedStaff });
     } catch (err) {
       console.error('Admin Supabase sync error:', err);
     } finally {
@@ -233,11 +252,14 @@ export function useSupabaseSync() {
           status: profile.status,
           role: profile.role,
           teamCode: profile.team_code || '',
+          userReferralCode: profile.user_referral_code || '',
           joinedAt: profile.joined_at || profile.created_at,
           kycSubmittedAt: profile.kyc_submitted_at || profile.joined_at || profile.created_at,
           profilePhoto: profile.avatar_url || undefined,
+          lifetimePoints: profile.lifetime_points_earned || 0,
         });
-        setTotalPoints(profile.prime_points || 0);
+        // Use lifetime_points_earned for tier calculation — ensures tier doesn't drop on redemptions
+        setTotalPoints(profile.prime_points || 0, profile.lifetime_points_earned || 0);
       }
 
       // Fetch partner's own referrals

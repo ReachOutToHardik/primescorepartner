@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAdminStore } from '@/lib/admin-store';
+import { getAuthorizedPagesForUser } from '@/lib/admin-permissions';
 import {
   SquaresFour,
   ShieldCheck,
@@ -22,7 +23,8 @@ import {
   CheckCircle,
   Coins,
   ArrowSquareOut,
-  Megaphone
+  Megaphone,
+  LockKey
 } from '@phosphor-icons/react';
 
 const ADMIN_NAV = [
@@ -44,29 +46,17 @@ export default function AdminSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const allowedPages = getAuthorizedPagesForUser(adminEmail, staff);
+
   // Find currently logged-in admin user / staff profile
   const currentStaff = staff.find(
     (s) => s.email.toLowerCase() === (adminEmail || 'sawai@primescore.in').toLowerCase()
   );
 
   const isSuperAdmin = !currentStaff || currentStaff.role === 'super_admin';
-  const allowedPages = currentStaff?.allowedPages || [
-    'dashboard',
-    'kyc',
-    'referrals',
-    'teams',
-    'analytics',
-    'gift-cards',
-    'services',
-    'rewards-config',
-    'notifications',
-    'settings',
-  ];
 
-  // Filter sidebar navigation according to assigned plain English staff pages
-  const navItems = isSuperAdmin
-    ? ADMIN_NAV
-    : ADMIN_NAV.filter((item) => allowedPages.includes(item.id));
+  // Filter sidebar navigation to ONLY show pages allowed for this staff user
+  const navItems = ADMIN_NAV.filter((item) => allowedPages.includes(item.id));
 
   const handleLogout = () => {
     adminLogout();
@@ -204,17 +194,7 @@ export default function AdminSidebar() {
             </div>
           )}
 
-          {/* Switch View Button */}
-          <Link
-            href="/dashboard"
-            className={`flex items-center gap-2 w-full py-2 px-3 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-white/10 transition-colors ${
-              isCollapsed ? 'justify-center px-0' : ''
-            }`}
-            title="Switch to Partner Portal"
-          >
-            <ArrowSquareOut size={16} className="shrink-0 text-slate-400" />
-            {!isCollapsed && <span className="font-semibold text-[11px]">Partner View</span>}
-          </Link>
+
 
           {/* Log Out Button */}
           <button

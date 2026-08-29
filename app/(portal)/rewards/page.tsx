@@ -95,9 +95,9 @@ export default function RewardsPage() {
         type: tx.transaction_type,
         typeLabel,
         badgeStyle,
-        title: tx.title,
-        pointsChange: tx.points_change,
-        balanceAfter: tx.balance_after,
+        title: (tx as any).title || (tx as any).description || 'Point Activity',
+        pointsChange: (tx as any).points_change ?? (tx as any).amount ?? 0,
+        balanceAfter: (tx as any).balance_after ?? 0,
         createdAt: tx.created_at,
       });
     });
@@ -169,20 +169,20 @@ export default function RewardsPage() {
 
   // Dynamically compute effective active level based on totalPoints
   const activeLevel: 'Silver' | 'Gold' | 'Platinum' = useMemo(() => {
-    if (totalPoints >= 20000) return 'Platinum';
-    if (totalPoints >= 5000) return 'Gold';
+    if (totalPoints >= 50000) return 'Platinum';
+    if (totalPoints >= 20000) return 'Gold';
     return 'Silver';
   }, [totalPoints]);
 
   // Level Progression & Text Calculations
   const levelDetails = useMemo(() => {
     if (activeLevel === 'Silver') {
-      const needed = Math.max(0, 5000 - totalPoints);
-      const progress = Math.min(100, Math.max(0, Math.round((totalPoints / 5000) * 100)));
+      const needed = Math.max(0, 20000 - totalPoints);
+      const progress = Math.min(100, Math.max(0, Math.round((totalPoints / 20000) * 100)));
       return {
         currentLevelName: 'Silver Partner',
         nextLevelName: 'Gold',
-        targetPoints: 5000,
+        targetPoints: 20000,
         pointsNeeded: needed,
         progressPercent: progress,
         levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Gold tier`,
@@ -190,14 +190,14 @@ export default function RewardsPage() {
     }
 
     if (activeLevel === 'Gold') {
-      const span = 20000 - 5000;
-      const currentInTier = totalPoints - 5000;
+      const span = 50000 - 20000;
+      const currentInTier = totalPoints - 20000;
       const progress = Math.min(100, Math.max(0, Math.round((currentInTier / span) * 100)));
-      const needed = Math.max(0, 20000 - totalPoints);
+      const needed = Math.max(0, 50000 - totalPoints);
       return {
         currentLevelName: 'Gold Partner',
         nextLevelName: 'Platinum',
-        targetPoints: 20000,
+        targetPoints: 50000,
         pointsNeeded: needed,
         progressPercent: progress,
         levelSubtext: `${needed.toLocaleString()} Pts needed to unlock Platinum tier`,
@@ -208,10 +208,10 @@ export default function RewardsPage() {
     return {
       currentLevelName: 'Platinum VIP',
       nextLevelName: 'Max Tier Reached',
-      targetPoints: 20000,
+      targetPoints: 50000,
       pointsNeeded: 0,
       progressPercent: 100,
-      levelSubtext: '🏆 Maximum VIP Level Active (+30% bonus points per case)',
+      levelSubtext: 'Maximum Level Active (15% case commission rate & 150 Pts enrollment reward)',
     };
   }, [activeLevel, totalPoints]);
 
@@ -334,7 +334,7 @@ export default function RewardsPage() {
                     <span className="text-lg font-display font-extrabold tracking-tight text-white drop-shadow-md">Silver Partner</span>
                   </div>
 
-                  {totalPoints >= 5000 ? (
+                  {totalPoints >= 20000 ? (
                     <span className="px-3 py-1 bg-emerald-500 text-white font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider flex items-center gap-1">
                       <Check size={14} weight="bold" /> COMPLETED
                     </span>
@@ -346,7 +346,7 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-xs font-mono-num text-slate-200 font-bold tracking-wider uppercase">0 &ndash; 4,999 PRIMEPOINTS</p>
+                  <p className="text-xs font-mono-num text-slate-200 font-bold tracking-wider uppercase">0 &ndash; 19,999 PRIMEPOINTS</p>
                 </div>
               </div>
 
@@ -354,7 +354,11 @@ export default function RewardsPage() {
                 <ul className="text-sm text-slate-700 space-y-2.5 font-medium leading-relaxed">
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className="text-emerald-600 shrink-0" weight="fill" />
-                    <span>500 Pts base reward / referral</span>
+                    <span>100 Pts on Referred User Enrollment</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className="text-emerald-600 shrink-0" weight="fill" />
+                    <span>10% Case Completion Commission</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className="text-emerald-600 shrink-0" weight="fill" />
@@ -368,7 +372,7 @@ export default function RewardsPage() {
             <div className={`rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
               activeLevel === 'Gold'
                 ? 'bg-white border-amber-500 ring-2 ring-amber-500/30 shadow-lg'
-                : totalPoints >= 20000
+                : totalPoints >= 50000
                 ? 'bg-white border-slate-200'
                 : 'bg-slate-100/90 border-slate-300 brightness-95 opacity-85'
             }`}>
@@ -376,22 +380,21 @@ export default function RewardsPage() {
                 <img
                   src="/tier2-wave.svg"
                   alt="Gold Wave Banner"
-                  className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none ${totalPoints < 5000 ? 'brightness-75' : ''}`}
+                  className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none ${totalPoints < 20000 ? 'brightness-75' : ''}`}
                 />
 
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-display font-extrabold tracking-tight text-white flex items-center gap-1.5 drop-shadow-md">
                       <span>Gold Partner</span>
-                      <Sparkle size={18} className="text-amber-300" weight="fill" />
                     </span>
                   </div>
 
-                  {totalPoints >= 20000 ? (
+                  {totalPoints >= 50000 ? (
                     <span className="px-3 py-1 bg-emerald-500 text-white font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider flex items-center gap-1">
                       <Check size={14} weight="bold" /> COMPLETED
                     </span>
-                  ) : totalPoints >= 5000 ? (
+                  ) : totalPoints >= 20000 ? (
                     <span className="px-3 py-1 bg-amber-400 text-amber-950 font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider">
                       ACTIVE
                     </span>
@@ -404,18 +407,22 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-xs font-mono-num text-amber-200/90 font-bold tracking-wider uppercase">5,000 &ndash; 19,999 PRIMEPOINTS</p>
+                  <p className="text-xs font-mono-num text-amber-200/90 font-bold tracking-wider uppercase">20,000 &ndash; 49,999 PRIMEPOINTS</p>
                 </div>
               </div>
 
               <div className="p-6 space-y-3 bg-white">
                 <ul className="text-sm space-y-2.5 font-medium leading-relaxed text-slate-700">
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className={totalPoints >= 5000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
-                    <span className="font-semibold text-slate-900">+15% Bonus (575 Pts / case)</span>
+                    <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <span className="font-semibold text-slate-900">125 Pts on Referred User Enrollment</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className={totalPoints >= 5000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <span>12% Case Completion Commission</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
                     <span>Dedicated Relationship Manager</span>
                   </li>
                 </ul>
@@ -432,18 +439,17 @@ export default function RewardsPage() {
                 <img
                   src="/tier3-wave.svg"
                   alt="Platinum Wave Banner"
-                  className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none ${totalPoints < 20000 ? 'brightness-75' : ''}`}
+                  className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none ${totalPoints < 50000 ? 'brightness-75' : ''}`}
                 />
 
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-display font-extrabold tracking-tight text-white flex items-center gap-1.5 drop-shadow-md">
                       <span>Platinum VIP</span>
-                      <Crown size={18} className="text-amber-300" weight="fill" />
                     </span>
                   </div>
 
-                  {totalPoints >= 20000 ? (
+                  {totalPoints >= 50000 ? (
                     <span className="px-3 py-1 bg-rose-500 text-white font-mono-num text-[11px] font-extrabold uppercase rounded-full shadow-md tracking-wider flex items-center gap-1">
                       <Sparkle size={14} weight="fill" /> ACTIVE VIP
                     </span>
@@ -456,19 +462,23 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-xs font-mono-num text-rose-200/90 font-bold tracking-wider uppercase">20,000+ PRIMEPOINTS</p>
+                  <p className="text-xs font-mono-num text-rose-200/90 font-bold tracking-wider uppercase">50,000+ PRIMEPOINTS</p>
                 </div>
               </div>
 
               <div className="p-6 space-y-3 bg-white">
                 <ul className="text-sm space-y-2.5 font-medium leading-relaxed text-slate-700">
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-rose-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
-                    <span className="font-semibold text-slate-900">+30% Bonus (650 Pts / case)</span>
+                    <CheckCircle size={17} className={totalPoints >= 50000 ? 'text-rose-600 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <span className="font-semibold text-slate-900">150 Pts on Referred User Enrollment</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-rose-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
-                    <span>Same-day automated payout</span>
+                    <CheckCircle size={17} className={totalPoints >= 50000 ? 'text-rose-600 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <span>15% Case Completion Commission</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle size={17} className={totalPoints >= 50000 ? 'text-rose-600 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
+                    <span>Priority 1h Express Payouts</span>
                   </li>
                 </ul>
               </div>

@@ -70,7 +70,8 @@ export function ResetPartnerPasswordModal({
     setSuccessMsg('');
 
     try {
-      const res = await updatePartnerPassword(partner.id, newPassword);
+      const targetIdentifier = partner.email ? partner.email.trim().toLowerCase() : partner.id;
+      const res = await updatePartnerPassword(targetIdentifier, newPassword);
       if (res.success) {
         setSuccessMsg(`Password for ${partner.name} updated successfully!`);
         setTimeout(() => {

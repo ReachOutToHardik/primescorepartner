@@ -247,14 +247,6 @@ export default function RegisterPage() {
   // Form State Step 2
   const [pan, setPan] = useState('');
   const [aadhaar, setAadhaar] = useState('');
-  const [panFile, setPanFile] = useState<File | null>(null);
-  const [aadhaarFile, setAadhaarFile] = useState<File | null>(null);
-  const [panFileName, setPanFileName] = useState<string | null>(null);
-  const [aadhaarFileName, setAadhaarFileName] = useState<string | null>(null);
-  const [dragOverPan, setDragOverPan] = useState(false);
-  const [dragOverAadhaar, setDragOverAadhaar] = useState(false);
-  const panInputRef = useRef<HTMLInputElement>(null);
-  const aadhaarInputRef = useRef<HTMLInputElement>(null);
 
   // Form State Step 3
   const [bankAccount, setBankAccount] = useState('');
@@ -374,29 +366,7 @@ export default function RegisterPage() {
         userId = crypto.randomUUID();
       }
 
-      // 2. Upload PAN file to Supabase Storage
-      let panFileUrl = '';
-      if (panFile && userId) {
-        const { data: panUpload } = await supabase.storage
-          .from('kyc-documents')
-          .upload(`${userId}/pan_${pan}.${panFile.name.split('.').pop()}`, panFile, { upsert: true });
-        if (panUpload) {
-          const { data: panUrlData } = supabase.storage.from('kyc-documents').getPublicUrl(panUpload.path);
-          panFileUrl = panUrlData?.publicUrl || '';
-        }
-      }
 
-      // 3. Upload Aadhaar file to Supabase Storage
-      let aadhaarFileUrl = '';
-      if (aadhaarFile && userId) {
-        const { data: aadhaarUpload } = await supabase.storage
-          .from('kyc-documents')
-          .upload(`${userId}/aadhaar_${aadhaar}.${aadhaarFile.name.split('.').pop()}`, aadhaarFile, { upsert: true });
-        if (aadhaarUpload) {
-          const { data: aadhaarUrlData } = supabase.storage.from('kyc-documents').getPublicUrl(aadhaarUpload.path);
-          aadhaarFileUrl = aadhaarUrlData?.publicUrl || '';
-        }
-      }
 
       // 4. Upload profile photo to Supabase Storage (avatars bucket)
       let avatarUrl = '';
@@ -427,6 +397,7 @@ export default function RegisterPage() {
               city: city.trim(),
               state: stateName.trim(),
               pan: pan.trim().toUpperCase(),
+              aadhaar: aadhaar.trim(),
               role: teamLeaderCode ? 'team_member' : accountRole,
               status: 'kyc_submitted',
               team_code: generatedTeamCode,
@@ -467,26 +438,8 @@ export default function RegisterPage() {
         }
       }
 
-      // 6. Insert KYC documents
+      // 6. Insert bank details
       if (createdProfile?.id) {
-        await supabase.from('kyc_documents').insert([
-          {
-            partner_id: createdProfile.id,
-            document_type: 'pan_card',
-            file_url: panFileUrl,
-            document_number: pan.trim().toUpperCase(),
-            verification_status: 'kyc_submitted',
-          },
-          {
-            partner_id: createdProfile.id,
-            document_type: 'aadhaar_front',
-            file_url: aadhaarFileUrl,
-            document_number: aadhaar.trim(),
-            verification_status: 'kyc_submitted',
-          },
-        ]);
-
-        // 7. Insert bank details
         await supabase.from('bank_accounts').insert([
           {
             partner_id: createdProfile.id,
@@ -532,24 +485,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Real file upload handlers
-  const handleFilePick = (type: 'pan' | 'aadhaar', file: File) => {
-    if (type === 'pan') {
-      setPanFile(file);
-      setPanFileName(file.name);
-    } else {
-      setAadhaarFile(file);
-      setAadhaarFileName(file.name);
-    }
-  };
 
-  const handleDrop = (type: 'pan' | 'aadhaar', e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) handleFilePick(type, file);
-    if (type === 'pan') setDragOverPan(false);
-    else setDragOverAadhaar(false);
-  };
 
   return (
     <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)] flex flex-col justify-between p-4 sm:p-8">
@@ -604,52 +540,11 @@ export default function RegisterPage() {
                 Personal & Professional Details
               </h2>
               <p className="text-xs text-[var(--ink-muted)] mt-1">
-                Select your partner account type and tell us about your background.
+                Tell us about your personal and professional background.
               </p>
             </div>
 
-            {/* Account Role Selector (Only shown if NOT invited via Team Leader link) */}
-            {!teamLeaderCode ? (
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--ink-2)]">
-                  Select Partner Account Type *
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setAccountRole('individual')}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      accountRole === 'individual'
-                        ? 'bg-indigo-50/50 border-[#1B2A72] ring-2 ring-[#1B2A72]/20'
-                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <span className="font-display font-bold text-sm text-[#1B2A72] block">Individual Partner</span>
-                    <span className="text-xs text-slate-500 font-medium mt-0.5 block">
-                      Submit client referrals directly & earn 500 PrimePoints per case.
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setAccountRole('team_leader')}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      accountRole === 'team_leader'
-                        ? 'bg-amber-50/60 border-amber-500 ring-2 ring-amber-500/30'
-                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-display font-bold text-sm text-slate-900">Team Leader / Agency Lead</span>
-                    </div>
-                    <span className="text-xs text-slate-500 font-medium mt-0.5 block">
-                      Onboard advisors under your roster & earn override points.
-                    </span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Clean Referral Banner without 10% cut mention */
+            {teamLeaderCode && (
               <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2 text-slate-900 font-bold">
                   <span>Attached Team Leader Code:</span>
@@ -963,15 +858,15 @@ export default function RegisterPage() {
         </div>
       )}
 
-        {/* STEP 2: KYC Document Details */}
+        {/* STEP 2: KYC Identity Numbers */}
         {currentStep === 2 && (
           <div className="space-y-6">
             <div>
               <h2 className="font-display text-2xl font-bold text-[var(--ink)]">
-                KYC Verification Documents
+                Identity & KYC Verification
               </h2>
               <p className="text-xs text-[var(--ink-muted)] mt-1">
-                Enter your identity details and upload proof documents for automated verification.
+                Enter your official PAN and Aadhaar card numbers for instant verification. No document upload required.
               </p>
             </div>
 
@@ -1010,88 +905,6 @@ export default function RegisterPage() {
                   <ShieldCheck size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
                 </div>
                 {errors.aadhaar && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.aadhaar}</p>}
-              </div>
-            </div>
-
-            {/* Real File Upload: PAN Card */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1.5">
-                Upload PAN Card Front Copy (PDF/JPG/PNG)
-              </label>
-              <div
-                onDragOver={(e) => { e.preventDefault(); setDragOverPan(true); }}
-                onDragLeave={() => setDragOverPan(false)}
-                onDrop={(e) => handleDrop('pan', e)}
-                className={`border-2 border-dashed p-6 text-center rounded-xs transition-colors cursor-pointer ${
-                  dragOverPan ? 'border-[#1B2A72] bg-[#1B2A72]/5' : 'border-[var(--border)] bg-[var(--surface)]'
-                }`}
-                onClick={() => panInputRef.current?.click()}
-              >
-                <input
-                  ref={panInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFilePick('pan', f); }}
-                />
-                {panFileName ? (
-                  <div className="flex items-center justify-center gap-3 text-[#3DAA4B]">
-                    <FileText size={28} weight="fill" />
-                    <div className="text-left">
-                      <p className="font-semibold text-xs text-[var(--ink)]">{panFileName}</p>
-                      <p className="text-[11px] text-[var(--ink-muted)]">File selected (Click to change)</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <UploadSimple size={24} className="mx-auto text-[var(--ink-muted)]" />
-                    <p className="text-xs font-semibold text-[var(--ink)]">
-                      Drag & drop your PAN file here or <span className="text-[#1B2A72] underline">browse file</span>
-                    </p>
-                    <p className="text-[11px] text-[var(--ink-subtle)]">Supports PDF, JPG, PNG up to 5MB</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Real File Upload: Aadhaar Card */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1.5">
-                Upload Aadhaar Copy (Front & Back)
-              </label>
-              <div
-                onDragOver={(e) => { e.preventDefault(); setDragOverAadhaar(true); }}
-                onDragLeave={() => setDragOverAadhaar(false)}
-                onDrop={(e) => handleDrop('aadhaar', e)}
-                className={`border-2 border-dashed p-6 text-center rounded-xs transition-colors cursor-pointer ${
-                  dragOverAadhaar ? 'border-[#1B2A72] bg-[#1B2A72]/5' : 'border-[var(--border)] bg-[var(--surface)]'
-                }`}
-                onClick={() => aadhaarInputRef.current?.click()}
-              >
-                <input
-                  ref={aadhaarInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFilePick('aadhaar', f); }}
-                />
-                {aadhaarFileName ? (
-                  <div className="flex items-center justify-center gap-3 text-[#3DAA4B]">
-                    <FileText size={28} weight="fill" />
-                    <div className="text-left">
-                      <p className="font-semibold text-xs text-[var(--ink)]">{aadhaarFileName}</p>
-                      <p className="text-[11px] text-[var(--ink-muted)]">File selected (Click to change)</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <UploadSimple size={24} className="mx-auto text-[var(--ink-muted)]" />
-                    <p className="text-xs font-semibold text-[var(--ink)]">
-                      Drag & drop your Aadhaar file here or <span className="text-[#1B2A72] underline">browse file</span>
-                    </p>
-                    <p className="text-[11px] text-[var(--ink-subtle)]">Supports PDF, JPG, PNG up to 5MB</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>

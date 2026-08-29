@@ -11,7 +11,7 @@ const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
 export async function POST(req: Request) {
   try {
     const adminHeader = req.headers.get('x-admin-password');
-    const masterPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Primescore@Admin2026';
+    const masterPassword = process.env.ADMIN_PASSWORD || 'Primescore@Admin2026';
 
     if (adminHeader !== masterPassword) {
       return NextResponse.json({ error: 'Unauthorized admin request.' }, { status: 401 });
