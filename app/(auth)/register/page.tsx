@@ -27,6 +27,45 @@ import {
 import { LogoLight } from '@/components/ui/LogoLight';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 
+const INDIAN_STATES = [
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Andaman and Nicobar Islands',
+  'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi',
+  'Jammu and Kashmir',
+  'Ladakh',
+  'Lakshadweep',
+  'Puducherry',
+];
+
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -269,6 +308,7 @@ export default function RegisterPage() {
   // Async duplicate email and phone check against Supabase
   const validateStep1 = async () => {
     const errs: Record<string, string> = {};
+    if (!profilePhoto) errs.profilePhoto = 'Partner profile picture is mandatory. Please upload a clear headshot image.';
     if (!name.trim()) errs.name = 'Full name is required';
     if (!email.trim() || !email.includes('@')) {
       errs.email = 'Valid email is required';
@@ -280,6 +320,7 @@ export default function RegisterPage() {
     if (!password.trim() || password.length < 6) errs.password = 'Password must be at least 6 characters long';
     if (password !== confirmPassword) errs.confirmPassword = 'Passwords do not match';
     if (!city.trim()) errs.city = 'City is required';
+    if (!stateName.trim()) errs.stateName = 'State selection is required';
 
     if (Object.keys(errs).length === 0) {
       try {
@@ -567,9 +608,9 @@ export default function RegisterPage() {
             )}
 
             {/* Profile Photo Uploader */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className={`flex flex-col sm:flex-row items-center gap-4 p-4 ${errors.profilePhoto ? 'bg-red-50/50 border-red-300' : 'bg-slate-50 border-slate-200'} border rounded-xl transition-all`}>
               <div className="relative group shrink-0">
-                <div className="w-20 h-20 rounded-full bg-[#1B2A72] text-white flex items-center justify-center font-bold text-2xl overflow-hidden border-2 border-white shadow-md">
+                <div className={`w-20 h-20 rounded-full ${errors.profilePhoto ? 'bg-red-100 text-red-600 border-2 border-red-500' : 'bg-[#1B2A72] text-white border-2 border-white'} flex items-center justify-center font-bold text-2xl overflow-hidden shadow-md`}>
                   {profilePhoto ? (
                     <img src={profilePhoto} alt="Profile Avatar" className="w-full h-full object-cover" />
                   ) : (
@@ -586,14 +627,26 @@ export default function RegisterPage() {
                       const file = e.target.files?.[0];
                       if (file) {
                         setProfilePhoto(URL.createObjectURL(file));
+                        setErrors((prev) => {
+                          const n = { ...prev };
+                          delete n.profilePhoto;
+                          return n;
+                        });
                       }
                     }}
                   />
                 </label>
               </div>
-              <div className="space-y-0.5 text-center sm:text-left">
-                <h4 className="font-display font-bold text-xs text-slate-900 uppercase tracking-wider">Partner Profile Picture</h4>
+              <div className="space-y-0.5 text-center sm:text-left flex-1">
+                <h4 className="font-display font-bold text-xs text-slate-900 uppercase tracking-wider">
+                  Partner Profile Picture <span className="text-[#E63329]">*</span>
+                </h4>
                 <p className="text-xs text-slate-500 font-medium">Upload a clear passport-style headshot (JPG/PNG). Used on your official digital ID card.</p>
+                {errors.profilePhoto && (
+                  <p className="text-xs text-red-600 font-bold mt-1">
+                    ⚠ {errors.profilePhoto}
+                  </p>
+                )}
                 <div className="pt-1 flex justify-center sm:justify-start gap-2">
                   <label className="text-[11px] font-bold text-[#1B2A72] hover:underline cursor-pointer">
                     Browse File
@@ -605,6 +658,11 @@ export default function RegisterPage() {
                         const file = e.target.files?.[0];
                         if (file) {
                           setProfilePhoto(URL.createObjectURL(file));
+                          setErrors((prev) => {
+                            const n = { ...prev };
+                            delete n.profilePhoto;
+                            return n;
+                          });
                         }
                       }}
                     />
@@ -832,6 +890,15 @@ export default function RegisterPage() {
                 placeholder="Select profession..."
               />
 
+              <CustomSelect
+                label="State *"
+                options={INDIAN_STATES}
+                value={stateName}
+                onChange={(val) => setStateName(val)}
+                placeholder="Select State..."
+              />
+              {errors.stateName && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.stateName}</p>}
+
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
                   City *
@@ -839,7 +906,7 @@ export default function RegisterPage() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Mumbai / Delhi / Bengaluru"
+                    placeholder="Mumbai / Delhi / Jaipur / Chandigarh"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)]"
@@ -847,19 +914,6 @@ export default function RegisterPage() {
                   <MapPin size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
                 </div>
                 {errors.city && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.city}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  State *
-                </label>
-                <input
-                  type="text"
-                  placeholder="Maharashtra"
-                  value={stateName}
-                  onChange={(e) => setStateName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)]"
-                />
               </div>
             </div>
           </div>
