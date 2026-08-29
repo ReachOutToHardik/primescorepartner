@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/login" className="flex items-center gap-3">
             <img
-              src="/logo-light.png"
+              src="/logo.png"
               alt="Primescore Partner Network"
               className="h-10 object-contain"
             />
