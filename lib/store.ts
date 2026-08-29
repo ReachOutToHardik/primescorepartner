@@ -32,7 +32,8 @@ export const getCaseCommissionRate = (tier: Tier): number => {
 
 export const calculateCaseCompletionPoints = (tier: Tier, serviceAmount: number): number => {
   const rate = getCaseCommissionRate(tier);
-  return Math.round((serviceAmount || 0) * (rate / 100));
+  const commissionInr = Math.round((serviceAmount || 0) * (rate / 100));
+  return commissionInr * 4; // 4 Pts per ₹1 INR (e.g. ₹10,000 @ 10% = ₹1,000 = 4,000 Pts)
 };
 
 export interface TeamMemberReferral {

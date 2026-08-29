@@ -37,9 +37,10 @@ export const CompleteCaseModal: React.FC<CompleteCaseModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Computed calculated points
+  // Computed calculated points: 1 INR commission = 4 PrimePoints (e.g. ₹10,000 service @ 10% = ₹1,000 = 4,000 Pts)
   const numAmount = typeof serviceAmount === 'number' ? serviceAmount : 0;
-  const autoCalculatedPoints = Math.round(numAmount * (commissionRatePct / 100));
+  const commissionInr = Math.round(numAmount * (commissionRatePct / 100));
+  const autoCalculatedPoints = commissionInr * 4;
   const finalPointsToCredit = typeof manualOverridePoints === 'number' ? manualOverridePoints : autoCalculatedPoints;
 
   useEffect(() => {
@@ -252,17 +253,17 @@ export const CompleteCaseModal: React.FC<CompleteCaseModalProps> = ({
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
             <div className="flex items-center justify-between font-bold text-slate-900">
               <span className="flex items-center gap-1.5 text-slate-700">
-                <Calculator size={16} className="text-emerald-600" /> Partner Commission Tier:
+                <Calculator size={16} className="text-emerald-600" /> Partner Commission ({partnerTier}):
               </span>
               <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-mono text-[11px]">
-                {partnerTier} ({commissionRatePct}%)
+                {commissionRatePct}% (₹{commissionInr.toLocaleString('en-IN')})
               </span>
             </div>
 
             <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 text-slate-700">
-              <span>Auto-Calculated Commission:</span>
+              <span>PrimePoints Credited (4 Pts / ₹1):</span>
               <span className="font-mono font-bold text-emerald-700 text-sm">
-                +{autoCalculatedPoints} Pts
+                +{autoCalculatedPoints.toLocaleString('en-IN')} Pts
               </span>
             </div>
           </div>
