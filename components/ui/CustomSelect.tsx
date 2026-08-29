@@ -42,7 +42,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div className="relative w-full" ref={dropdownRef}>
       {label && (
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
           {label}
         </label>
       )}
@@ -51,18 +51,18 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border rounded-xl flex items-center justify-between transition-all duration-200 ${
+        className={`w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border flex items-center justify-between transition-all duration-200 rounded-xs ${
           isOpen
-            ? 'border-[#1B2A72] bg-white ring-2 ring-indigo-100/80 shadow-sm'
-            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-100/60'
+            ? 'border-[#1B2A72] bg-white ring-2 ring-indigo-100/80 shadow-2xs'
+            : 'border-[var(--border)] hover:border-slate-300 hover:bg-slate-100/60'
         }`}
       >
-        <span className={`font-semibold ${selectedOption ? 'text-slate-900' : 'text-slate-400'}`}>
+        <span className={`font-medium ${selectedOption ? 'text-[var(--ink)]' : 'text-[var(--ink-subtle)]'}`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <CaretDown
-          size={16}
-          className={`text-slate-500 transition-transform duration-200 ${
+          size={18}
+          className={`text-[var(--ink-subtle)] transition-transform duration-200 ${
             isOpen ? 'rotate-180 text-[#1B2A72]' : ''
           }`}
         />
@@ -70,7 +70,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
       {/* Floating Custom Options Menu */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white border border-slate-200/90 rounded-xl shadow-xl p-1.5 space-y-0.5 max-h-60 overflow-y-auto animate-fade-in backdrop-blur-md">
+        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-white border border-[var(--border)] rounded-xs shadow-xl p-1 space-y-0.5 max-h-60 overflow-y-auto animate-fade-in backdrop-blur-md">
           {normalizedOptions.map((opt) => {
             const isSelected = opt.value === value;
             return (
@@ -81,7 +81,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   onChange(opt.value);
                   setIsOpen(false);
                 }}
-                className={`w-full px-3 py-2 text-xs text-left rounded-lg flex items-center justify-between transition-colors font-medium ${
+                className={`w-full px-3 py-2 text-xs text-left rounded-xs flex items-center justify-between transition-colors font-medium ${
                   isSelected
                     ? 'bg-[#1B2A72] text-white font-bold'
                     : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900'
