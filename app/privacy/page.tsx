@@ -3,163 +3,160 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Privacy Policy | Primescore Partner Portal',
-  description: 'Privacy Policy and Data Handling Guidelines for Primescore Partner Portal',
+  description: 'Privacy Policy and Data Protection Standards for the Primescore Partner Portal',
 };
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-amber-400 selection:text-slate-950 flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)] flex flex-col justify-between selection:bg-[var(--amber)] selection:text-[var(--navy-deep)] font-sans">
       {/* Top Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="bg-gradient-to-r from-[var(--navy-deep)] to-[var(--navy)] text-white sticky top-0 z-50 shadow-md">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/login" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-slate-950 flex items-center justify-center font-extrabold text-xl shadow-lg shadow-amber-400/20 font-display">
+            <div className="w-10 h-10 rounded-lg bg-[var(--amber)] text-[var(--navy-deep)] flex items-center justify-center font-extrabold text-xl shadow-sm font-display">
               P
             </div>
             <div>
-              <span className="font-display font-black text-xl tracking-tight text-white block leading-none group-hover:text-amber-400 transition">
+              <span className="font-display font-bold text-xl tracking-tight text-white block leading-none group-hover:text-[var(--amber)] transition">
                 Primescore
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-300/90">
                 Partner Network
               </span>
             </div>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-xs font-semibold text-slate-300 hover:text-white px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
+              className="text-xs font-semibold text-white/90 hover:text-white px-3.5 py-2 rounded-xs bg-white/10 hover:bg-white/20 border border-white/15 transition-all flex items-center gap-1.5"
             >
-              ← Back to Login
+              <span>← Back to Login</span>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Main Body */}
-      <main className="max-w-4xl mx-auto px-4 py-10 w-full flex-1">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl backdrop-blur-xl">
+      {/* Main Body Container */}
+      <main className="max-w-4xl mx-auto px-4 py-8 w-full flex-1">
+        <div className="bg-white border border-[var(--border)] rounded-xs p-6 sm:p-10 space-y-8 shadow-xs animate-fade-up">
           {/* Title Header */}
-          <div className="border-b border-slate-800 pb-6 space-y-2">
-            <span className="text-xs font-mono font-bold tracking-widest text-amber-400 uppercase bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
-              Legal & Compliance
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-black font-display text-white tracking-tight">
+          <div className="border-b border-[var(--border)] pb-6 space-y-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xs bg-[var(--amber-light)] border border-[var(--amber)]/30 text-[var(--navy-deep)] text-[11px] font-bold uppercase tracking-wider">
+              <span>Legal Document</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-[var(--ink)] tracking-tight">
               Privacy Policy & Data Security
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--ink-muted)]">
               Effective Date: January 1, 2026 | Last Updated: August 29, 2026
             </p>
           </div>
 
           {/* Policy Sections */}
-          <div className="space-y-6 text-sm text-slate-300 leading-relaxed font-normal">
+          <div className="space-y-6 text-sm text-[var(--ink-2)] leading-relaxed font-normal">
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                1. Overview & Commitment
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                1. Overview & Scope
               </h2>
               <p>
-                Primescore (&ldquo;Company&rdquo;, &ldquo;We&rdquo;, &ldquo;Us&rdquo;, or &ldquo;Our&rdquo;) operates the Primescore Partner Portal. We are committed to upholding strict data privacy standards and protecting all personal, financial, and referral information collected through our digital platforms.
+                Primescore (&ldquo;Company&rdquo;, &ldquo;We&rdquo;, &ldquo;Us&rdquo;, or &ldquo;Our&rdquo;) operates the Primescore Partner Portal. We prioritize the security, confidentiality, and integrity of all personal, operational, and financial data processed through our partner application and management interfaces.
               </p>
               <p>
-                This Privacy Policy outlines how we collect, process, store, and safeguard the information you provide when registering as a partner, referring potential clients, or engaging with our partner portal services.
+                This Privacy Policy describes our general practices regarding the collection, processing, storage, and handling of information when you register as a partner, refer potential clients, or access our portal features.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                2. Information We Collect
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                2. Data We Collect
               </h2>
               <p>
-                To facilitate partner account verification, referral tracking, and reward settlement, we collect the following categories of information:
+                To provide partner account management, referral tracking, and reward calculations, we may process:
               </p>
-              <ul className="list-disc list-inside space-y-1 text-slate-400 pl-2">
-                <li><strong className="text-slate-200">Partner Identification Data:</strong> Full name, email address, mobile number, professional designation, city, and state.</li>
-                <li><strong className="text-slate-200">KYC Verification Data:</strong> PAN card details, Aadhaar verification parameters, and government-issued identity documents.</li>
-                <li><strong className="text-slate-200">Banking & Settlement Information:</strong> Bank account numbers, IFSC codes, account holder names, and reward transaction history.</li>
-                <li><strong className="text-slate-200">Referral Lead Information:</strong> Customer contact details submitted by partners for credit evaluation and counseling services.</li>
-                <li><strong className="text-slate-200">Technical Data:</strong> Device IP address, browser metadata, session duration, and portal activity logs.</li>
+              <ul className="list-disc list-inside space-y-1.5 text-[var(--ink-muted)] pl-2">
+                <li><strong className="text-[var(--ink)]">Partner Profile Data:</strong> Name, contact details, email address, profession, city, and state.</li>
+                <li><strong className="text-[var(--ink)]">KYC & Identity Data:</strong> Permanent Account Number (PAN), verification records, and submitted identity documents.</li>
+                <li><strong className="text-[var(--ink)]">Banking Details:</strong> Bank account numbers, IFSC codes, and settlement records for reward redemption.</li>
+                <li><strong className="text-[var(--ink)]">Referral Submissions:</strong> Client contact details submitted by partners for credit counseling evaluation.</li>
+                <li><strong className="text-[var(--ink)]">System Technical Logs:</strong> IP address, device telemetry, browser type, and portal interaction timestamps.</li>
               </ul>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                3. How Information Is Used
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                3. Purpose & Use of Data
               </h2>
               <p>
-                Information collected is strictly utilized for legitimate business operations, including:
+                Information processed through the portal is used solely for legitimate business operations, including:
               </p>
-              <ul className="list-disc list-inside space-y-1 text-slate-400 pl-2">
-                <li>Verifying partner eligibility and performing mandatory Know-Your-Customer (KYC) checks.</li>
-                <li>Attributing, tracking, and processing referral leads across the lifecycle stages.</li>
-                <li>Calculating, crediting, and fulfilling PrimePoints reward distributions and gift card vouchers.</li>
-                <li>Sending transactional updates, system alerts, security notifications, and program updates.</li>
-                <li>Maintaining audit logs for compliance, fraud prevention, and system security.</li>
+              <ul className="list-disc list-inside space-y-1.5 text-[var(--ink-muted)] pl-2">
+                <li>Authenticating partner credentials and fulfilling KYC verification requirements.</li>
+                <li>Attributing, recording, and tracking client referral submissions across workflow stages.</li>
+                <li>Calculating PrimePoints rewards, tier progressions, and issuing gift card vouchers.</li>
+                <li>Sending operational notifications, transactional email alerts, and administrative updates.</li>
+                <li>Maintaining audit logs for security, dispute resolution, and system protection.</li>
               </ul>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                4. Data Protection & Security Controls
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                4. Data Security & Storage Standards
               </h2>
               <p>
-                We implement enterprise-grade security architecture, including end-to-end transport layer security (TLS 1.3), AES-256 encryption at rest, role-based access control (RBAC), and continuous threat monitoring. Partner authentication credentials and database transactions are protected by cryptographic key management standards.
-              </p>
-              <p>
-                We do not sell, rent, lease, or trade partner or customer data to third-party marketing entities under any circumstances.
+                We employ standard industry security protocols, including encrypted communications (HTTPS/TLS), access restriction controls, and secure database storage. We do not sell, rent, or trade partner or client data to unauthorized third-party commercial entities.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                5. Third-Party Service Providers
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                5. Third-Party Service Integrations
               </h2>
               <p>
-                We engage trusted third-party technology infrastructure providers (including cloud database hosting, transactional email delivery services, and OTP verification gateways) under strict data processing agreements. These vendors process data exclusively on our instructions and in compliance with security guidelines.
+                We may utilize secure third-party service providers (such as cloud hosting providers, transactional email services, and messaging gateways) to support portal operations. All service providers are expected to adhere to data confidentiality standards.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                6. General Disclaimer & Liability Limitation
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                6. General Disclaimer & Limitation
               </h2>
               <p>
-                The Primescore Partner Portal functions as a digital management tool for partner activity and credit counseling advisory tracking. Registration or participation in the partner network does not guarantee any specific volume of referred cases, conversion rates, or financial earnings. All partner referral compensation is contingent upon verified activity in accordance with system guidelines.
+                The Primescore Partner Portal is an administrative platform for referral tracking and partner collaboration. Registration as a partner does not guarantee any specific volume of referred cases, financial returns, or specific credit score outcomes for referred clients. All referral evaluations are subject to independent assessment.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                7. Contact & Data Grievances
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                7. Privacy Queries & Contact Information
               </h2>
               <p>
-                If you have questions regarding this Privacy Policy, wish to request profile updates, or have privacy concerns, please contact our Compliance Officer at:
+                For privacy questions, data update requests, or general inquiries regarding this policy, please reach out to our team at:
               </p>
-              <div className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 space-y-1 font-mono text-xs text-amber-300">
-                <p><strong>Email:</strong> privacy@primescore.in / partner@primescore.in</p>
-                <p><strong>Support Desk:</strong> Primescore Credit Solutions Pvt Ltd</p>
-                <p><strong>Portal Helpdesk:</strong> https://partner.primescore.in</p>
+              <div className="p-4 bg-[var(--surface)] rounded-xs border border-[var(--border)] space-y-1 font-mono text-xs text-[var(--ink)]">
+                <p><strong>Email:</strong> info@primescore.in / partner@primescore.in</p>
+                <p><strong>Helpdesk:</strong> Primescore Credit Solutions</p>
+                <p><strong>Portal:</strong> https://partner.primescore.in</p>
               </div>
             </section>
           </div>
 
-          {/* Bottom Footer Action */}
-          <div className="pt-6 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-4 text-slate-400 font-medium">
-              <Link href="/terms" className="hover:text-amber-400 transition">Terms & Conditions</Link>
+          {/* Footer Action Bar */}
+          <div className="pt-6 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3 text-[var(--ink-muted)] font-medium">
+              <Link href="/terms" className="hover:text-[var(--navy)] underline transition">Terms & Conditions</Link>
               <span>•</span>
-              <Link href="/refund" className="hover:text-amber-400 transition">Payout & Rewards Policy</Link>
+              <Link href="/refund" className="hover:text-[var(--navy)] underline transition">Payout & Rewards Policy</Link>
             </div>
             <Link
               href="/login"
-              className="text-amber-400 font-bold hover:underline flex items-center gap-1"
+              className="text-[var(--navy)] font-bold hover:underline flex items-center gap-1"
             >
               Return to Login &rarr;
             </Link>
@@ -168,8 +165,8 @@ export default function PrivacyPolicyPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-400">
-        <p>© {new Date().getFullYear()} Primescore Credit Solutions. All rights reserved.</p>
+      <footer className="border-t border-[var(--border)] py-4 text-center text-xs text-[var(--ink-muted)] bg-white">
+        <p>© {new Date().getFullYear()} Primescore. All rights reserved.</p>
       </footer>
     </div>
   );

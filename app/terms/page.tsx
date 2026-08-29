@@ -8,141 +8,141 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-amber-400 selection:text-slate-950 flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)] flex flex-col justify-between selection:bg-[var(--amber)] selection:text-[var(--navy-deep)] font-sans">
       {/* Top Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="bg-gradient-to-r from-[var(--navy-deep)] to-[var(--navy)] text-white sticky top-0 z-50 shadow-md">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/login" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-slate-950 flex items-center justify-center font-extrabold text-xl shadow-lg shadow-amber-400/20 font-display">
+            <div className="w-10 h-10 rounded-lg bg-[var(--amber)] text-[var(--navy-deep)] flex items-center justify-center font-extrabold text-xl shadow-sm font-display">
               P
             </div>
             <div>
-              <span className="font-display font-black text-xl tracking-tight text-white block leading-none group-hover:text-amber-400 transition">
+              <span className="font-display font-bold text-xl tracking-tight text-white block leading-none group-hover:text-[var(--amber)] transition">
                 Primescore
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-300/90">
                 Partner Network
               </span>
             </div>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-xs font-semibold text-slate-300 hover:text-white px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
+              className="text-xs font-semibold text-white/90 hover:text-white px-3.5 py-2 rounded-xs bg-white/10 hover:bg-white/20 border border-white/15 transition-all flex items-center gap-1.5"
             >
-              ← Back to Login
+              <span>← Back to Login</span>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Main Body */}
-      <main className="max-w-4xl mx-auto px-4 py-10 w-full flex-1">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl backdrop-blur-xl">
+      {/* Main Body Container */}
+      <main className="max-w-4xl mx-auto px-4 py-8 w-full flex-1">
+        <div className="bg-white border border-[var(--border)] rounded-xs p-6 sm:p-10 space-y-8 shadow-xs animate-fade-up">
           {/* Title Header */}
-          <div className="border-b border-slate-800 pb-6 space-y-2">
-            <span className="text-xs font-mono font-bold tracking-widest text-amber-400 uppercase bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
-              Operational Agreement
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-black font-display text-white tracking-tight">
-              Partner Program Terms & Conditions
+          <div className="border-b border-[var(--border)] pb-6 space-y-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xs bg-[var(--amber-light)] border border-[var(--amber)]/30 text-[var(--navy-deep)] text-[11px] font-bold uppercase tracking-wider">
+              <span>Operational Agreement</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-[var(--ink)] tracking-tight">
+              Partner Terms & Conditions
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--ink-muted)]">
               Effective Date: January 1, 2026 | Last Updated: August 29, 2026
             </p>
           </div>
 
           {/* Terms Content */}
-          <div className="space-y-6 text-sm text-slate-300 leading-relaxed font-normal">
+          <div className="space-y-6 text-sm text-[var(--ink-2)] leading-relaxed font-normal">
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                1. Acceptance of Terms & Partner Enrollment
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                1. Acceptance & Partner Registration
               </h2>
               <p>
-                By creating a partner account or accessing the Primescore Partner Portal, you agree to be bound by these Terms and Conditions. The partner program is open to eligible professionals, independent agents, DSAs, financial consultants, and institutional representatives.
+                By registering for a partner account or utilizing the Primescore Partner Portal, you agree to comply with these Terms and Conditions. The partner program is accessible to qualified professionals, independent consultants, DSAs, financial counselors, and institutional partners.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                2. Independent Partner Relationship
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                2. Independent Partner Status
               </h2>
               <p>
-                The relationship between Primescore and the Partner is that of independent contractor entities. Nothing contained in these terms shall be construed to create a joint venture, franchise, employment, agency, or partnership relationship between the parties. Partners have no authority to bind Primescore to any contract or obligation.
+                Partners operate as independent entities. Nothing in these terms creates an employment, agency, franchise, joint venture, or legal partnership between Primescore and the Partner. Partners are not authorized to make binding representations or commitments on behalf of Primescore.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
                 3. Lead Submission & Attribution Rules
               </h2>
               <p>
-                Partners may refer potential clients for credit score analysis and counseling services. Lead attribution is tracked automatically via unique referral links or referral codes assigned upon account creation.
+                Partners may refer potential clients for credit score analysis and counseling services using assigned referral codes or links.
               </p>
-              <ul className="list-disc list-inside space-y-1 text-slate-400 pl-2">
-                <li>Leads must contain authentic client details submitted with appropriate consent.</li>
-                <li>Primescore reserves the right to verify client interest and decline duplicate or uncontactable leads.</li>
-                <li>Referral activity is evaluated independently per client application without guarantee of approval or conversion.</li>
+              <ul className="list-disc list-inside space-y-1.5 text-[var(--ink-muted)] pl-2">
+                <li>Referrals must contain genuine contact details provided with client consent.</li>
+                <li>Primescore reserves the right to review lead validity and decline duplicate or uncontactable submissions.</li>
+                <li>Referral submissions are evaluated independently without guarantee of client enrollment or specific case outcomes.</li>
               </ul>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                4. Rewards, Tiers & PrimePoints System
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                4. PrimePoints & Reward Program Rules
               </h2>
               <p>
-                PrimePoints are promotional reward credits awarded to partners for verified portal activity and case milestones. Points are non-transferable, carry no direct cash value except when redeemed through official portal gift voucher channels, and are subject to program parameters.
+                PrimePoints are promotional credits granted for verified portal activity and milestones. PrimePoints carry no direct monetary cash value outside of official portal redemption channels and cannot be transferred between accounts.
               </p>
               <p>
-                Partner tier levels (Silver, Gold, Platinum) are calculated based on cumulative lifetime points earned. Primescore reserves the right to modify reward schedules, tier parameters, or redemption offerings upon system updates.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                5. Compliance, Conduct & Anti-Fraud Policy
-              </h2>
-              <p>
-                Partners agree not to engage in deceptive, fraudulent, or spam marketing practices. Misrepresentation of Primescore services, creation of fake client profiles, or unauthorized collection of upfront client fees will result in immediate account termination and forfeiture of accrued points.
+                Partner tier levels (Silver, Gold, Platinum) are determined by cumulative lifetime points earned. Primescore reserves the right to adjust reward schedules, point parameters, or gift card redemption catalogs during standard system updates.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                6. Limitation of Liability & General Disclaimer
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                5. Partner Conduct & Anti-Fraud Guidelines
               </h2>
               <p>
-                Primescore provides the Partner Portal on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. We do not guarantee uninterrupted system access or specific client conversion rates. In no event shall Primescore be liable for indirect, incidental, consequential, or punitive damages arising out of portal usage.
+                Partners must maintain ethical practices. Misrepresentation of services, creation of non-authentic client leads, unauthorized collection of upfront fees, or spam promotion is prohibited and will result in account suspension and point forfeiture.
               </p>
             </section>
 
             <section className="space-y-2">
-              <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                7. Modifications & Inquiries
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                6. General Disclaimer & Limitation of Liability
               </h2>
               <p>
-                Primescore reserves the right to update these Terms at any time. Continued portal usage following updates constitutes acceptance of revised terms. For operational or legal inquiries, reach out to partner@primescore.in.
+                The Primescore Partner Portal is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. Primescore does not warrant uninterrupted portal availability or specific referral conversion rates. In no event shall Primescore be liable for indirect, incidental, or consequential losses related to portal participation.
+              </p>
+            </section>
+
+            <section className="space-y-2">
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                7. Program Amendments & Inquiries
+              </h2>
+              <p>
+                Primescore reserves the right to update these terms as needed. Continued portal usage after updates implies acceptance. For inquiries regarding these terms, contact info@primescore.in or partner@primescore.in.
               </p>
             </section>
           </div>
 
-          {/* Bottom Footer Action */}
-          <div className="pt-6 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-4 text-slate-400 font-medium">
-              <Link href="/privacy" className="hover:text-amber-400 transition">Privacy Policy</Link>
+          {/* Footer Action Bar */}
+          <div className="pt-6 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3 text-[var(--ink-muted)] font-medium">
+              <Link href="/privacy" className="hover:text-[var(--navy)] underline transition">Privacy Policy</Link>
               <span>•</span>
-              <Link href="/refund" className="hover:text-amber-400 transition">Payout & Rewards Policy</Link>
+              <Link href="/refund" className="hover:text-[var(--navy)] underline transition">Payout & Rewards Policy</Link>
             </div>
             <Link
               href="/login"
-              className="text-amber-400 font-bold hover:underline flex items-center gap-1"
+              className="text-[var(--navy)] font-bold hover:underline flex items-center gap-1"
             >
               Return to Login &rarr;
             </Link>
@@ -151,8 +151,8 @@ export default function TermsPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-400">
-        <p>© {new Date().getFullYear()} Primescore Credit Solutions. All rights reserved.</p>
+      <footer className="border-t border-[var(--border)] py-4 text-center text-xs text-[var(--ink-muted)] bg-white">
+        <p>© {new Date().getFullYear()} Primescore. All rights reserved.</p>
       </footer>
     </div>
   );
