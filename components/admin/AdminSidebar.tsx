@@ -94,14 +94,14 @@ export default function AdminSidebar() {
           <Link href="/admin" className="flex items-center gap-3 overflow-hidden py-1">
             {isCollapsed ? (
               <img
-                src="/logo.png"
+                src="/logo-light.png"
                 alt="Primescore Admin"
                 className="w-9 h-9 object-contain shrink-0"
               />
             ) : (
               <div className="flex items-center gap-2">
                 <img
-                  src="/logo.png"
+                  src="/logo-light.png"
                   alt="Primescore Admin"
                   className="h-8 object-contain max-w-[150px]"
                 />

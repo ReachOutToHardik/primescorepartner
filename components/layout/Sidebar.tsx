@@ -109,13 +109,13 @@ export default function Sidebar({
         <Link href="/dashboard" className="flex items-center gap-3 overflow-hidden py-1">
           {isCollapsed ? (
             <img
-              src="/logo.png"
+              src="/logo-light.png"
               alt="PrimeScore Logo"
               className="w-9 h-9 object-contain shrink-0"
             />
           ) : (
             <img
-              src="/logo.png"
+              src="/logo-light.png"
               alt="PrimeScore Partner Network"
               className="h-9 object-contain max-w-[170px]"
             />
