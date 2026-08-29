@@ -54,6 +54,7 @@ export default function RegisterPage() {
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [enteredOtp, setEnteredOtp] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
+  const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const [otpError, setOtpError] = useState('');
   const [otpSuccessMsg, setOtpSuccessMsg] = useState('');
 
@@ -140,6 +141,7 @@ export default function RegisterPage() {
     setGeneratedOtp(code);
     setOtpStep('sent');
     setOtpTimer(60);
+    setOtpExpiresAt(Date.now() + 10 * 60 * 1000); // Expiration: 10 minutes (600 seconds)
 
     // Call Resend API via server route
     try {
@@ -150,7 +152,7 @@ export default function RegisterPage() {
       });
       const resData = await res.json();
       if (res.ok) {
-        setOtpSuccessMsg(`Verification code sent to ${email.trim()}! Please check your email inbox.`);
+        setOtpSuccessMsg(`Verification code sent to ${email.trim()}! Valid for 10 minutes.`);
       } else {
         console.warn('Resend email notice:', resData);
         setOtpSuccessMsg(`Verification code generated for ${email.trim()}.`);
@@ -175,6 +177,12 @@ export default function RegisterPage() {
 
     if (!enteredOtp.trim()) {
       setOtpError('Please enter the 6-digit OTP code.');
+      return;
+    }
+
+    // Explicit 10-minute expiration check
+    if (otpExpiresAt && Date.now() > otpExpiresAt) {
+      setOtpError('This OTP code has expired after 10 minutes. Please click "Resend Code" to get a new code.');
       return;
     }
 

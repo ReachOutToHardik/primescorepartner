@@ -36,6 +36,7 @@ export default function RedeemPage() {
   const [otpStep, setOtpStep] = useState<'confirm' | 'otp' | 'success'>('confirm');
   const [otpValue, setOtpValue] = useState('');
   const [internalOtp, setInternalOtp] = useState('');
+  const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const [generatedVoucherCode, setGeneratedVoucherCode] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -90,14 +91,21 @@ export default function RedeemPage() {
   const handleRequestOTP = () => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     setInternalOtp(otp);
+    setOtpExpiresAt(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
     setOtpStep('otp');
     console.info(`[DEV] OTP for redemption: ${otp}`);
   };
 
   const handleVerifyAndRedeem = async () => {
     if (!selectedBrand || !partner?.id) return;
+
+    if (otpExpiresAt && Date.now() > otpExpiresAt) {
+      setErrorMsg('This OTP code has expired after 10 minutes. Please request a new OTP code.');
+      return;
+    }
+
     if (otpValue.trim() !== internalOtp) {
-      setErrorMsg('Invalid OTP. Please check and try again.');
+      setErrorMsg('Invalid OTP code. Please check and try again.');
       return;
     }
 
