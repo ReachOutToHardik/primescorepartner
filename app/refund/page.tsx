@@ -12,18 +12,12 @@ export default function RefundPolicyPage() {
       {/* Top Header */}
       <header className="bg-gradient-to-r from-[var(--navy-deep)] to-[var(--navy)] text-white sticky top-0 z-50 shadow-md">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/login" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-lg bg-[var(--amber)] text-[var(--navy-deep)] flex items-center justify-center font-extrabold text-xl shadow-sm font-display">
-              P
-            </div>
-            <div>
-              <span className="font-display font-bold text-xl tracking-tight text-white block leading-none group-hover:text-[var(--amber)] transition">
-                Primescore
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-300/90">
-                Partner Network
-              </span>
-            </div>
+          <Link href="/login" className="flex items-center gap-3">
+            <img
+              src="/logo-light.png"
+              alt="Primescore Partner Network"
+              className="h-10 object-contain"
+            />
           </Link>
           <div className="flex items-center gap-3">
             <Link
