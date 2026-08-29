@@ -238,7 +238,7 @@ export default function LoginPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-3">
             <img
-              src="/logo.png"
+              src="/logo-light.png"
               alt="PrimeScore Partner Network"
               className="h-9 lg:h-11 object-contain"
             />
