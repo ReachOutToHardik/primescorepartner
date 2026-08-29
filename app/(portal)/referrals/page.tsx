@@ -356,7 +356,7 @@ export default function ReferralsPage() {
       {/* 5-STAGE STATUS STEPPER MODAL */}
       {selectedReferral && (
         <div
-          className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+          className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 animate-fade-in"
           onClick={() => setSelectedReferralId(null)}
         >
           <div

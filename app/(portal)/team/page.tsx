@@ -318,7 +318,7 @@ export default function TeamPage() {
 
       {/* 5. Modal: Directly Onboard New Team Member */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 animate-fade-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/65 animate-fade-in">
           <Card variant="elevated" className="max-w-md w-full p-6 sm:p-8 space-y-6 rounded-2xl bg-white relative">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
@@ -437,7 +437,7 @@ export default function TeamPage() {
       )}
       {/* 6. Modal: Downloadable & Printable Team Signup QR Code */}
       {isQrModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 animate-fade-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/65 animate-fade-in">
           <Card variant="elevated" className="max-w-sm w-full p-6 space-y-6 rounded-2xl bg-white relative text-center">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">

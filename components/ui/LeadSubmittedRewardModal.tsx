@@ -27,7 +27,7 @@ export const LeadSubmittedRewardModal: React.FC<LeadSubmittedRewardModalProps> =
   const commissionRatePct = getCaseCommissionRate(currentTier);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-fade-in">
       <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-scale-up">
         {/* Top Header Banner */}
         <div className="bg-[#0F1A4E] text-white p-6 relative overflow-hidden text-center space-y-2">
