@@ -85,10 +85,10 @@ export const LeadSubmittedRewardModal: React.FC<LeadSubmittedRewardModalProps> =
               <div className="flex-1 space-y-0.5">
                 <div className="flex items-center justify-between">
                   <span className="font-display font-bold text-xs text-slate-900">
-                    Case Completion Commission ({commissionRatePct}%)
+                    Case Completion Reward ({commissionRatePct}% PrimePoints Value)
                   </span>
                   <span className="font-mono font-bold text-emerald-700 text-xs">
-                    {commissionRatePct}% of Case Amount
+                    {commissionRatePct}% PrimePoints Value
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">

@@ -358,7 +358,7 @@ export default function RewardsPage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className="text-emerald-600 shrink-0" weight="fill" />
-                    <span>10% Case Completion Commission</span>
+                    <span>10% PrimePoints Value on Case Completion</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className="text-emerald-600 shrink-0" weight="fill" />
@@ -419,7 +419,7 @@ export default function RewardsPage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
-                    <span>12% Case Completion Commission</span>
+                    <span>12% PrimePoints Value on Case Completion</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className={totalPoints >= 20000 ? 'text-amber-500 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
@@ -474,7 +474,7 @@ export default function RewardsPage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className={totalPoints >= 50000 ? 'text-rose-600 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
-                    <span>15% Case Completion Commission</span>
+                    <span>15% PrimePoints Value on Case Completion</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle size={17} className={totalPoints >= 50000 ? 'text-rose-600 shrink-0' : 'text-slate-400 shrink-0'} weight="fill" />
