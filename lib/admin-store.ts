@@ -511,7 +511,7 @@ export const useAdminStore = create<AdminStore>()(
             await supabase.from('notifications').insert([{
               partner_id: partnerId,
               title: '❌ KYC Application Not Approved',
-              message: `Your partner KYC application was not approved. Reason: ${reason || 'Documentation incomplete'}. Please contact support at support@primescore.in to re-apply or clarify.`,
+              message: `Your partner KYC application was not approved. Reason: ${reason || 'Documentation incomplete'}. Please contact support at partner@primescore.in to re-apply or clarify.`,
               type: 'warning',
               is_read: false,
             }]);

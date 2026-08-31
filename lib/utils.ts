@@ -83,3 +83,36 @@ export function getTierInfo(points: number) {
     return { tier: 'Gold', next: 'Platinum', progress: Math.round(((points - 5000) / 15000) * 100), color: '#F5C518', nextThreshold: 20000 };
   return { tier: 'Silver', next: 'Gold', progress: Math.round((points / 5000) * 100), color: '#9C9893', nextThreshold: 5000 };
 }
+
+/**
+ * Formats an Indian 10-digit mobile number into "5 5" format (e.g., "98765 43210").
+ * Restricts input to maximum 10 digits.
+ */
+export function formatMobile(val: string): string {
+  const digits = val.replace(/\D/g, '').slice(0, 10);
+  if (digits.length > 5) {
+    return `${digits.slice(0, 5)} ${digits.slice(5)}`;
+  }
+  return digits;
+}
+
+/**
+ * Formats a 12-digit Indian Aadhaar card into "4 4 4" format (e.g., "1234 5678 9012").
+ * Restricts input to maximum 12 digits.
+ */
+export function formatAadhaar(val: string): string {
+  const digits = val.replace(/\D/g, '').slice(0, 12);
+  const parts: string[] = [];
+  for (let i = 0; i < digits.length; i += 4) {
+    parts.push(digits.slice(i, i + 4));
+  }
+  return parts.join(' ');
+}
+
+/**
+ * Formats a 10-character Indian PAN Card number (e.g., "ABCDE1234F").
+ * Restricts to uppercase alphanumeric and maximum 10 characters.
+ */
+export function formatPan(val: string): string {
+  return val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+}

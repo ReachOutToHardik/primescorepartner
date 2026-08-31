@@ -134,7 +134,7 @@ export default function PrivacyPolicyPage() {
                 For privacy questions, data update requests, or general inquiries regarding this policy, please reach out to our team at:
               </p>
               <div className="p-4 bg-[var(--surface)] rounded-xs border border-[var(--border)] space-y-1 font-mono text-xs text-[var(--ink)]">
-                <p><strong>Email:</strong> info@primescore.in / partner@primescore.in</p>
+                <p><strong>Email:</strong> partner@primescore.in</p>
                 <p><strong>Helpdesk:</strong> Primescore Credit Solutions</p>
                 <p><strong>Portal:</strong> https://partner.primescore.in</p>
               </div>

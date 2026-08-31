@@ -26,6 +26,7 @@ import {
 } from '@phosphor-icons/react';
 import { LogoLight } from '@/components/ui/LogoLight';
 import { CustomSelect } from '@/components/ui/CustomSelect';
+import { formatMobile, formatAadhaar, formatPan } from '@/lib/utils';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -36,7 +37,6 @@ export default function RegisterPage() {
   // Form State Step 1
   const [accountRole, setAccountRole] = useState<'individual' | 'team_leader'>('individual');
   const [teamLeaderCode, setTeamLeaderCode] = useState('');
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -120,7 +120,7 @@ export default function RegisterPage() {
         setOtpStep('idle');
         setErrors((prev) => ({
           ...prev,
-          email: 'This email already exists. Please log in or contact info@primescore.in',
+          email: 'This email already exists. Please log in or contact partner@primescore.in',
         }));
         return;
       }
@@ -269,7 +269,6 @@ export default function RegisterPage() {
   // Async duplicate email and phone check against Supabase
   const validateStep1 = async () => {
     const errs: Record<string, string> = {};
-    if (!profilePhoto) errs.profilePhoto = 'Partner profile picture is mandatory. Please upload a clear headshot image.';
     if (!name.trim()) errs.name = 'Full name is required';
     if (!email.trim() || !email.includes('@')) {
       errs.email = 'Valid email is required';
@@ -277,7 +276,8 @@ export default function RegisterPage() {
       errs.email = 'Email verification is mandatory. Please verify your email using OTP below.';
     }
 
-    if (!phone.trim() || phone.length < 10) errs.phone = 'Valid 10-digit phone is required';
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) errs.phone = 'Valid 10-digit mobile number is required';
     if (!password.trim() || password.length < 6) errs.password = 'Password must be at least 6 characters long';
     if (password !== confirmPassword) errs.confirmPassword = 'Passwords do not match';
     if (!city.trim()) errs.city = 'City is required';
@@ -297,11 +297,11 @@ export default function RegisterPage() {
           errs.email = 'This email is already registered. Please sign in instead.';
         }
 
-        // Check duplicate phone
+        // Check duplicate phone (compare 10 clean digits)
         const { data: existingPhone } = await supabase
           .from('profiles')
           .select('id')
-          .eq('phone', phone.trim())
+          .eq('phone', cleanPhone)
           .maybeSingle();
 
         if (existingPhone) {
@@ -318,19 +318,26 @@ export default function RegisterPage() {
 
   const validateStep2 = () => {
     const errs: Record<string, string> = {};
-    if (!pan.trim() || pan.length < 10) errs.pan = 'Valid 10-character PAN is required';
-    if (!aadhaar.trim() || aadhaar.length < 12) errs.aadhaar = 'Valid 12-digit Aadhaar is required';
+    const cleanPan = pan.replace(/[^A-Z0-9]/gi, '');
+    const cleanAadhaar = aadhaar.replace(/\D/g, '');
+
+    if (cleanPan.length !== 10) {
+      errs.pan = 'Valid 10-character PAN is required (e.g. ABCDE1234F)';
+    }
+    if (cleanAadhaar.length !== 12) {
+      errs.aadhaar = 'Valid 12-digit Aadhaar number is required (e.g. 1234 5678 9012)';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const validateStep3 = () => {
     const errs: Record<string, string> = {};
-    if (!bankAccount.trim()) errs.bankAccount = 'Bank account number is required';
-    if (!bankName.trim()) errs.bankName = 'Bank name is required';
-    if (!ifsc.trim()) errs.ifsc = 'IFSC code is required';
-    if (!accountHolder.trim()) errs.accountHolder = 'Account holder name is required';
-    if (!termsAgreed) errs.terms = 'You must agree to the Terms & Conditions';
+    // Bank details and payout setup are OPTIONAL as requested
+    if (ifsc.trim() && ifsc.trim().length !== 11) {
+      errs.ifsc = 'If provided, IFSC code must be 11 characters (e.g. HDFC0001234)';
+    }
+    if (!termsAgreed) errs.terms = 'You must agree to the Terms & Conditions to submit';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -378,20 +385,12 @@ export default function RegisterPage() {
 
 
 
-      // 4. Upload profile photo to Supabase Storage (avatars bucket)
-      let avatarUrl = '';
-      if (profilePhoto && userId && profilePhoto.startsWith('blob:')) {
-        const blob = await fetch(profilePhoto).then((r) => r.blob());
-        const { data: avatarUpload } = await supabase.storage
-          .from('avatars')
-          .upload(`${userId}/avatar.jpg`, blob, { upsert: true, contentType: 'image/jpeg' });
-        if (avatarUpload) {
-          const { data: avatarUrlData } = supabase.storage.from('avatars').getPublicUrl(avatarUpload.path);
-          avatarUrl = avatarUrlData?.publicUrl || '';
-        }
-      }
+      // Clean digits
+      const cleanPhone = phone.replace(/\D/g, '').trim();
+      const cleanAadhaar = aadhaar.replace(/\D/g, '').trim();
+      const cleanPan = pan.replace(/[^A-Z0-9]/gi, '').toUpperCase().trim();
 
-      // 5. Insert profile row (id = auth user id)
+      // 4. Insert profile row (id = auth user id)
       const registrationTime = new Date().toISOString();
       const { data: createdProfile, error: profileError } = await supabase
         .from('profiles')
@@ -401,18 +400,18 @@ export default function RegisterPage() {
               id: userId,
               name: name.trim(),
               email: email.trim().toLowerCase(),
-              phone: phone.trim(),
+              phone: cleanPhone,
               password: password.trim(),
               profession,
               city: city.trim(),
               state: stateName.trim(),
-              pan: pan.trim().toUpperCase(),
-              aadhaar: aadhaar.trim(),
+              pan: cleanPan,
+              aadhaar: cleanAadhaar,
               role: teamLeaderCode ? 'team_member' : accountRole,
               status: 'kyc_submitted',
               team_code: generatedTeamCode,
               referred_by_leader_id: teamLeaderCode || null,
-              avatar_url: avatarUrl || null,
+              avatar_url: null,
               is_email_verified: true,
               prime_points: 0,
               lifetime_points_earned: 0,
@@ -448,18 +447,22 @@ export default function RegisterPage() {
         }
       }
 
-      // 6. Insert bank details
-      if (createdProfile?.id) {
-        await supabase.from('bank_accounts').insert([
-          {
-            partner_id: createdProfile.id,
-            account_holder_name: accountHolder.trim(),
-            bank_name: bankName.trim(),
-            account_number: bankAccount.trim(),
-            ifsc_code: ifsc.trim().toUpperCase(),
-            is_verified: false,
-          },
-        ]);
+      // 5. Insert bank details (only if provided by partner, since bank details are optional)
+      if (createdProfile?.id && (accountHolder.trim() || bankAccount.trim() || ifsc.trim())) {
+        try {
+          await supabase.from('bank_accounts').insert([
+            {
+              partner_id: createdProfile.id,
+              account_holder_name: accountHolder.trim() || name.trim(),
+              bank_name: bankName.trim() || 'Bank',
+              account_number: bankAccount.trim(),
+              ifsc_code: ifsc.trim().toUpperCase(),
+              is_verified: false,
+            },
+          ]);
+        } catch (bankErr) {
+          console.warn('Optional bank details save notice:', bankErr);
+        }
       }
 
       // Authenticate partner and open /kyc Application Under Review screen directly
@@ -467,16 +470,17 @@ export default function RegisterPage() {
         id: userId,
         name: name.trim(),
         email: email.trim().toLowerCase(),
-        phone: phone.trim(),
+        phone: cleanPhone,
         profession,
         city: city.trim(),
         state: stateName.trim(),
-        pan: pan.trim().toUpperCase(),
+        pan: cleanPan,
+        aadhaar: cleanAadhaar,
         role: teamLeaderCode ? ('team_member' as const) : accountRole,
         status: 'kyc_submitted' as const,
         teamCode: generatedTeamCode,
         joinedAt: new Date().toISOString(),
-        profilePhoto: avatarUrl || undefined,
+        profilePhoto: undefined,
       };
 
       const { usePartnerStore } = await import('@/lib/store');
@@ -567,79 +571,6 @@ export default function RegisterPage() {
                 </span>
               </div>
             )}
-
-            {/* Profile Photo Uploader */}
-            <div className={`flex flex-col sm:flex-row items-center gap-4 p-4 ${errors.profilePhoto ? 'bg-red-50/50 border-red-300' : 'bg-slate-50 border-slate-200'} border rounded-xl transition-all`}>
-              <div className="relative group shrink-0">
-                <div className={`w-20 h-20 rounded-full ${errors.profilePhoto ? 'bg-red-100 text-red-600 border-2 border-red-500' : 'bg-[#1B2A72] text-white border-2 border-white'} flex items-center justify-center font-bold text-2xl overflow-hidden shadow-md`}>
-                  {profilePhoto ? (
-                    <img src={profilePhoto} alt="Profile Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <span>{name ? name.substring(0, 1).toUpperCase() : <User size={32} />}</span>
-                  )}
-                </div>
-                <label className="absolute bottom-0 right-0 p-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-full cursor-pointer shadow-md transition-all">
-                  <Camera size={14} weight="bold" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setProfilePhoto(URL.createObjectURL(file));
-                        setErrors((prev) => {
-                          const n = { ...prev };
-                          delete n.profilePhoto;
-                          return n;
-                        });
-                      }
-                    }}
-                  />
-                </label>
-              </div>
-              <div className="space-y-0.5 text-center sm:text-left flex-1">
-                <h4 className="font-display font-bold text-xs text-slate-900 uppercase tracking-wider">
-                  Partner Profile Picture <span className="text-[#E63329]">*</span>
-                </h4>
-                <p className="text-xs text-slate-500 font-medium">Upload a clear passport-style headshot (JPG/PNG). Used on your official digital ID card.</p>
-                {errors.profilePhoto && (
-                  <p className="text-xs text-red-600 font-bold mt-1">
-                    ⚠ {errors.profilePhoto}
-                  </p>
-                )}
-                <div className="pt-1 flex justify-center sm:justify-start gap-2">
-                  <label className="text-[11px] font-bold text-[#1B2A72] hover:underline cursor-pointer">
-                    Browse File
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setProfilePhoto(URL.createObjectURL(file));
-                          setErrors((prev) => {
-                            const n = { ...prev };
-                            delete n.profilePhoto;
-                            return n;
-                          });
-                        }
-                      }}
-                    />
-                  </label>
-                  {profilePhoto && (
-                    <button
-                      type="button"
-                      onClick={() => setProfilePhoto(null)}
-                      className="text-[11px] font-bold text-red-600 hover:underline"
-                    >
-                      Remove Photo
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
 
             <div className="space-y-4">
               <div>
@@ -787,9 +718,10 @@ export default function RegisterPage() {
                 <div className="relative">
                   <input
                     type="tel"
-                    placeholder="9876543210"
+                    placeholder="98765 43210"
+                    maxLength={11}
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(formatMobile(e.target.value))}
                     className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono-num"
                   />
                   <Phone size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
@@ -904,7 +836,7 @@ export default function RegisterPage() {
                     placeholder="ABCDE1234F"
                     maxLength={10}
                     value={pan}
-                    onChange={(e) => setPan(e.target.value.toUpperCase())}
+                    onChange={(e) => setPan(formatPan(e.target.value))}
                     className="w-full px-3.5 py-2.5 text-sm uppercase bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono-num"
                   />
                   <Cardholder size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
@@ -922,7 +854,7 @@ export default function RegisterPage() {
                     placeholder="1234 5678 9012"
                     maxLength={14}
                     value={aadhaar}
-                    onChange={(e) => setAadhaar(e.target.value)}
+                    onChange={(e) => setAadhaar(formatAadhaar(e.target.value))}
                     className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono-num"
                   />
                   <ShieldCheck size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
@@ -933,22 +865,27 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* STEP 3: Bank Details & T&C */}
+        {/* STEP 3: Bank Details (Optional) & T&C */}
         {currentStep === 3 && (
           <div className="space-y-6">
             <div>
-              <h2 className="font-display text-2xl font-bold text-[var(--ink)]">
-                Bank Details for Referral Payouts
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-display text-2xl font-bold text-[var(--ink)]">
+                  Bank Details for Referral Payouts
+                </h2>
+                <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  Optional
+                </span>
+              </div>
               <p className="text-xs text-[var(--ink-muted)] mt-1">
-                Your commissions & cash payouts will be transferred directly to this bank account.
+                Optional — you can add or update your bank account details anytime later from your partner profile to receive commission payouts.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Account Holder Name *
+                  Account Holder Name <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -965,7 +902,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Bank Name *
+                  Bank Name <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -982,7 +919,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Account Number *
+                  Account Number <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   type="password"
@@ -996,7 +933,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  IFSC Code *
+                  IFSC Code <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
@@ -1021,10 +958,14 @@ export default function RegisterPage() {
                 />
                 <span className="text-xs text-[var(--ink-2)] leading-normal">
                   I hereby certify that all documents and information provided above are accurate and true. I agree to the{' '}
-                  <a href="#" onClick={(e) => e.preventDefault()} className="text-[#1B2A72] font-semibold underline">
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#1B2A72] font-semibold underline hover:text-[#253390]">
                     PrimeScore Partner Network Agreement
                   </a>{' '}
-                  and consent to KYC background verification.
+                  and{' '}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#1B2A72] font-semibold underline hover:text-[#253390]">
+                    Privacy Policy
+                  </a>
+                  , and consent to KYC verification.
                 </span>
               </label>
               {errors.terms && <p className="text-[11px] text-[#E63329] font-semibold">{errors.terms}</p>}

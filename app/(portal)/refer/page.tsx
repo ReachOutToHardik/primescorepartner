@@ -29,6 +29,7 @@ import jsPDF from 'jspdf';
 import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
 import { FileCogIcon } from '@/components/ui/file-cog';
 import { LeadSubmittedRewardModal } from '@/components/ui/LeadSubmittedRewardModal';
+import { formatMobile } from '@/lib/utils';
 
 export default function ReferPage() {
   const { partner, setReferrals, referrals } = usePartnerStore();
@@ -195,9 +196,10 @@ export default function ReferPage() {
       return;
     }
     const errs: Record<string, string> = {};
+    const cleanPhone = customerPhone.replace(/\D/g, '');
 
     if (!customerName.trim()) errs.name = 'Customer name is required';
-    if (!customerPhone.trim() || customerPhone.length < 10) errs.phone = 'Valid 10-digit phone number is required';
+    if (cleanPhone.length !== 10) errs.phone = 'Valid 10-digit mobile number is required';
     if (!city.trim()) errs.city = 'City is required';
 
     if (Object.keys(errs).length > 0) {
@@ -218,7 +220,7 @@ export default function ReferPage() {
           {
             partner_id: partner.id,
             customer_name: customerName.trim(),
-            customer_phone: customerPhone.trim(),
+            customer_phone: cleanPhone,
             customer_email: customerEmail.trim() || null,
             city: city.trim(),
             service_name: service,
@@ -392,7 +394,7 @@ export default function ReferPage() {
                 <span>Check Application Status</span>
               </a>
               <a
-                href="mailto:info@primescore.in"
+                href="mailto:partner@primescore.in"
                 className="w-full py-3 px-4 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 text-center"
               >
                 <Envelope size={16} />
@@ -488,9 +490,10 @@ export default function ReferPage() {
                 <div className="relative">
                   <input
                     type="tel"
-                    placeholder="9876543210"
+                    placeholder="98765 43210"
+                    maxLength={11}
                     value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    onChange={(e) => setCustomerPhone(formatMobile(e.target.value))}
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#1B2A72] focus:ring-2 focus:ring-indigo-100 text-slate-900 font-mono-num transition-all"
                   />
                   <Phone size={18} className="absolute right-3.5 top-3 text-slate-400" />

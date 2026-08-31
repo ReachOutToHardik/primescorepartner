@@ -43,18 +43,19 @@ export default function LoginPage() {
     try {
       const { supabase } = await import('@/lib/supabase');
 
-      const identifier = email.trim().toLowerCase();
-      const isMobile = /^\d{10}$/.test(identifier);
+      const rawIdentifier = email.trim();
+      const cleanDigits = rawIdentifier.replace(/\D/g, '');
+      const isMobile = cleanDigits.length === 10 && !rawIdentifier.includes('@');
+      const identifier = isMobile ? cleanDigits : rawIdentifier.toLowerCase();
 
       // ─── Step 1: Resolve email from mobile if needed ────────────────────────
-      // Only query the DB to convert a phone number to an email address.
-      // We fetch ONLY the email field — no PII, no profile data exposed.
       let resolvedEmail = identifier;
       if (isMobile) {
+        const formattedPhone = `${cleanDigits.slice(0, 5)} ${cleanDigits.slice(5)}`;
         const { data: phoneRow, error: phoneErr } = await supabase
           .from('profiles')
           .select('email')
-          .eq('phone', identifier)
+          .or(`phone.eq.${cleanDigits},phone.eq.${formattedPhone}`)
           .maybeSingle();
 
         if (phoneErr || !phoneRow?.email) {
@@ -176,7 +177,7 @@ export default function LoginPage() {
       // Enforce status checks after auth
       if (profile.status === 'kyc_rejected') {
         await supabase.auth.signOut();
-        setError('Your partner application was declined. Please contact info@primescore.in for assistance.');
+        setError('Your partner application was declined. Please contact partner@primescore.in for assistance.');
         setIsLoading(false);
         return;
       }
@@ -357,8 +358,8 @@ export default function LoginPage() {
         <div className="relative z-10 pt-4 hidden lg:block text-[11px] text-slate-300 font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
           <p className="inline-flex items-center gap-1.5">
             <span>&copy; 2026 Primescore. All rights reserved.</span>
-            <a href="mailto:info@primescore.in" className="text-slate-300 hover:text-white font-normal hover:underline">
-              info@primescore.in
+            <a href="mailto:partner@primescore.in" className="text-slate-300 hover:text-white font-normal hover:underline">
+              partner@primescore.in
             </a>
           </p>
         </div>
@@ -415,7 +416,7 @@ export default function LoginPage() {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert('Please contact support@primescore.in to reset your password.');
+                    alert('Please contact partner@primescore.in to reset your password.');
                   }}
                   className="text-xs text-[#F5C518] lg:text-[#1B2A72] hover:underline font-semibold"
                 >
@@ -494,8 +495,8 @@ export default function LoginPage() {
           </div>
           <p className="inline-flex items-center justify-center gap-1.5 text-slate-400 lg:text-[var(--ink-muted)]">
             <span>&copy; {new Date().getFullYear()} Primescore. All rights reserved.</span>
-            <a href="mailto:info@primescore.in" className="text-slate-300 lg:text-[var(--ink)] font-semibold hover:underline">
-              info@primescore.in
+            <a href="mailto:partner@primescore.in" className="text-slate-300 lg:text-[var(--ink)] font-semibold hover:underline">
+              partner@primescore.in
             </a>
           </p>
         </div>

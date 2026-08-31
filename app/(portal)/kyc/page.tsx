@@ -12,7 +12,6 @@ import {
   FileText,
   Bank,
   User,
-  PhoneCall,
   Envelope,
   WhatsappLogo,
   Headset,
@@ -23,93 +22,137 @@ import {
   HourglassHigh,
   LockKey,
   Shield,
-  Check
+  Check,
+  Scales,
+  Article,
+  QrCode,
+  CaretDown,
 } from '@phosphor-icons/react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Card } from '@/components/ui/Card';
+import { formatMobile, formatAadhaar, formatPan } from '@/lib/utils';
 
 export default function KYCPage() {
   const { partner } = usePartnerStore();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const qrCardRef = useRef<HTMLDivElement>(null);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const handleDownloadPdf = async () => {
+  const userRefCode = partner?.userReferralCode || partner?.teamCode || 'PSMKMVLN';
+  const clientReferralUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/apply?ref=${userRefCode}`
+    : `https://partners.primescore.in/apply?ref=${userRefCode}`;
+
+  const handleDownloadQR = async (format: 'png' | 'jpg' | 'pdf' = 'pdf') => {
+    setDownloadOpen(false);
+    setIsExporting(true);
+
     try {
-      setIsGeneratingPdf(true);
+      const qrSvg = qrCardRef.current?.querySelector('svg');
+      if (!qrSvg) throw new Error('QR SVG element not found');
 
-      const canvas = document.createElement('canvas');
-      canvas.width = 1011;
-      canvas.height = 637;
-      const ctx = canvas.getContext('2d');
+      // Convert SVG element to serialized string
+      const svgData = new XMLSerializer().serializeToString(qrSvg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const URL = window.URL || window.webkitURL || window;
+      const blobURL = URL.createObjectURL(svgBlob);
 
-      if (!ctx) throw new Error('Canvas context not available');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
 
-      const bgImg = new Image();
-      bgImg.crossOrigin = 'anonymous';
-      await new Promise((resolve, reject) => {
-        bgImg.onload = resolve;
-        bgImg.onerror = reject;
-        bgImg.src = '/id-card-bg.png';
-      });
-      ctx.drawImage(bgImg, 0, 0, 1011, 637);
-
-      ctx.fillStyle = '#0F1A4E';
-      ctx.font = '900 36px "Plus Jakarta Sans", sans-serif';
-      const nameText = (partner?.name || 'RAHUL JOSHI').toUpperCase();
-      ctx.fillText(nameText, 66, 292);
-
-      ctx.fillStyle = '#1A1917';
-      ctx.font = '800 21px "Inter", sans-serif';
-      const refCodeText = `REF CODE : ${(partner?.teamCode || partner?.id?.toUpperCase() || 'EFWFFEW')}`;
-      ctx.fillText(refCodeText, 66, 350);
-
-      const phoneText = `MOBILE :- +91 ${partner?.phone || '9811223344'}`;
-      ctx.fillText(phoneText, 66, 388);
-
-      const qrImg = new Image();
-      qrImg.crossOrigin = 'anonymous';
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=PRIMESCORE-PARTNER-${partner?.teamCode || partner?.id || 'demo'}&color=0F1A4E`;
-      
-      await new Promise((resolve, reject) => {
-        qrImg.onload = resolve;
-        qrImg.onerror = reject;
-        qrImg.src = qrUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = (e) => reject(e);
+        img.src = blobURL;
       });
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(555, 181, 390, 385);
-      ctx.drawImage(qrImg, 560, 186, 380, 375);
-
+      // Load logo image for center overlay
       const logoImg = new Image();
       logoImg.crossOrigin = 'anonymous';
-      await new Promise((resolve) => {
-        logoImg.onload = resolve;
-        logoImg.onerror = resolve;
+
+      await new Promise<void>((resolve) => {
+        logoImg.onload = () => resolve();
+        logoImg.onerror = () => resolve(); // Proceed even if logo fails
         logoImg.src = '/qr-logo.png';
       });
 
-      if (logoImg.complete && logoImg.naturalWidth !== 0) {
+      // Render high-res 1000x1160 canvas badge
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const size = 1000;
+      const padding = 80;
+      canvas.width = size;
+      canvas.height = size + 160;
+
+      if (ctx) {
+        // White rounded background card
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.roundRect(0, 0, canvas.width, canvas.height, 40);
+        ctx.fill();
+
+        // Border ring
+        ctx.strokeStyle = '#F5C518';
+        ctx.lineWidth = 12;
+        ctx.stroke();
+
+        // Draw QR SVG Image
+        ctx.drawImage(img, padding, padding, size - padding * 2, size - padding * 2);
+
+        // Draw Centered Logo Image Overlay
+        if (logoImg.complete && logoImg.width > 0) {
+          const logoSize = 180;
+          const logoX = (canvas.width - logoSize) / 2;
+          const logoY = padding + (size - padding * 2 - logoSize) / 2;
+
+          // White background cutout circle for logo center
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, padding + (size - padding * 2) / 2, logoSize / 2 + 10, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+        }
+
+        // Partner footer text
         ctx.fillStyle = '#0F1A4E';
-        ctx.fillRect(725, 348, 50, 50);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(725, 348, 50, 50);
-        ctx.drawImage(logoImg, 728, 351, 44, 44);
+        ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`PRIMESCORE PARTNER • ${userRefCode}`, size / 2, size + 80);
       }
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: [85.6, 54],
-      });
+      const filename = `primescore-referral-qr-${userRefCode.toLowerCase()}`;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
-      pdf.save(`PrimeScore_Partner_ID_${partner?.teamCode || partner?.id || 'card'}.pdf`);
+      if (format === 'png') {
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `${filename}.png`;
+        link.click();
+      } else if (format === 'jpg') {
+        const image = canvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `${filename}.jpg`;
+        link.click();
+      } else if (format === 'pdf') {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+        });
+        const imgWidth = 140;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', (210 - imgWidth) / 2, 40, imgWidth, imgHeight);
+        pdf.save(`${filename}.pdf`);
+      }
+
+      URL.revokeObjectURL(blobURL);
     } catch (err) {
-      console.error('PDF Generation failed', err);
-      alert('Could not generate PDF. Please try again.');
+      console.error('Failed to export Referral QR code:', err);
     } finally {
-      setIsGeneratingPdf(false);
+      setIsExporting(false);
     }
   };
 
@@ -231,7 +274,7 @@ export default function KYCPage() {
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Mobile Number</span>
-                <span className="font-mono text-slate-800">{partner?.phone}</span>
+                <span className="font-mono text-slate-800">{partner?.phone ? formatMobile(partner.phone) : '—'}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-slate-500">City & State</span>
@@ -242,15 +285,15 @@ export default function KYCPage() {
 
           <Card variant="elevated" className="p-6 space-y-4">
             <h3 className="font-display font-bold text-sm text-slate-900 border-b border-slate-100 pb-2.5 flex items-center gap-2">
-              <ShieldCheck size={18} className="text-[#1B2A72]" /> Uploaded KYC Documents
+              <ShieldCheck size={18} className="text-[#1B2A72]" /> Submitted KYC Details
             </h3>
             <div className="space-y-3 text-xs">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <FileText size={20} className="text-blue-600" />
                   <div>
-                    <p className="font-bold text-slate-900">PAN Card Document</p>
-                    <p className="text-[10px] font-mono text-slate-500">PAN: {partner?.pan || 'Uploaded'}</p>
+                    <p className="font-bold text-slate-900">PAN Card Number</p>
+                    <p className="text-[11px] font-mono font-bold text-slate-700">{partner?.pan ? formatPan(partner.pan) : 'Submitted'}</p>
                   </div>
                 </div>
                 <span className="px-2 py-0.5 bg-amber-100 text-amber-900 font-bold text-[10px] rounded-md">Reviewing</span>
@@ -258,16 +301,49 @@ export default function KYCPage() {
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <FileText size={20} className="text-emerald-600" />
+                  <ShieldCheck size={20} className="text-emerald-600" />
                   <div>
-                    <p className="font-bold text-slate-900">Aadhaar Identity Proof</p>
-                    <p className="text-[10px] text-slate-500">Government Identity Proof</p>
+                    <p className="font-bold text-slate-900">Aadhaar Identification</p>
+                    <p className="text-[11px] font-mono font-bold text-slate-700">
+                      {partner?.aadhaar ? formatAadhaar(partner.aadhaar) : 'Government Identity Proof'}
+                    </p>
                   </div>
                 </div>
                 <span className="px-2 py-0.5 bg-amber-100 text-amber-900 font-bold text-[10px] rounded-md">Reviewing</span>
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Legal Policies & Security Compliance Strip */}
+        <div className="p-4 bg-white border border-[var(--border)] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Scales size={20} className="text-[#1B2A72] shrink-0" weight="fill" />
+            <div>
+              <span className="font-bold text-slate-900">Official Platform Policies</span>
+              <p className="text-[11px] text-slate-500">Review our regulatory, data security, and partner compensation terms.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              href="/privacy"
+              className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-bold text-[11px] transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-bold text-[11px] transition-colors"
+            >
+              Terms & Conditions
+            </Link>
+            <Link
+              href="/refund"
+              className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-bold text-[11px] transition-colors"
+            >
+              Refund Policy
+            </Link>
+          </div>
         </div>
 
         {/* Support Help & Contact Box */}
@@ -282,7 +358,7 @@ export default function KYCPage() {
 
           <div className="flex items-center gap-3 shrink-0">
             <a
-              href="mailto:support@primescore.in"
+              href="mailto:partner@primescore.in"
               className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all border border-white/10 flex items-center gap-1.5"
             >
               <Envelope size={16} /> Support Email
@@ -405,73 +481,83 @@ export default function KYCPage() {
             </p>
           </div>
 
-          {/* OFFICIAL PRIMESCORE PARTNER ID CARD DOWNLOAD ACTION */}
+          {/* OFFICIAL PRIMESCORE PARTNER REFERRAL QR DOWNLOAD ACTION */}
           <div className="space-y-3 bg-white border border-[var(--border)] p-6 rounded-xs shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
-                  <IdentificationCard size={20} className="text-[#1B2A72]" weight="fill" />
-                  Official PrimeScore Partner Digital ID Card
+                  <QrCode size={20} className="text-[#1B2A72]" weight="bold" />
+                  Official PrimeScore Partner Referral QR Code
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Your identity is verified. Download your official high-definition Partner ID Card as a formatted PDF.
+                  Your identity is verified. Download your official high-definition Partner Referral QR Code as a formatted PDF or image.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleDownloadPdf}
-                disabled={isGeneratingPdf}
-                className="px-5 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
-              >
-                <DownloadSimple size={18} weight="bold" />
-                <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download ID Card (PDF)'}</span>
-              </button>
+              <div className="relative inline-block text-left shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setDownloadOpen(!downloadOpen)}
+                  disabled={isExporting}
+                  className="px-5 py-2.5 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <DownloadSimple size={18} weight="bold" />
+                  <span>{isExporting ? 'Exporting QR...' : 'Download Referral QR Code'}</span>
+                  <CaretDown size={12} weight="bold" className={`transition-transform ${downloadOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {downloadOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-2 divide-y divide-slate-100 animate-fade-in text-left">
+                    <button
+                      onClick={() => handleDownloadQR('pdf')}
+                      className="w-full px-4 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer"
+                    >
+                      <span>PDF Document</span>
+                      <span className="text-[10px] text-indigo-600 font-mono-num font-bold">.pdf</span>
+                    </button>
+                    <button
+                      onClick={() => handleDownloadQR('png')}
+                      className="w-full px-4 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer"
+                    >
+                      <span>PNG Image</span>
+                      <span className="text-[10px] text-slate-400 font-mono-num">.png</span>
+                    </button>
+                    <button
+                      onClick={() => handleDownloadQR('jpg')}
+                      className="w-full px-4 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer"
+                    >
+                      <span>JPG Image</span>
+                      <span className="text-[10px] text-slate-400 font-mono-num">.jpg</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* OFF-SCREEN HIGH-RES CARD RENDERER FOR JSPDF */}
+            {/* OFF-SCREEN HIGH-RES QR BADGE RENDERER FOR EXPORT */}
             <div className="fixed -left-[9999px] -top-[9999px] pointer-events-none">
               <div
-                id="pdf-id-card-renderer"
-                ref={cardRef}
-                className="relative w-[1011px] h-[637px] rounded-none overflow-hidden bg-white select-none shadow-none"
+                ref={qrCardRef}
+                className="p-5 bg-white rounded-2xl border-2 border-[#F5C518] shadow-lg flex flex-col items-center gap-2.5 w-[240px]"
               >
-                <img
-                  src="/id-card-bg.png"
-                  alt="PrimeScore ID Card Background"
-                  className="absolute inset-0 w-full h-full object-fill"
+                <QRCodeSVG
+                  value={clientReferralUrl}
+                  size={180}
+                  bgColor={"#FFFFFF"}
+                  fgColor={"#0F1A4E"}
+                  level={"H"}
+                  includeMargin={false}
+                  imageSettings={{
+                    src: "/qr-logo.png",
+                    x: undefined,
+                    y: undefined,
+                    height: 42,
+                    width: 42,
+                    excavate: true,
+                  }}
                 />
-
-                <div className="absolute top-[41%] left-[6.5%] max-w-[46%] z-10 flex flex-col justify-start">
-                  <h4 className="font-display font-extrabold text-slate-950 text-3xl leading-none uppercase tracking-tight truncate">
-                    {partner?.name || 'RAHUL JOSHI'}
-                  </h4>
-
-                  <div className="mt-5 space-y-2 font-body font-bold text-slate-900 text-lg tracking-wide">
-                    <p className="flex items-center gap-2 truncate">
-                      <span className="text-slate-900 font-bold">REF CODE :</span>
-                      <span className="font-display text-slate-950 font-extrabold uppercase">{partner?.teamCode || partner?.id?.toUpperCase() || 'EFWFFEW'}</span>
-                    </p>
-                    <p className="flex items-center gap-2 truncate">
-                      <span className="text-slate-900 font-bold">MOBILE :-</span>
-                      <span className="font-display text-slate-950 font-extrabold">+91 {partner?.phone || '9811223344'}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="absolute top-[28.5%] right-[6.5%] w-[38.5%] h-[60.5%] flex items-center justify-center p-2 z-10">
-                  <div className="w-full h-full relative bg-white p-2 rounded-none flex items-center justify-center">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=PRIMESCORE-PARTNER-${partner?.teamCode || partner?.id || 'demo'}&color=0F1A4E`}
-                      alt="Partner Verification QR Code"
-                      className="w-full h-full object-contain"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-12 h-12 bg-[#0F1A4E] rounded-none p-1 border-2 border-white shadow-md flex items-center justify-center overflow-hidden">
-                        <img src="/qr-logo.png" alt="PrimeScore Logo" className="w-full h-full object-contain" />
-                      </div>
-                    </div>
-                  </div>
+                <div className="text-[10px] font-bold text-[#0F1A4E] uppercase tracking-wider font-mono-num border-t border-slate-100 pt-1.5 w-full text-center">
+                  Primescore Partner &bull; {userRefCode}
                 </div>
               </div>
             </div>
@@ -534,13 +620,13 @@ export default function KYCPage() {
 
             <div className="space-y-3 pt-2">
               <a
-                href="mailto:partner.support@primescore.in"
+                href="mailto:partner@primescore.in"
                 className="flex items-center gap-3 p-3 bg-[#1B2A72] hover:bg-[#253390] border border-white/15 rounded-xs transition-colors text-xs text-white"
               >
                 <Envelope size={18} className="text-[#F5C518]" />
                 <div>
                   <span className="block font-semibold text-slate-200">Email Support</span>
-                  <span className="font-mono-num text-white">partner.support@primescore.in</span>
+                  <span className="font-mono-num text-white">partner@primescore.in</span>
                 </div>
               </a>
 
@@ -556,14 +642,65 @@ export default function KYCPage() {
                   <span className="font-mono-num text-white">+91 98765 43210</span>
                 </div>
               </a>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-3 p-3 bg-[#1B2A72] border border-white/15 rounded-xs text-xs text-white">
-                <PhoneCall size={18} className="text-[#F5C518]" />
-                <div>
-                  <span className="block font-semibold text-slate-200">Partner Helpline</span>
-                  <span className="font-mono-num text-white">1800-200-PRIME (Toll-Free)</span>
-                </div>
+          {/* Legal & Platform Policies Card */}
+          <div className="bg-white border border-[var(--border)] p-6 rounded-xs space-y-4 shadow-xs">
+            <div className="flex items-center gap-2.5 border-b border-[var(--border)] pb-3">
+              <Scales size={22} className="text-[#1B2A72]" weight="fill" />
+              <div>
+                <h3 className="font-display text-base font-bold text-[var(--navy-deep)]">
+                  Platform Policies & Legal
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  PrimeScore Partner Network regulatory & compliance documentation.
+                </p>
               </div>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <Link
+                href="/privacy"
+                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-left transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck size={18} className="text-emerald-600 shrink-0" weight="fill" />
+                  <div>
+                    <span className="font-bold text-slate-900 block group-hover:text-[#1B2A72]">Privacy Policy</span>
+                    <span className="text-[10px] text-slate-500 block">DPDP Act & partner data protection</span>
+                  </div>
+                </div>
+                <ArrowRight size={14} className="text-slate-400 group-hover:text-[#1B2A72]" />
+              </Link>
+
+              <Link
+                href="/terms"
+                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-left transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Article size={18} className="text-indigo-600 shrink-0" weight="fill" />
+                  <div>
+                    <span className="font-bold text-slate-900 block group-hover:text-[#1B2A72]">Terms & Conditions</span>
+                    <span className="text-[10px] text-slate-500 block">Partner network code of conduct & agreement</span>
+                  </div>
+                </div>
+                <ArrowRight size={14} className="text-slate-400 group-hover:text-[#1B2A72]" />
+              </Link>
+
+              <Link
+                href="/refund"
+                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-left transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Bank size={18} className="text-amber-600 shrink-0" weight="fill" />
+                  <div>
+                    <span className="font-bold text-slate-900 block group-hover:text-[#1B2A72]">Refund & Payout Policy</span>
+                    <span className="text-[10px] text-slate-500 block">Commission calculations, points & claims</span>
+                  </div>
+                </div>
+                <ArrowRight size={14} className="text-slate-400 group-hover:text-[#1B2A72]" />
+              </Link>
             </div>
           </div>
         </div>

@@ -24,17 +24,14 @@ import {
   DownloadSimple,
   Printer
 } from '@phosphor-icons/react';
+import { formatMobile } from '@/lib/utils';
 
 export default function TeamPage() {
   const router = useRouter();
   const { partner, teamMembers, onboardTeamMember, updateTeamMemberStatus } = usePartnerStore();
 
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
+  // Quick Onboarding Modal Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-
-  // Onboard Member Form State
   const [memberName, setMemberName] = useState('');
   const [memberEmail, setMemberEmail] = useState('');
   const [memberPhone, setMemberPhone] = useState('');
@@ -43,10 +40,16 @@ export default function TeamPage() {
   const [memberCity, setMemberCity] = useState('');
   const [formError, setFormError] = useState('');
 
-  const teamCode = partner?.teamCode || 'TL-ARJUN-884';
-  const inviteUrl = `https://partner.primescore.in/register?ref=${teamCode}`;
+  // Team Invite Links State
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
-  // Metrics Calculations
+  const teamCode = partner?.teamCode || 'IND-HAR-509';
+  const inviteUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/register?ref=${teamCode}`
+    : `https://partners.primescore.in/register?ref=${teamCode}`;
+
   const totalOnboarded = teamMembers.length;
   const totalOverrideEarned = teamMembers.reduce((acc, m) => acc + m.overridePointsEarned, 0);
   const totalCasesByTeam = teamMembers.reduce((acc, m) => acc + m.casesCount, 0);
@@ -65,18 +68,19 @@ export default function TeamPage() {
 
   const handleOnboardSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!memberName || !memberEmail || !memberPhone || !memberState || !memberCity) {
-      setFormError('Please fill in all required member fields.');
+    const cleanPhone = memberPhone.replace(/\D/g, '');
+    if (!memberName.trim() || !memberEmail.trim() || cleanPhone.length !== 10 || !memberState || !memberCity.trim()) {
+      setFormError('Please fill in all required fields. Mobile number must be 10 digits.');
       return;
     }
 
     onboardTeamMember({
-      name: memberName,
-      email: memberEmail,
-      phone: memberPhone,
+      name: memberName.trim(),
+      email: memberEmail.trim(),
+      phone: cleanPhone,
       profession: memberProfession,
       state: memberState,
-      city: memberCity,
+      city: memberCity.trim(),
       status: 'kyc_approved',
     });
 
@@ -385,9 +389,10 @@ export default function TeamPage() {
                 <div className="relative">
                   <input
                     type="tel"
-                    placeholder="9876543210"
+                    placeholder="98765 43210"
+                    maxLength={11}
                     value={memberPhone}
-                    onChange={(e) => setMemberPhone(e.target.value)}
+                    onChange={(e) => setMemberPhone(formatMobile(e.target.value))}
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#1B2A72] text-slate-900 font-mono-num transition-all"
                   />
                   <Phone size={18} className="absolute right-3.5 top-3 text-slate-400" />

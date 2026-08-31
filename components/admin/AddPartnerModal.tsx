@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { UserPlus, User, Envelope, Phone, LockKey, MapPin, Cardholder, ShieldCheck } from '@phosphor-icons/react';
+import { formatMobile } from '@/lib/utils';
 
 interface AddPartnerModalProps {
   isOpen: boolean;
@@ -147,9 +148,10 @@ export function AddPartnerModal({ isOpen, onClose, onSuccess }: AddPartnerModalP
               <div className="relative">
                 <input
                   type="tel"
-                  placeholder="9876543210"
+                  placeholder="98765 43210"
+                  maxLength={11}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(formatMobile(e.target.value))}
                   className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-[#1B2A72] focus:ring-2 focus:ring-[#1B2A72]/15 text-slate-900 font-mono-num transition-all"
                 />
                 <Phone size={16} className="absolute right-3 top-3 text-slate-400" />

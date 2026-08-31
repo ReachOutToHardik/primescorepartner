@@ -99,7 +99,7 @@ export default function RefundPolicyPage() {
                 5. Support & Settlement Assistance
               </h2>
               <p>
-                For questions regarding voucher delivery, reward balances, or redemption status, please contact partner support at info@primescore.in or partner@primescore.in.
+                For questions regarding voucher delivery, reward balances, or redemption status, please contact partner support at partner@primescore.in.
               </p>
             </section>
           </div>

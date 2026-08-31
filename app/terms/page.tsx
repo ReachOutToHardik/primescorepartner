@@ -122,7 +122,7 @@ export default function TermsPage() {
                 7. Program Amendments & Inquiries
               </h2>
               <p>
-                Primescore reserves the right to update these terms as needed. Continued portal usage after updates implies acceptance. For inquiries regarding these terms, contact info@primescore.in or partner@primescore.in.
+                Primescore reserves the right to update these terms as needed. Continued portal usage after updates implies acceptance. For inquiries regarding these terms, contact partner@primescore.in.
               </p>
             </section>
           </div>
