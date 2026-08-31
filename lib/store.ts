@@ -61,6 +61,7 @@ export interface TeamMember {
   phone: string;
   profession: string;
   city: string;
+  state?: string;
   status: PartnerStatus;
   joinedAt: string;
   casesCount: number;
@@ -273,7 +274,7 @@ export const usePartnerStore = create<PartnerStore>()(
                 phone: memberData.phone.trim(),
                 profession: memberData.profession,
                 city: memberData.city.trim(),
-                state: memberData.city.trim() ? '' : 'Maharashtra', // don't hardcode state
+                state: (memberData.state || 'Rajasthan').trim(),
                 role: 'team_member',
                 status: memberData.status || 'kyc_approved',
                 team_code: partner?.teamCode || 'TL-MEMBER',

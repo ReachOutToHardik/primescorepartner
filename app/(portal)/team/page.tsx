@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePartnerStore } from '@/lib/store';
-import { PROFESSION_OPTIONS } from '@/lib/mock-data';
+import { PROFESSION_OPTIONS, INDIAN_STATES } from '@/lib/mock-data';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { CustomSelect } from '@/components/ui/CustomSelect';
@@ -39,6 +39,7 @@ export default function TeamPage() {
   const [memberEmail, setMemberEmail] = useState('');
   const [memberPhone, setMemberPhone] = useState('');
   const [memberProfession, setMemberProfession] = useState(PROFESSION_OPTIONS[0]);
+  const [memberState, setMemberState] = useState('Rajasthan');
   const [memberCity, setMemberCity] = useState('');
   const [formError, setFormError] = useState('');
 
@@ -64,7 +65,7 @@ export default function TeamPage() {
 
   const handleOnboardSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!memberName || !memberEmail || !memberPhone || !memberCity) {
+    if (!memberName || !memberEmail || !memberPhone || !memberState || !memberCity) {
       setFormError('Please fill in all required member fields.');
       return;
     }
@@ -74,6 +75,7 @@ export default function TeamPage() {
       email: memberEmail,
       phone: memberPhone,
       profession: memberProfession,
+      state: memberState,
       city: memberCity,
       status: 'kyc_approved',
     });
@@ -82,6 +84,7 @@ export default function TeamPage() {
     setMemberName('');
     setMemberEmail('');
     setMemberPhone('');
+    setMemberState('Rajasthan');
     setMemberCity('');
     setFormError('');
     setIsModalOpen(false);
@@ -399,6 +402,14 @@ export default function TeamPage() {
                 placeholder="Select profession..."
               />
 
+              <CustomSelect
+                label="State *"
+                options={INDIAN_STATES}
+                value={memberState}
+                onChange={(val) => setMemberState(val)}
+                placeholder="Select State..."
+              />
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   City / Location *
@@ -406,7 +417,7 @@ export default function TeamPage() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Mumbai, Pune, etc."
+                    placeholder="Mumbai, Pune, Jaipur, etc."
                     value={memberCity}
                     onChange={(e) => setMemberCity(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#1B2A72] text-slate-900 transition-all font-medium"
