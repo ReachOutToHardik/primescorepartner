@@ -16,6 +16,7 @@ export default function AdminServicesPage() {
   // New Service Form State
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Credit Counseling');
+  const [typicalFee, setTypicalFee] = useState<number>(5000);
   const [pointsReward, setPointsReward] = useState(500);
   const [description, setDescription] = useState('');
 
@@ -27,22 +28,26 @@ export default function AdminServicesPage() {
       addService({
         title: title.trim(),
         category,
-        pointsReward,
+        typicalFee,
+        pointsReward: Math.round(typicalFee * 0.1 * pointsPerInr),
         description: description.trim(),
         isActive: true,
       });
       setTitle('');
       setDescription('');
+      setTypicalFee(5000);
       setModalOpen(false);
     }
   };
 
   const handleSaveEditService = () => {
     if (editingService && editingService.title.trim()) {
+      const fee = editingService.typicalFee || 5000;
       updateService(editingService.id, {
         title: editingService.title.trim(),
         category: editingService.category,
-        pointsReward: editingService.pointsReward,
+        typicalFee: fee,
+        pointsReward: Math.round(fee * 0.1 * pointsPerInr),
         description: editingService.description,
       });
       setEditingService(null);
@@ -104,7 +109,14 @@ export default function AdminServicesPage() {
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {services.map((srv) => {
-          const cashValue = srv.pointsReward / pointsPerInr;
+          const fee = srv.typicalFee || 5000;
+          const silverInr = fee * 0.1;
+          const goldInr = fee * 0.12;
+          const platInr = fee * 0.15;
+          const silverPts = Math.round(silverInr * pointsPerInr);
+          const goldPts = Math.round(goldInr * pointsPerInr);
+          const platPts = Math.round(platInr * pointsPerInr);
+
           return (
             <Card key={srv.id} className="p-6 space-y-4 relative border-l-4 border-[var(--navy)] hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
@@ -119,20 +131,43 @@ export default function AdminServicesPage() {
 
               <p className="text-xs text-slate-600 leading-relaxed">{srv.description}</p>
 
-              <div className="pt-3 flex items-center justify-between border-t border-slate-100">
-                <div className="space-y-0.5">
-                  <div className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full inline-block">
-                    +{srv.pointsReward} Points
-                  </div>
-                  <span className="text-[11px] font-semibold text-slate-500 ml-2 font-mono-num">
-                    (₹{cashValue.toFixed(2)} INR Cash)
+              {/* Pricing & Commission Breakdown */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-200/70 pb-1.5">
+                  <span className="font-bold text-slate-500">Standard Service Fee:</span>
+                  <span className="font-mono-num font-extrabold text-sm text-slate-900">
+                    ₹{fee.toLocaleString('en-IN')}
                   </span>
                 </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+                  <div className="p-1.5 bg-white border border-slate-200/80 rounded-lg">
+                    <span className="text-slate-400 block font-bold text-[9px] uppercase">Silver (10%)</span>
+                    <strong className="text-slate-900 font-mono-num">₹{silverInr.toLocaleString('en-IN')}</strong>
+                    <span className="text-[10px] text-slate-500 block font-mono">+{silverPts.toLocaleString()} Pts</span>
+                  </div>
+                  <div className="p-1.5 bg-amber-50/60 border border-amber-200/70 rounded-lg">
+                    <span className="text-amber-700 block font-bold text-[9px] uppercase">Gold (12%)</span>
+                    <strong className="text-amber-950 font-mono-num">₹{goldInr.toLocaleString('en-IN')}</strong>
+                    <span className="text-[10px] text-amber-700 block font-mono">+{goldPts.toLocaleString()} Pts</span>
+                  </div>
+                  <div className="p-1.5 bg-indigo-50/60 border border-indigo-200/70 rounded-lg">
+                    <span className="text-indigo-700 block font-bold text-[9px] uppercase">Plat (15%)</span>
+                    <strong className="text-indigo-950 font-mono-num">₹{platInr.toLocaleString('en-IN')}</strong>
+                    <span className="text-[10px] text-indigo-700 block font-mono">+{platPts.toLocaleString()} Pts</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+                <span className="text-xs text-slate-500 font-medium">
+                  Commission credited directly as PrimePoints
+                </span>
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => setEditingService({ ...srv })}
-                    className="p-2 text-slate-500 hover:text-[var(--navy)] hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2 text-slate-500 hover:text-[var(--navy)] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                     title="Edit Service"
                   >
                     <PencilSimple size={18} />
@@ -185,14 +220,19 @@ export default function AdminServicesPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700">Points Reward Payout</label>
-              <input
-                type="number"
-                value={pointsReward}
-                onChange={(e) => setPointsReward(parseInt(e.target.value) || 500)}
-                className="w-full p-3 border border-slate-300 rounded-xl text-sm outline-none mt-1 font-mono"
-              />
-              <p className="text-[11px] text-slate-400 mt-1">Cash: ₹{(pointsReward / pointsPerInr).toFixed(2)} INR</p>
+              <label className="text-xs font-semibold text-slate-700">Standard Service Fee (₹)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-4 text-xs font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  min={500}
+                  step={500}
+                  value={typicalFee}
+                  onChange={(e) => setTypicalFee(parseInt(e.target.value) || 5000)}
+                  className="w-full pl-7 pr-3 py-3 border border-slate-300 rounded-xl text-sm outline-none mt-1 font-mono font-bold"
+                />
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Silver (10%): ₹{(typicalFee * 0.1).toFixed(0)} • Gold (12%): ₹{(typicalFee * 0.12).toFixed(0)}</p>
             </div>
           </div>
 
@@ -250,14 +290,21 @@ export default function AdminServicesPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-700">Points Reward Payout</label>
-                <input
-                  type="number"
-                  value={editingService.pointsReward}
-                  onChange={(e) => setEditingService({ ...editingService, pointsReward: parseInt(e.target.value) || 0 })}
-                  className="w-full p-3 border border-slate-300 rounded-xl text-sm outline-none mt-1 font-mono font-bold"
-                />
-                <p className="text-[11px] text-slate-400 mt-1">Cash: ₹{(editingService.pointsReward / pointsPerInr).toFixed(2)} INR</p>
+                <label className="text-xs font-semibold text-slate-700">Standard Service Fee (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-4 text-xs font-bold text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    min={500}
+                    step={500}
+                    value={editingService.typicalFee || 5000}
+                    onChange={(e) => setEditingService({ ...editingService, typicalFee: parseInt(e.target.value) || 0 })}
+                    className="w-full pl-7 pr-3 py-3 border border-slate-300 rounded-xl text-sm outline-none mt-1 font-mono font-bold"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Silver 10%: ₹{((editingService.typicalFee || 5000) * 0.1).toFixed(0)} • Gold 12%: ₹{((editingService.typicalFee || 5000) * 0.12).toFixed(0)}
+                </p>
               </div>
             </div>
 

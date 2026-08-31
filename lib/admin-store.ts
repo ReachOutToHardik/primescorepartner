@@ -28,6 +28,7 @@ export interface PlatformService {
   title: string;
   category: string;
   pointsReward: number;
+  typicalFee?: number;
   description: string;
   isActive: boolean;
 }
@@ -94,12 +95,23 @@ const INITIAL_GIFT_CARDS: GiftCardItem[] = GIFT_CARDS.map((g) => ({
   isActive: true,
 }));
 
+// Default fees per service (in INR)
+const DEFAULT_SERVICE_FEES: Record<string, number> = {
+  'Bureau Report (All 4 Bureaus)': 1500,
+  'Multi-Bureau Report': 2500,
+  'Credit Rectification': 10000,
+  'Loan Advisory': 5000,
+  'Credit Score Improvement': 7500,
+  'Dispute Resolution': 8000,
+};
+
 // Services initialized from static config (no mock data)
 const INITIAL_SERVICES: PlatformService[] = SERVICE_OPTIONS.map((s, idx) => ({
   id: `srv-${idx + 1}`,
   title: s,
   category: s.includes('Report') ? 'Bureau Analysis' : 'Credit Counseling',
   pointsReward: 500,
+  typicalFee: DEFAULT_SERVICE_FEES[s] || 5000,
   description: `Official ${s} solution with full documentation and bureau filing support.`,
   isActive: true,
 }));

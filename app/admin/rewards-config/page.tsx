@@ -31,13 +31,14 @@ export default function RewardsConfigPage() {
 
   // Service Edit Modal
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
-  const [editServicePoints, setEditServicePoints] = useState<number>(500);
+  const [editServiceFee, setEditServiceFee] = useState<number>(10000);
 
-  // Simulator State
+  // Simulator State based on Case Amount received
   const [simProfession, setSimProfession] = useState<'ca' | 'dsa' | 'loan_consultant' | 'other'>('ca');
   const [simTier, setSimTier] = useState<'silver' | 'gold' | 'platinum'>('gold');
   const [simCases, setSimCases] = useState<number>(10);
   const [simSelectedServiceId, setSimSelectedServiceId] = useState<string>(services[0]?.id || '');
+  const [simCaseAmount, setSimCaseAmount] = useState<number>(10000);
 
   // Handle Form Change
   const handleChange = (field: keyof RewardEngineConfig, value: any) => {
@@ -71,30 +72,55 @@ export default function RewardsConfigPage() {
     setSaveSuccess(false);
   };
 
-  const handleOpenEditService = (serviceId: string, currentPts: number) => {
+  const handleOpenEditService = (serviceId: string, currentFee: number) => {
     setEditingServiceId(serviceId);
-    setEditServicePoints(currentPts);
+    setEditServiceFee(currentFee || 10000);
   };
 
-  const handleSaveServicePoints = () => {
+  const handleSaveServiceFee = () => {
     if (editingServiceId) {
-      updateService(editingServiceId, { pointsReward: editServicePoints });
+      const pPerInr = formData.pointsPerInr || 4;
+      updateService(editingServiceId, {
+        typicalFee: editServiceFee,
+        pointsReward: Math.round(editServiceFee * 0.1 * pPerInr),
+      });
       setEditingServiceId(null);
     }
   };
 
-  // Simulator calculation
-  const targetService = services.find((s) => s.id === simSelectedServiceId) || services[0];
-  const baseServicePts = targetService ? targetService.pointsReward : formData.conversionPoints;
+  const handleSelectSimService = (serviceId: string) => {
+    setSimSelectedServiceId(serviceId);
+    const srv = services.find((s) => s.id === serviceId);
+    if (srv && srv.typicalFee) {
+      setSimCaseAmount(srv.typicalFee);
+    }
+  };
 
-  const tierMult = formData.tierMultipliers[simTier] || 1.0;
-  const profMult = formData.professionMultipliers[simProfession] || 1.0;
+  // Live Case Amount & Tier Commission Simulator Calculation
+  const pointsPerInr = formData.pointsPerInr || 4;
+  const tierCommissionRate = simTier === 'platinum' ? 15 : simTier === 'gold' ? 12 : 10;
+  const enrollmentPointsPerCase = simTier === 'platinum' ? 150 : simTier === 'gold' ? 125 : 100;
+  const profBoost = formData.professionMultipliers[simProfession] || 1.0;
 
-  const perCasePts = Math.round(baseServicePts * tierMult * profMult);
-  const totalSimPts = perCasePts * simCases;
-  const totalSimInr = totalSimPts / (formData.pointsPerInr || 10);
-  const simLeaderOverride = Math.round(totalSimPts * (formData.teamLeaderOverridePercent / 100));
-  const simLeaderOverrideInr = simLeaderOverride / (formData.pointsPerInr || 10);
+  // Case fee amounts
+  const perCaseFee = simCaseAmount || 10000;
+  const totalReceivedFromClient = perCaseFee * simCases;
+
+  // Partner commission in INR
+  const baseCommissionPerCase = (perCaseFee * tierCommissionRate) / 100;
+  const boostedCommissionPerCase = Math.round(baseCommissionPerCase * profBoost);
+  const totalCommissionInr = boostedCommissionPerCase * simCases;
+
+  // PrimePoints (1 INR = pointsPerInr PrimePoints)
+  const pointsPerCase = Math.round(boostedCommissionPerCase * pointsPerInr);
+  const totalCommissionPoints = pointsPerCase * simCases;
+  const totalEnrollmentPoints = enrollmentPointsPerCase * simCases;
+  const grandTotalPoints = totalCommissionPoints + totalEnrollmentPoints;
+  const grandTotalInr = grandTotalPoints / pointsPerInr;
+
+  // Team Leader Override (10% override on commission points)
+  const simLeaderOverride = Math.round(totalCommissionPoints * (formData.teamLeaderOverridePercent / 100));
+  const simLeaderOverrideInr = simLeaderOverride / pointsPerInr;
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -370,56 +396,97 @@ export default function RewardsConfigPage() {
 
             {/* Tier Rates & Thresholds */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Partner Reward Tiers &amp; Commission Percentages</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Partner Reward Tiers & Commission Rates
+                </h3>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  Commissions credited in PrimePoints
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                {/* Silver Tier */}
+                <div className="p-4 bg-slate-50/90 border border-slate-200 rounded-2xl space-y-3 relative">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900">Silver Tier</span>
-                    <span className="text-[10px] font-mono font-bold text-slate-500">0 – 19,999 Pts</span>
+                    <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+                      Silver Tier
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
+                      0 – 19,999 Pts
+                    </span>
                   </div>
-                  <div className="text-xs space-y-1 text-slate-600 font-medium">
-                    <div className="flex justify-between">
-                      <span>Referred User Enrollment:</span>
-                      <strong className="text-slate-900">100 Pts</strong>
+
+                  <div className="p-2.5 bg-white border border-slate-200/80 rounded-xl space-y-0.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Case Completion
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-display font-extrabold text-2xl text-[#1B2A72]">10%</span>
+                      <span className="text-[11px] text-slate-500 font-medium">of Case Amount</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Case Completion Rate:</span>
-                      <strong className="text-slate-900">10% of Case Amount</strong>
-                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between px-1 text-xs">
+                    <span className="text-slate-500 font-medium">User Enrollment:</span>
+                    <span className="font-mono-num font-bold text-slate-900">+100 Pts</span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-xl space-y-2">
+                {/* Gold Tier */}
+                <div className="p-4 bg-amber-50/50 border border-amber-200 rounded-2xl space-y-3 relative">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-900">Gold Tier</span>
-                    <span className="text-[10px] font-mono font-bold text-amber-700">20,000 – 49,999 Pts</span>
+                    <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                      Gold Tier
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-amber-800 bg-white/90 border border-amber-200 px-2 py-0.5 rounded-md">
+                      20,000 – 49,999 Pts
+                    </span>
                   </div>
-                  <div className="text-xs space-y-1 text-amber-800 font-medium">
-                    <div className="flex justify-between">
-                      <span>Referred User Enrollment:</span>
-                      <strong className="text-amber-950">125 Pts</strong>
+
+                  <div className="p-2.5 bg-white/90 border border-amber-200/80 rounded-xl space-y-0.5">
+                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">
+                      Case Completion
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-display font-extrabold text-2xl text-amber-700">12%</span>
+                      <span className="text-[11px] text-amber-800 font-medium">of Case Amount</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Case Completion Rate:</span>
-                      <strong className="text-amber-950">12% of Case Amount</strong>
-                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between px-1 text-xs">
+                    <span className="text-amber-800 font-medium">User Enrollment:</span>
+                    <span className="font-mono-num font-bold text-amber-950">+125 Pts</span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-2">
+                {/* Platinum Tier */}
+                <div className="p-4 bg-indigo-50/50 border border-indigo-200 rounded-2xl space-y-3 relative">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-indigo-900">Platinum Tier</span>
-                    <span className="text-[10px] font-mono font-bold text-indigo-700">50,000+ Pts</span>
+                    <span className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
+                      Platinum Tier
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-indigo-800 bg-white/90 border border-indigo-200 px-2 py-0.5 rounded-md">
+                      50,000+ Pts
+                    </span>
                   </div>
-                  <div className="text-xs space-y-1 text-indigo-800 font-medium">
-                    <div className="flex justify-between">
-                      <span>Referred User Enrollment:</span>
-                      <strong className="text-indigo-950">150 Pts</strong>
+
+                  <div className="p-2.5 bg-white/90 border border-indigo-200/80 rounded-xl space-y-0.5">
+                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">
+                      Case Completion
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-display font-extrabold text-2xl text-indigo-700">15%</span>
+                      <span className="text-[11px] text-indigo-800 font-medium">of Case Amount</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Case Completion Rate:</span>
-                      <strong className="text-indigo-950">15% of Case Amount</strong>
-                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between px-1 text-xs">
+                    <span className="text-indigo-800 font-medium">User Enrollment:</span>
+                    <span className="font-mono-num font-bold text-indigo-950">+150 Pts</span>
                   </div>
                 </div>
               </div>
@@ -427,99 +494,157 @@ export default function RewardsConfigPage() {
 
             {/* Profession Multipliers */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Profession Multipliers</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Profession Commission Boosters
+                </h3>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  Applied as bonus multiplier on commission
+                </span>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-1">
-                  <span className="text-[11px] font-bold text-slate-600">DSA Agent</span>
-                  <input
-                    type="number"
-                    step={0.05}
-                    min={1.0}
-                    max={2.5}
-                    value={formData.professionMultipliers.dsa}
-                    onChange={(e) => handleNestedChange('professionMultipliers', 'dsa', parseFloat(e.target.value) || 1.0)}
-                    className="w-full p-1 text-xs font-bold bg-slate-50 border border-slate-300 rounded-md"
-                  />
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">DSA Agent</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400">1.0x</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step={0.05}
+                      min={1.0}
+                      max={2.5}
+                      value={formData.professionMultipliers.dsa}
+                      onChange={(e) => handleNestedChange('professionMultipliers', 'dsa', parseFloat(e.target.value) || 1.0)}
+                      className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg outline-none focus:border-[#1B2A72]"
+                    />
+                    <span className="absolute right-2.5 top-1.5 text-xs font-bold text-slate-400">x</span>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-1">
-                  <span className="text-[11px] font-bold text-slate-600">Chartered Accountant</span>
-                  <input
-                    type="number"
-                    step={0.05}
-                    min={1.0}
-                    max={2.5}
-                    value={formData.professionMultipliers.ca}
-                    onChange={(e) => handleNestedChange('professionMultipliers', 'ca', parseFloat(e.target.value) || 1.15)}
-                    className="w-full p-1 text-xs font-bold bg-slate-50 border border-slate-300 rounded-md"
-                  />
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">CA</span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">+15%</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step={0.05}
+                      min={1.0}
+                      max={2.5}
+                      value={formData.professionMultipliers.ca}
+                      onChange={(e) => handleNestedChange('professionMultipliers', 'ca', parseFloat(e.target.value) || 1.15)}
+                      className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg outline-none focus:border-[#1B2A72]"
+                    />
+                    <span className="absolute right-2.5 top-1.5 text-xs font-bold text-slate-400">x</span>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-1">
-                  <span className="text-[11px] font-bold text-slate-600">Loan Consultant</span>
-                  <input
-                    type="number"
-                    step={0.05}
-                    min={1.0}
-                    max={2.5}
-                    value={formData.professionMultipliers.loan_consultant}
-                    onChange={(e) => handleNestedChange('professionMultipliers', 'loan_consultant', parseFloat(e.target.value) || 1.1)}
-                    className="w-full p-1 text-xs font-bold bg-slate-50 border border-slate-300 rounded-md"
-                  />
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Loan Consultant</span>
+                    <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">+10%</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step={0.05}
+                      min={1.0}
+                      max={2.5}
+                      value={formData.professionMultipliers.loan_consultant}
+                      onChange={(e) => handleNestedChange('professionMultipliers', 'loan_consultant', parseFloat(e.target.value) || 1.1)}
+                      className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg outline-none focus:border-[#1B2A72]"
+                    />
+                    <span className="absolute right-2.5 top-1.5 text-xs font-bold text-slate-400">x</span>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-1">
-                  <span className="text-[11px] font-bold text-slate-600">Other / General</span>
-                  <input
-                    type="number"
-                    step={0.05}
-                    min={1.0}
-                    max={2.5}
-                    value={formData.professionMultipliers.other}
-                    onChange={(e) => handleNestedChange('professionMultipliers', 'other', parseFloat(e.target.value) || 1.0)}
-                    className="w-full p-1 text-xs font-bold bg-slate-50 border border-slate-300 rounded-md"
-                  />
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">General Partner</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400">1.0x</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step={0.05}
+                      min={1.0}
+                      max={2.5}
+                      value={formData.professionMultipliers.other}
+                      onChange={(e) => handleNestedChange('professionMultipliers', 'other', parseFloat(e.target.value) || 1.0)}
+                      className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg outline-none focus:border-[#1B2A72]"
+                    />
+                    <span className="absolute right-2.5 top-1.5 text-xs font-bold text-slate-400">x</span>
+                  </div>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* SECTION D: SERVICE REWARD MATRIX */}
+          {/* SECTION D: SERVICE PRICING & TIER COMMISSION MATRIX */}
           <Card className="p-6 space-y-4 border border-[var(--border)] shadow-xs">
-            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-              <div className="flex items-center gap-2">
-                <Wrench size={22} className="text-indigo-600" weight="fill" />
-                <h2 className="font-display font-bold text-lg text-[var(--navy-deep)]">
-                  Points Earned By Service
-                </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-[#1B2A72] flex items-center justify-center shrink-0">
+                  <Wrench size={18} weight="fill" />
+                </div>
+                <div>
+                  <h2 className="font-display font-bold text-lg text-[var(--navy-deep)] leading-tight">
+                    Service Pricing & Commission Structure
+                  </h2>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Partners receive PrimePoints based on the actual Case Amount received upon case completion.
+                  </p>
+                </div>
               </div>
-              <span className="text-xs text-slate-500 font-semibold">{services.length} Active Services</span>
+              <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                {services.length} Active Services
+              </span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                    <th className="p-3">Service Name</th>
+                    <th className="p-3">Service Offering</th>
                     <th className="p-3">Category</th>
-                    <th className="p-3 text-right">Points Earned</th>
-                    <th className="p-3 text-right">Rupee Value</th>
+                    <th className="p-3 text-right">Standard Fee</th>
+                    <th className="p-3 text-right">Silver (10%)</th>
+                    <th className="p-3 text-right">Gold (12%)</th>
+                    <th className="p-3 text-right">Platinum (15%)</th>
                     <th className="p-3 text-center">Status</th>
                     <th className="p-3 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {services.map((srv) => {
-                    const cashVal = srv.pointsReward / (formData.pointsPerInr || 10);
+                    const fee = srv.typicalFee || 5000;
+                    const silverInr = fee * 0.1;
+                    const goldInr = fee * 0.12;
+                    const platInr = fee * 0.15;
+                    const silverPts = Math.round(silverInr * pointsPerInr);
+                    const goldPts = Math.round(goldInr * pointsPerInr);
+                    const platPts = Math.round(platInr * pointsPerInr);
+
                     return (
                       <tr key={srv.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="p-3 font-bold text-slate-900">{srv.title}</td>
                         <td className="p-3 text-slate-500">{srv.category}</td>
-                        <td className="p-3 text-right font-mono-num font-bold text-emerald-700">
-                          +{srv.pointsReward} Pts
-                        </td>
                         <td className="p-3 text-right font-mono-num font-bold text-slate-900">
-                          ₹{cashVal.toFixed(2)}
+                          ₹{fee.toLocaleString('en-IN')}
+                        </td>
+                        <td className="p-3 text-right font-mono-num">
+                          <span className="text-slate-900 font-bold">₹{silverInr.toLocaleString('en-IN')}</span>
+                          <span className="text-[11px] text-slate-500 block">+{silverPts.toLocaleString()} Pts</span>
+                        </td>
+                        <td className="p-3 text-right font-mono-num">
+                          <span className="text-amber-900 font-bold">₹{goldInr.toLocaleString('en-IN')}</span>
+                          <span className="text-[11px] text-amber-700 block">+{goldPts.toLocaleString()} Pts</span>
+                        </td>
+                        <td className="p-3 text-right font-mono-num">
+                          <span className="text-indigo-900 font-bold">₹{platInr.toLocaleString('en-IN')}</span>
+                          <span className="text-[11px] text-indigo-700 block">+{platPts.toLocaleString()} Pts</span>
                         </td>
                         <td className="p-3 text-center">
                           <Badge variant={srv.isActive ? 'green' : 'gray'}>
@@ -528,11 +653,12 @@ export default function RewardsConfigPage() {
                         </td>
                         <td className="p-3 text-center">
                           <button
-                            onClick={() => handleOpenEditService(srv.id, srv.pointsReward)}
+                            type="button"
+                            onClick={() => handleOpenEditService(srv.id, fee)}
                             className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer"
                           >
                             <PencilSimple size={14} />
-                            <span>Edit Pts</span>
+                            <span>Edit Fee</span>
                           </button>
                         </td>
                       </tr>
@@ -546,19 +672,38 @@ export default function RewardsConfigPage() {
 
         {/* Right Column: Earnings Simulator Widget (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="p-6 space-y-5 border-2 border-[#1B2A72]/20 bg-gradient-to-b from-[#0F1A4E] to-[#121F5E] text-white shadow-xl sticky top-20">
-            <div className="flex items-center gap-2 border-b border-white/15 pb-3">
-              <Calculator size={24} className="text-[#F5C518]" weight="fill" />
-              <h2 className="font-display font-bold text-lg text-white">
-                Earnings Calculator
-              </h2>
+          <Card className="p-6 space-y-5 border-2 border-[#1B2A72]/20 bg-gradient-to-b from-[#0F1A4E] to-[#121F5E] text-white shadow-xl sticky top-20 rounded-2xl">
+            <div className="flex items-center gap-2.5 border-b border-white/15 pb-3">
+              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#F5C518]">
+                <Calculator size={20} weight="fill" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-lg text-white leading-tight">
+                  Earnings Calculator
+                </h2>
+                <p className="text-[11px] text-slate-300">
+                  Simulate partner earnings based on client case fees received.
+                </p>
+              </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Calculate how much a partner earns based on current reward rules.
-            </p>
+            <div className="space-y-3.5 text-xs">
+              {/* Partner Tier */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                  Partner Tier & Commission
+                </label>
+                <select
+                  value={simTier}
+                  onChange={(e: any) => setSimTier(e.target.value)}
+                  className="w-full p-2.5 bg-[#1B2A72] border border-white/20 rounded-lg text-white font-semibold outline-none cursor-pointer"
+                >
+                  <option value="silver">Silver Tier (10% Case Commission • 100 Pts Enrollment)</option>
+                  <option value="gold">Gold Tier (12% Case Commission • 125 Pts Enrollment)</option>
+                  <option value="platinum">Platinum Tier (15% Case Commission • 150 Pts Enrollment)</option>
+                </select>
+              </div>
 
-            <div className="space-y-4 text-xs">
               {/* Partner Profession */}
               <div>
                 <label className="block text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
@@ -567,47 +712,49 @@ export default function RewardsConfigPage() {
                 <select
                   value={simProfession}
                   onChange={(e: any) => setSimProfession(e.target.value)}
-                  className="w-full p-2.5 bg-[#1B2A72] border border-white/20 rounded-lg text-white font-semibold outline-none"
+                  className="w-full p-2.5 bg-[#1B2A72] border border-white/20 rounded-lg text-white font-semibold outline-none cursor-pointer"
                 >
-                  <option value="ca">Chartered Accountant (CA) (1.15x)</option>
-                  <option value="dsa">DSA Agent (1.0x)</option>
-                  <option value="loan_consultant">Loan Consultant (1.1x)</option>
-                  <option value="other">General Referral Partner (1.0x)</option>
+                  <option value="ca">Chartered Accountant (CA) ({formData.professionMultipliers.ca}x)</option>
+                  <option value="dsa">Direct Selling Agent (DSA) ({formData.professionMultipliers.dsa}x)</option>
+                  <option value="loan_consultant">Loan Consultant ({formData.professionMultipliers.loan_consultant}x)</option>
+                  <option value="other">General Referral Partner ({formData.professionMultipliers.other}x)</option>
                 </select>
               </div>
 
-              {/* Partner Tier */}
+              {/* Service Offering */}
               <div>
                 <label className="block text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
-                  Partner Tier
-                </label>
-                <select
-                  value={simTier}
-                  onChange={(e: any) => setSimTier(e.target.value)}
-                  className="w-full p-2.5 bg-[#1B2A72] border border-white/20 rounded-lg text-white font-semibold outline-none"
-                >
-                  <option value="silver">Silver Tier ({formData.tierMultipliers.silver}x)</option>
-                  <option value="gold">Gold Tier ({formData.tierMultipliers.gold}x)</option>
-                  <option value="platinum">Platinum Tier ({formData.tierMultipliers.platinum}x)</option>
-                </select>
-              </div>
-
-              {/* Service Type */}
-              <div>
-                <label className="block text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
-                  Service Type
+                  Service Offering
                 </label>
                 <select
                   value={simSelectedServiceId}
-                  onChange={(e) => setSimSelectedServiceId(e.target.value)}
-                  className="w-full p-2.5 bg-[#1B2A72] border border-white/20 rounded-lg text-white font-semibold outline-none"
+                  onChange={(e) => handleSelectSimService(e.target.value)}
+                  className="w-full p-2.5 bg-[#1B2A72] border border-white/20 rounded-lg text-white font-semibold outline-none cursor-pointer"
                 >
                   {services.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.title} ({s.pointsReward} Pts)
+                      {s.title} (₹{(s.typicalFee || 5000).toLocaleString('en-IN')})
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Case Amount Received per Case */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                  Amount Received per Case (₹)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">₹</span>
+                  <input
+                    type="number"
+                    min={500}
+                    step={500}
+                    value={simCaseAmount}
+                    onChange={(e) => setSimCaseAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full pl-7 pr-3 py-2 bg-[#1B2A72] border border-white/20 rounded-lg text-white font-mono-num font-bold text-sm outline-none focus:border-[#F5C518]"
+                  />
+                </div>
               </div>
 
               {/* Number of Cases */}
@@ -621,43 +768,55 @@ export default function RewardsConfigPage() {
                 <input
                   type="range"
                   min={1}
-                  max={100}
+                  max={50}
                   value={simCases}
                   onChange={(e) => setSimCases(parseInt(e.target.value) || 1)}
                   className="w-full accent-[#F5C518] cursor-pointer"
                 />
               </div>
 
-              {/* Simulation Output Card */}
-              <div className="p-4 bg-white/10 border border-white/15 rounded-xl space-y-3 pt-4 mt-2">
+              {/* Simulation Output Breakdown */}
+              <div className="p-4 bg-white/10 border border-white/15 rounded-xl space-y-2.5 pt-3.5 mt-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-300">Base Points per Case:</span>
-                  <span className="font-mono-num font-bold text-white">+{baseServicePts} Pts</span>
+                  <span className="text-slate-300">Total Fees Received:</span>
+                  <span className="font-mono-num font-bold text-white">
+                    ₹{totalReceivedFromClient.toLocaleString('en-IN')}
+                  </span>
                 </div>
+
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-300">Boosted Pts per Case:</span>
-                  <span className="font-mono-num font-bold text-emerald-400">+{perCasePts} Pts</span>
+                  <span className="text-slate-300">Case Commission ({tierCommissionRate}%):</span>
+                  <span className="font-mono-num font-bold text-emerald-400">
+                    ₹{totalCommissionInr.toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-300">Enrollment Bounty ({enrollmentPointsPerCase} Pts/case):</span>
+                  <span className="font-mono-num font-bold text-indigo-300">
+                    +{totalEnrollmentPoints.toLocaleString()} Pts
+                  </span>
                 </div>
 
                 <div className="border-t border-white/15 pt-3 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-200 font-semibold">Total Points Earned:</span>
-                    <span className="text-lg font-bold font-mono-num text-[#F5C518]">
-                      {totalSimPts.toLocaleString()} Pts
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-slate-200 font-bold">Total PrimePoints:</span>
+                    <span className="text-xl font-bold font-mono-num text-[#F5C518]">
+                      {grandTotalPoints.toLocaleString()} Pts
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-200 font-semibold">Total Cash Value:</span>
-                    <span className="text-xl font-bold font-mono-num text-emerald-400">
-                      ₹{totalSimInr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-slate-200 font-bold">Total Cash Value:</span>
+                    <span className="text-lg font-bold font-mono-num text-emerald-400">
+                      ₹{grandTotalInr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center pt-2 border-t border-white/10 text-[11px] text-slate-300">
                     <span>TL Override Cut ({formData.teamLeaderOverridePercent}%):</span>
                     <span className="font-mono-num font-bold text-indigo-300">
-                      +{simLeaderOverride} Pts (₹{simLeaderOverrideInr})
+                      +{simLeaderOverride.toLocaleString()} Pts (₹{simLeaderOverrideInr.toLocaleString('en-IN')})
                     </span>
                   </div>
                 </div>
@@ -667,49 +826,64 @@ export default function RewardsConfigPage() {
         </div>
       </div>
 
-      {/* Edit Service Points Modal */}
+      {/* Edit Standard Service Fee Modal */}
       <Modal
         isOpen={Boolean(editingServiceId)}
         onClose={() => setEditingServiceId(null)}
-        title="Edit Service Point Reward"
+        title="Edit Standard Service Fee"
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-500">
-            Set the base PrimePoints rewarded to partners for successfully completing this service.
+            Set the typical fee charged for this service. Partner PrimePoints commission will automatically calculate as 10% (Silver), 12% (Gold), or 15% (Platinum) of this fee.
           </p>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Base Points Reward
+              Standard Service Fee (₹)
             </label>
             <div className="relative">
+              <span className="absolute left-3 top-3 text-xs font-bold text-slate-400">₹</span>
               <input
                 type="number"
-                min={50}
-                step={50}
-                value={editServicePoints}
-                onChange={(e) => setEditServicePoints(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2.5 text-sm font-mono-num font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#1B2A72] outline-none"
+                min={500}
+                step={500}
+                value={editServiceFee}
+                onChange={(e) => setEditServiceFee(parseInt(e.target.value) || 0)}
+                className="w-full pl-7 pr-3 py-2.5 text-sm font-mono-num font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#1B2A72] outline-none"
               />
-              <span className="absolute right-3 top-3 text-xs font-semibold text-slate-400">Pts</span>
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Cash Value Equivalent: <strong className="text-emerald-700">₹{(editServicePoints / (formData.pointsPerInr || 10)).toFixed(2)} INR</strong>
-            </p>
+
+            <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
+              <p className="font-bold text-slate-700">Commission Payout Preview:</p>
+              <div className="flex justify-between text-slate-600">
+                <span>Silver Tier (10%):</span>
+                <strong className="text-slate-900">₹{(editServiceFee * 0.1).toLocaleString('en-IN')} ({(editServiceFee * 0.1 * pointsPerInr).toLocaleString()} Pts)</strong>
+              </div>
+              <div className="flex justify-between text-amber-800">
+                <span>Gold Tier (12%):</span>
+                <strong className="text-amber-950">₹{(editServiceFee * 0.12).toLocaleString('en-IN')} ({(editServiceFee * 0.12 * pointsPerInr).toLocaleString()} Pts)</strong>
+              </div>
+              <div className="flex justify-between text-indigo-800">
+                <span>Platinum Tier (15%):</span>
+                <strong className="text-indigo-950">₹{(editServiceFee * 0.15).toLocaleString('en-IN')} ({(editServiceFee * 0.15 * pointsPerInr).toLocaleString()} Pts)</strong>
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-3">
             <button
+              type="button"
               onClick={() => setEditingServiceId(null)}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
             >
               Cancel
             </button>
             <button
-              onClick={handleSaveServicePoints}
-              className="px-4 py-2 text-xs font-bold text-white bg-[#1B2A72] hover:bg-[#0F1A4E] rounded-xl shadow-sm"
+              type="button"
+              onClick={handleSaveServiceFee}
+              className="px-4 py-2 text-xs font-bold text-white bg-[#1B2A72] hover:bg-[#0F1A4E] rounded-xl shadow-sm cursor-pointer"
             >
-              Update Service Payout
+              Update Service Fee
             </button>
           </div>
         </div>
