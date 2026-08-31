@@ -20,6 +20,7 @@ import {
   CalendarBlank,
   LockKey
 } from '@phosphor-icons/react';
+import { AdminIndiaMap } from '@/components/admin/AdminIndiaMap';
 
 export default function AdminDashboardPage() {
   const { partners, referrals, giftCards, rewardConfig, adminEmail, staff } = useAdminStore();
@@ -418,6 +419,20 @@ export default function AdminDashboardPage() {
           </Card>
         )}
       </div>
+      {/* GEOGRAPHIC PARTNER DISTRIBUTION HEATMAP */}
+      {allowedPages.includes('overview_map') ? (
+        <AdminIndiaMap />
+      ) : (
+        <Card className="p-8 border border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-3 min-h-[220px] text-center rounded-2xl">
+          <div className="w-12 h-12 rounded-xl bg-slate-200/80 text-slate-500 flex items-center justify-center">
+            <LockKey size={24} weight="bold" />
+          </div>
+          <h4 className="font-bold text-sm text-slate-800">Partner Presence Map Restricted</h4>
+          <p className="text-xs text-slate-500 max-w-sm">
+            You do not have permission to view the state partner presence map.
+          </p>
+        </Card>
+      )}
 
       {/* Quick Action Navigation Panels */}
       {allowedPages.includes('overview_actions') ? (

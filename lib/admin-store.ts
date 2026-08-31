@@ -69,6 +69,7 @@ export const ALL_ADMIN_PAGES = [
   'overview_kpis',
   'overview_chart',
   'overview_distribution',
+  'overview_map',
   'overview_actions',
   'kyc',
   'referrals',
