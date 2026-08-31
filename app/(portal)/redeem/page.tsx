@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { usePartnerStore, RedemptionRecord } from '@/lib/store';
-import { GIFT_CARDS } from '@/lib/mock-data';
+import { GIFT_CARDS } from '@/lib/constants';
 import {
   Gift,
   Coins,

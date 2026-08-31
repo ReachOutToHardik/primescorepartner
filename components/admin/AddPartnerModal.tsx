@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAdminStore } from '@/lib/admin-store';
-import { PROFESSION_OPTIONS } from '@/lib/mock-data';
+import { PROFESSION_OPTIONS, INDIAN_STATES } from '@/lib/constants';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { CustomSelect } from '@/components/ui/CustomSelect';

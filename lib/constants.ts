@@ -1,0 +1,70 @@
+// Production Application Constants
+
+export const INDIAN_STATES = [
+  'Andaman and Nicobar Islands',
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chandigarh',
+  'Chhattisgarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jammu and Kashmir',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Ladakh',
+  'Lakshadweep',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Puducherry',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+];
+
+export const PROFESSION_OPTIONS = [
+  'Direct Selling Agent (DSA)',
+  'Chartered Accountant (CA)',
+  'Company Secretary (CS)',
+  'Loan Consultant',
+  'Financial Advisor',
+  'Insurance Agent',
+  'Real Estate Agent',
+  'Business Consultant',
+  'Other',
+];
+
+export const SERVICE_OPTIONS = [
+  'Bureau Report (All 4 Bureaus)',
+  'Multi-Bureau Report',
+  'Credit Rectification',
+  'Loan Advisory',
+  'Credit Score Improvement',
+  'Dispute Resolution',
+];
+
+export const GIFT_CARDS = [
+  { id: 'amazon', brand: 'Amazon Pay', logo: '🛒', color: '#FF9900', denominations: [100, 250, 500, 1000] },
+  { id: 'flipkart', brand: 'Flipkart', logo: '🛍️', color: '#2874F0', denominations: [100, 250, 500, 1000] },
+  { id: 'swiggy', brand: 'Swiggy', logo: '🍔', color: '#FC8019', denominations: [100, 250, 500] },
+  { id: 'phonepay', brand: 'PhonePe', logo: '📱', color: '#5F259F', denominations: [100, 250, 500, 1000] },
+  { id: 'myntra', brand: 'Myntra', logo: '👗', color: '#FF3F6C', denominations: [250, 500, 1000] },
+  { id: 'irctc', brand: 'IRCTC', logo: '🚂', color: '#003580', denominations: [500, 1000] },
+];

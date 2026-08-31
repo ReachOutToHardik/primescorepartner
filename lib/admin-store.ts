@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Partner, Referral, ReferralStatus, PartnerStatus } from './store';
-import { GIFT_CARDS, SERVICE_OPTIONS } from './mock-data';
+import { GIFT_CARDS, SERVICE_OPTIONS } from './constants';
 
 export interface AdminPartner extends Partner {
   referredByLeaderName?: string;

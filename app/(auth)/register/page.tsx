@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PROFESSION_OPTIONS, INDIAN_STATES } from '@/lib/mock-data';
+import { PROFESSION_OPTIONS, INDIAN_STATES } from '@/lib/constants';
 import {
   CheckCircle,
   ArrowRight,

@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { usePartnerStore, Referral } from '@/lib/store';
 import { useAdminStore } from '@/lib/admin-store';
-import { SERVICE_OPTIONS } from '@/lib/mock-data';
+import { SERVICE_OPTIONS } from '@/lib/constants';
 import {
   UserPlus,
   CheckCircle,

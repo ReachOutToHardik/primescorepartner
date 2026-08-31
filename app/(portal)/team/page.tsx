@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePartnerStore } from '@/lib/store';
-import { PROFESSION_OPTIONS, INDIAN_STATES } from '@/lib/mock-data';
+import { PROFESSION_OPTIONS, INDIAN_STATES } from '@/lib/constants';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { CustomSelect } from '@/components/ui/CustomSelect';
