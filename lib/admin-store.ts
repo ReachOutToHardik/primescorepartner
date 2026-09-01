@@ -80,6 +80,9 @@ export const ALL_ADMIN_PAGES = [
   'services',
   'rewards-config',
   'notifications',
+  'broadcasts',
+  'staff',
+  'audit-logs',
   'settings',
 ];
 
@@ -205,6 +208,7 @@ interface AdminStore {
   deleteStaffUser: (id: string) => Promise<void>;
   createBroadcast: (b: Omit<BroadcastAnnouncement, 'id' | 'publishedAt'>) => Promise<void>;
   toggleBroadcast: (id: string) => Promise<void>;
+  deleteBroadcast: (id: string) => Promise<void>;
   issueAdminPoints: (partnerId: string, pointsAmount: number, reason: string) => Promise<void>;
   updatePartnerPassword: (partnerId: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   addPartnerUser: (partnerData: any) => Promise<{ success: boolean; data?: any; error?: string }>;
@@ -1236,6 +1240,24 @@ export const useAdminStore = create<AdminStore>()(
           broadcasts: state.broadcasts.map((b) =>
             b.id === id ? { ...b, isActive: nextState } : b
           ),
+        }));
+      },
+
+      deleteBroadcast: async (id: string) => {
+        try {
+          const adminPass = get()._adminPass || '';
+          await fetch(`/api/admin/broadcast?id=${id}`, {
+            method: 'DELETE',
+            headers: {
+              'x-admin-password': adminPass,
+            },
+          });
+        } catch (err) {
+          console.warn('Delete broadcast warning:', err);
+        }
+
+        set((state) => ({
+          broadcasts: state.broadcasts.filter((b) => b.id !== id),
         }));
       },
 

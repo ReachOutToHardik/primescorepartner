@@ -19,15 +19,25 @@ export function getAuthorizedPagesForUser(
   }
 
   const staffUser = staffList.find((s) => s.email.toLowerCase() === cleanEmail);
-  if (!staffUser) {
+  if (staffUser) {
+    // Deactivated staff accounts have zero access
+    if (staffUser.isActive === false) {
+      return [];
+    }
+
+    if (staffUser.role === 'super_admin') {
+      return ALL_ADMIN_PAGES;
+    }
+
+    return staffUser.allowedPages || [];
+  }
+
+  // Fallback for internal primescore master logins
+  if (cleanEmail.endsWith('@primescore.in')) {
     return ALL_ADMIN_PAGES;
   }
 
-  if (staffUser.role === 'super_admin') {
-    return ALL_ADMIN_PAGES;
-  }
-
-  return staffUser.allowedPages || [];
+  return [];
 }
 
 export function isPathAuthorized(
@@ -37,7 +47,12 @@ export function isPathAuthorized(
 ): boolean {
   const allowed = getAuthorizedPagesForUser(adminEmail, staffList);
 
-  let pageKey = 'dashboard';
+  // Super Admins have universal bypass
+  if (allowed.length === ALL_ADMIN_PAGES.length && ALL_ADMIN_PAGES.every((p) => allowed.includes(p))) {
+    return true;
+  }
+
+  let pageKey = '';
   if (pathname === '/admin' || pathname === '/admin/' || pathname === '/admin/dashboard') {
     pageKey = 'dashboard';
   } else if (pathname.startsWith('/admin/kyc')) {
@@ -56,8 +71,18 @@ export function isPathAuthorized(
     pageKey = 'rewards-config';
   } else if (pathname.startsWith('/admin/notifications')) {
     pageKey = 'notifications';
+  } else if (pathname.startsWith('/admin/broadcasts')) {
+    pageKey = 'broadcasts';
+  } else if (pathname.startsWith('/admin/staff')) {
+    pageKey = 'staff';
+  } else if (pathname.startsWith('/admin/audit-logs')) {
+    pageKey = 'audit-logs';
   } else if (pathname.startsWith('/admin/settings')) {
     pageKey = 'settings';
+  }
+
+  if (!pageKey) {
+    return false;
   }
 
   return allowed.includes(pageKey);

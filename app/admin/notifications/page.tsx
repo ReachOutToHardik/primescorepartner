@@ -176,14 +176,24 @@ export default function AdminNotificationsPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-[var(--navy-deep)] flex items-center gap-2">
-          <Megaphone className="w-7 h-7 text-[var(--navy)]" weight="fill" />
-          Send Announcements & Notifications
-        </h1>
-        <p className="text-sm text-[var(--ink-muted)]">
-          Send announcements, point reward alerts, and messages to partners.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-[var(--navy-deep)] flex items-center gap-2">
+            <PaperPlaneRight className="w-7 h-7 text-[var(--navy)]" weight="fill" />
+            Send Messages & Notifications
+          </h1>
+          <p className="text-sm text-[var(--ink-muted)]">
+            Send targeted push alerts, reward announcements, and direct messages to partners and teams.
+          </p>
+        </div>
+
+        <a
+          href="/admin/broadcasts"
+          className="px-3.5 py-2 bg-white border border-[var(--border)] text-[var(--ink)] hover:bg-slate-50 text-xs font-semibold rounded-xl transition-all shadow-2xs flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
+        >
+          <Megaphone size={16} className="text-amber-500" weight="fill" />
+          <span>Broadcast Marquees &rarr;</span>
+        </a>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
