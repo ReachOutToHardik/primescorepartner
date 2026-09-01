@@ -54,7 +54,7 @@ export default function AdminServicesPage() {
     }
   };
 
-  const pointsPerInr = rewardConfig?.pointsPerInr || 10;
+  const pointsPerInr = rewardConfig?.pointsPerInr || 4;
 
   return (
     <div className="space-y-6 animate-fade-up">

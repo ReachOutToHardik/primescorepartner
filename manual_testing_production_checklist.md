@@ -349,13 +349,13 @@ Route: `/rewards`
 - Interactive Points Calculator:
   - Input: "Enter points to calculate value"
   - Action: Type `1000`.
-  - Expected Output: Displays live equivalent: `1000 PrimePoints = ₹100.00 INR`.
+  - Expected Output: Displays live equivalent: `1000 PrimePoints = ₹250.00 INR` (4 PrimePoints = ₹1.00 INR).
 
 - Buttons: Voucher Cards ("Claim Voucher")
-  - What to test: Amazon, Flipkart, MakeMyTrip vouchers.
-  - Case 1 (Insufficient Balance): Click "Claim Voucher" on a 500-point card when your balance is 120.
-    - Expected Output: Clear alert note says: *"You need 380 more PrimePoints to claim this voucher."*
-  - Case 2 (Sufficient Balance): Click "Claim Voucher" when balance is >= 500.
+  - What to test: Amazon, Flipkart, MakeMyTrip vouchers (e.g. ₹500 voucher requires `500 × 4 = 2,000` PrimePoints).
+  - Case 1 (Insufficient Balance): Click "Claim Voucher" on a 2,000-point card (₹500 voucher) when your balance is 120.
+    - Expected Output: Clear alert note says: *"Insufficient PrimePoints! You need 2000 points for ₹500 voucher."*
+  - Case 2 (Sufficient Balance): Click "Claim Voucher" when balance is >= 2,000 points (or >= 400 points for a ₹100 voucher).
     - Expected Output: Opens "Confirm Voucher Redemption" modal.
 
 - Inside Voucher Claim Modal:
@@ -578,7 +578,7 @@ Access Admin at route: `/admin` (Unlock Password: `Primescore@Admin2026`).
   - Input: "Points on Customer Enrolled" (default `100`)
   - Input: "Points on Case Completed" (default `500`)
   - Input: "Team Leader Override %" (default `10`)
-  - Input: "Points per 1 INR" (default `10`)
+  - Input: "Points per 1 INR" (default `4`)
   - Input: "Minimum Points to Redeem" (default `500`)
   - Input: "Daily Redemption Cap" (default `10000`)
 

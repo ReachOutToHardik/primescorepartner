@@ -323,7 +323,7 @@ export default function RewardsConfigPage() {
                     type="number"
                     min={1}
                     value={formData.pointsPerInr}
-                    onChange={(e) => handleChange('pointsPerInr', Math.max(1, parseInt(e.target.value) || 10))}
+                    onChange={(e) => handleChange('pointsPerInr', Math.max(1, parseInt(e.target.value) || 4))}
                     className="w-full px-3 py-2 text-sm font-mono-num font-bold bg-white border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[#1B2A72] outline-none"
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">Pts / ₹1</span>

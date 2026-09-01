@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
 
   // Dynamically compute chart data (Hourly for Today, Daily for Month, Monthly for Year/All Time)
   const chartData = useMemo(() => {
-    const ptsRate = rewardConfig?.pointsPerInr || 10;
+    const ptsRate = rewardConfig?.pointsPerInr || 4;
     const ptsPerCase = rewardConfig?.conversionPoints || 500;
 
     if (dateFilter === 'today') {

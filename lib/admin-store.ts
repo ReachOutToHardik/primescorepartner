@@ -133,7 +133,7 @@ export interface RewardEngineConfig {
   enrollmentPoints: number;          // Pts on customer enrolled (e.g. 100)
   conversionPoints: number;          // Pts on case completed (e.g. 500)
   teamLeaderOverridePercent: number; // Team Leader override % (e.g. 10%)
-  pointsPerInr: number;              // How many points = 1 INR (e.g. 10 Pts = ₹1 INR)
+  pointsPerInr: number;              // How many points = 1 INR (4 Pts = ₹1 INR)
   payoutMode: 'points' | 'cash' | 'hybrid'; // Default reward mode
   minRedemptionPoints: number;       // Min points required to redeem (e.g. 500)
   maxDailyRedemptionPoints: number;   // Daily cap (e.g. 10000)

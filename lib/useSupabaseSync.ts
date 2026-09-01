@@ -97,7 +97,7 @@ export function useSupabaseSync() {
             enrollmentPoints: dbConfig.enrollment_points ?? 100,
             conversionPoints: dbConfig.conversion_points ?? 500,
             teamLeaderOverridePercent: Number(dbConfig.team_leader_override_percent ?? 10),
-            pointsPerInr: dbConfig.points_per_inr ?? 10,
+            pointsPerInr: dbConfig.points_per_inr ?? 4,
             payoutMode: dbConfig.payout_mode || 'points',
             minRedemptionPoints: dbConfig.min_redemption_points ?? 500,
             maxDailyRedemptionPoints: dbConfig.max_daily_redemption_points ?? 10000,
