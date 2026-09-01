@@ -3,10 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
+
+const supabaseDb = createClient(supabaseUrl, anonKey);
 
 export async function POST(req: Request) {
   try {
@@ -66,7 +69,7 @@ export async function POST(req: Request) {
     const finalTeamCode = teamCode ? teamCode.trim().toUpperCase() : `PS-${namePart}-${randomCode}`;
 
     // 2. Insert into profiles table
-    const { data: profileData, error: profileErr } = await supabaseAdmin
+    const { data: profileData, error: profileErr } = await supabaseDb
       .from('profiles')
       .upsert(
         [
@@ -75,7 +78,6 @@ export async function POST(req: Request) {
             name: name.trim(),
             email: cleanEmail,
             phone: cleanPhone,
-            password: userPassword,
             profession: profession || 'Direct Selling Agent (DSA)',
             city: (city || 'Mumbai').trim(),
             state: (state || 'Maharashtra').trim(),
@@ -103,7 +105,7 @@ export async function POST(req: Request) {
 
     // 3. Log 100 Pts welcome bonus transaction
     try {
-      await supabaseAdmin.from('point_transactions').insert([
+      await supabaseDb.from('point_transactions').insert([
         {
           partner_id: userId,
           transaction_type: 'signup_bonus',

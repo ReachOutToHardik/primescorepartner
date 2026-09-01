@@ -249,6 +249,7 @@ export function useSupabaseSync() {
           city: profile.city || '',
           state: profile.state || '',
           pan: profile.pan || '',
+          aadhaar: (profile as any).aadhaar || '',
           status: profile.status,
           role: profile.role,
           teamCode: profile.team_code || '',

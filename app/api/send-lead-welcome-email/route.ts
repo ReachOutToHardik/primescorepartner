@@ -47,9 +47,6 @@ export async function POST(req: NextRequest) {
     `;
 
     if (!apiKey) {
-      console.warn('⚠️ RESEND_API_KEY is not configured in .env.local. Simulating email log dispatch:');
-      console.log(`✉️ [LEAD WELCOME EMAIL DISPATCH TO]: ${customerEmail}`);
-      console.log(`🔗 Tracking URL: ${trackingUrl}`);
       return NextResponse.json({ success: true, simulated: true, trackingUrl });
     }
 

@@ -47,9 +47,29 @@ export default function RegisterPage() {
   const [profession, setProfession] = useState('Direct Selling Agent (DSA)');
   const [city, setCity] = useState('');
   const [stateName, setStateName] = useState('Rajasthan');
+  const [profilePhoto, setProfilePhoto] = useState<string>('');
 
-  // Mandatory Non-Hackable Email OTP State & Rate Limiting
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, photo: 'Photo must be less than 5MB' }));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePhoto(reader.result as string);
+      setErrors((prev) => {
+        const nextErrs = { ...prev };
+        delete nextErrs.photo;
+        return nextErrs;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Mandatory Non-Hackable Mobile SMS OTP State & Rate Limiting
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [otpStep, setOtpStep] = useState<'idle' | 'sending' | 'sent' | 'verified'>('idle');
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [enteredOtp, setEnteredOtp] = useState('');
@@ -86,9 +106,10 @@ export default function RegisterPage() {
     return () => clearInterval(interval);
   }, [lockoutTimer]);
 
-  const handleSendEmailOtp = async () => {
-    if (!email.trim() || !email.includes('@')) {
-      setErrors((prev) => ({ ...prev, email: 'Please enter a valid email address first.' }));
+  const handleSendSmsOtp = async () => {
+    const cleanNumber = phone.replace(/\D/g, '').trim();
+    if (cleanNumber.length !== 10) {
+      setErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit mobile number first.' }));
       return;
     }
 
@@ -113,19 +134,19 @@ export default function RegisterPage() {
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email.trim().toLowerCase())
+        .eq('phone', cleanNumber)
         .maybeSingle();
 
       if (existingProfile) {
         setOtpStep('idle');
         setErrors((prev) => ({
           ...prev,
-          email: 'This email already exists. Please log in or contact partner@primescore.in',
+          phone: 'This mobile number is already registered. Please log in or contact partner@primescore.in',
         }));
         return;
       }
     } catch (err) {
-      console.warn('Email check error:', err);
+      console.warn('Phone check error:', err);
     }
 
     // Update rate limit counter
@@ -143,33 +164,27 @@ export default function RegisterPage() {
     setOtpTimer(60);
     setOtpExpiresAt(Date.now() + 10 * 60 * 1000); // Expiration: 10 minutes (600 seconds)
 
-    // Call Resend API via server route
+    // Call Ishani SMS API via server route
     try {
-      const res = await fetch('/api/send-email-otp', {
+      const res = await fetch('/api/send-sms-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toEmail: email.trim(), otpCode: code }),
+        body: JSON.stringify({ phoneNumber: cleanNumber, otpCode: code }),
       });
       const resData = await res.json();
-      if (res.ok) {
-        setOtpSuccessMsg(`Verification code sent to ${email.trim()}! Valid for 10 minutes.`);
+      if (res.ok && resData.success) {
+        setOtpSuccessMsg(`Verification code sent via SMS to +91 ${cleanNumber}! Valid for 10 minutes.`);
       } else {
-        console.warn('Resend email notice:', resData);
-        setOtpSuccessMsg(`Verification code generated for ${email.trim()}.`);
+        console.warn('SMS notice:', resData);
+        setOtpSuccessMsg(`Verification code generated for +91 ${cleanNumber}.`);
       }
     } catch (apiErr) {
-      console.warn('Resend fetch notice:', apiErr);
-      setOtpSuccessMsg(`Verification code generated for ${email.trim()}.`);
+      console.warn('SMS fetch notice:', apiErr);
+      setOtpSuccessMsg(`Verification code generated for +91 ${cleanNumber}.`);
     }
-
-    // Silent Console log for backup testing
-    console.log('🔑 ====================================================');
-    console.log(`🔑 [PRIMESCORE REGISTRATION EMAIL OTP CODE]: ${code}`);
-    console.log(`🔑 Target Email: ${email.trim()}`);
-    console.log('🔑 ====================================================');
   };
 
-  const handleVerifyEmailOtp = () => {
+  const handleVerifySmsOtp = () => {
     if (lockoutTimer > 0) {
       setOtpError(`Account security lock active. Please wait ${lockoutTimer}s.`);
       return;
@@ -187,14 +202,14 @@ export default function RegisterPage() {
     }
 
     if (enteredOtp.trim() === generatedOtp) {
-      setIsEmailVerified(true);
+      setIsPhoneVerified(true);
       setOtpStep('verified');
       setOtpError('');
       setFailedVerifyCount(0);
-      setOtpSuccessMsg('Email address verified successfully!');
+      setOtpSuccessMsg('Mobile number verified successfully!');
       setErrors((prev) => {
         const newErrs = { ...prev };
-        delete newErrs.email;
+        delete newErrs.phone;
         return newErrs;
       });
     } else {
@@ -272,12 +287,15 @@ export default function RegisterPage() {
     if (!name.trim()) errs.name = 'Full name is required';
     if (!email.trim() || !email.includes('@')) {
       errs.email = 'Valid email is required';
-    } else if (!isEmailVerified) {
-      errs.email = 'Email verification is mandatory. Please verify your email using OTP below.';
     }
 
     const cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.length !== 10) errs.phone = 'Valid 10-digit mobile number is required';
+    if (cleanPhone.length !== 10) {
+      errs.phone = 'Valid 10-digit mobile number is required';
+    } else if (!isPhoneVerified) {
+      errs.phone = 'Mobile verification is mandatory. Please verify your mobile number using OTP below.';
+    }
+
     if (!password.trim() || password.length < 6) errs.password = 'Password must be at least 6 characters long';
     if (password !== confirmPassword) errs.confirmPassword = 'Passwords do not match';
     if (!city.trim()) errs.city = 'City is required';
@@ -316,10 +334,10 @@ export default function RegisterPage() {
     return Object.keys(errs).length === 0;
   };
 
-  const validateStep2 = () => {
+  const validateStep2 = async () => {
     const errs: Record<string, string> = {};
-    const cleanPan = pan.replace(/[^A-Z0-9]/gi, '');
-    const cleanAadhaar = aadhaar.replace(/\D/g, '');
+    const cleanPan = pan.replace(/[^A-Z0-9]/gi, '').toUpperCase().trim();
+    const cleanAadhaar = aadhaar.replace(/\D/g, '').trim();
 
     if (cleanPan.length !== 10) {
       errs.pan = 'Valid 10-character PAN is required (e.g. ABCDE1234F)';
@@ -327,6 +345,25 @@ export default function RegisterPage() {
     if (cleanAadhaar.length !== 12) {
       errs.aadhaar = 'Valid 12-digit Aadhaar number is required (e.g. 1234 5678 9012)';
     }
+
+    if (Object.keys(errs).length === 0) {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        // Check duplicate PAN in profiles
+        const { data: existingPan } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('pan', cleanPan)
+          .maybeSingle();
+
+        if (existingPan) {
+          errs.pan = 'This PAN card number is already registered with another account.';
+        }
+      } catch (err) {
+        console.warn('PAN duplicate check notice:', err);
+      }
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -346,8 +383,9 @@ export default function RegisterPage() {
     if (currentStep === 1) {
       const isValid = await validateStep1();
       if (isValid) setCurrentStep(2);
-    } else if (currentStep === 2 && validateStep2()) {
-      setCurrentStep(3);
+    } else if (currentStep === 2) {
+      const isValid = await validateStep2();
+      if (isValid) setCurrentStep(3);
     }
   };
 
@@ -360,127 +398,75 @@ export default function RegisterPage() {
     if (!validateStep3()) return;
     setIsSubmitting(true);
 
-    const generatedTeamCode = accountRole === 'team_leader'
-      ? `TL-${name.substring(0, 4).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`
-      : `IND-${name.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`;
-
     try {
-      const { supabase } = await import('@/lib/supabase');
-
-      // 1. Attempt Supabase Auth user signup or fallback to direct UUID
-      let userId = '';
-      const { data: authData } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password: password.trim(),
-        options: {
-          data: { name, role: accountRole },
-        },
-      });
-
-      if (authData?.user?.id) {
-        userId = authData.user.id;
-      } else {
-        userId = crypto.randomUUID();
-      }
-
-
-
-      // Clean digits
+      // Clean digits & inputs
       const cleanPhone = phone.replace(/\D/g, '').trim();
       const cleanAadhaar = aadhaar.replace(/\D/g, '').trim();
       const cleanPan = pan.replace(/[^A-Z0-9]/gi, '').toUpperCase().trim();
 
-      // 4. Insert profile row (id = auth user id)
-      const registrationTime = new Date().toISOString();
-      const { data: createdProfile, error: profileError } = await supabase
-        .from('profiles')
-        .upsert(
-          [
-            {
-              id: userId,
-              name: name.trim(),
-              email: email.trim().toLowerCase(),
-              phone: cleanPhone,
-              password: password.trim(),
-              profession,
-              city: city.trim(),
-              state: stateName.trim(),
-              pan: cleanPan,
-              aadhaar: cleanAadhaar,
-              role: teamLeaderCode ? 'team_member' : accountRole,
-              status: 'kyc_submitted',
-              team_code: generatedTeamCode,
-              referred_by_leader_id: teamLeaderCode || null,
-              avatar_url: null,
-              is_email_verified: true,
-              prime_points: 0,
-              lifetime_points_earned: 0,
-              kyc_submitted_at: registrationTime,
-            },
-          ],
-          { onConflict: 'email' }
-        )
-        .select('id')
-        .maybeSingle();
+      // Submit via server-side API with service role privileges to bypass client RLS issues
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          phone: cleanPhone,
+          password: password.trim(),
+          profession,
+          city: city.trim(),
+          state: stateName.trim(),
+          pan: cleanPan,
+          aadhaar: cleanAadhaar,
+          role: accountRole,
+          teamLeaderCode: teamLeaderCode.trim() || null,
+          accountHolder: accountHolder.trim() || null,
+          bankAccount: bankAccount.trim() || null,
+          bankName: bankName.trim() || null,
+          ifsc: ifsc.trim().toUpperCase() || null,
+          avatarUrl: profilePhoto || null,
+        }),
+      });
 
-      if (profileError) {
-        console.error('Profile insert error:', profileError);
-        setErrors({ submit: 'Registration failed. Please try again.' });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setErrors({ submit: data.error || 'Registration failed. Please try again.' });
         setIsSubmitting(false);
         return;
       }
 
-      // Record Under Review initial notification in notifications table
-      if (createdProfile?.id) {
-        try {
-          await supabase.from('notifications').insert([
-            {
-              partner_id: createdProfile.id,
-              title: 'Application Under Review',
-              message: 'Your partner application is under verification. We\'ll send you an SMS when you are verified (takes 24 to 48 hours). After verification, you will receive your 100 PrimePoints sign-up bonus.',
-              type: 'info',
-              is_read: false,
-            },
-          ]);
-        } catch (notifErr) {
-          console.warn('Initial notification insert warning:', notifErr);
-        }
-      }
+      const created = data.profile;
 
-      // 5. Insert bank details (only if provided by partner, since bank details are optional)
-      if (createdProfile?.id && (accountHolder.trim() || bankAccount.trim() || ifsc.trim())) {
-        try {
-          await supabase.from('bank_accounts').insert([
-            {
-              partner_id: createdProfile.id,
-              account_holder_name: accountHolder.trim() || name.trim(),
-              bank_name: bankName.trim() || 'Bank',
-              account_number: bankAccount.trim(),
-              ifsc_code: ifsc.trim().toUpperCase(),
-              is_verified: false,
-            },
-          ]);
-        } catch (bankErr) {
-          console.warn('Optional bank details save notice:', bankErr);
-        }
+      // Automatically sign in with Supabase Auth to establish the browser session
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password: password.trim(),
+        });
+      } catch (authErr) {
+        console.warn('Auto sign-in notice:', authErr);
       }
 
       // Authenticate partner and open /kyc Application Under Review screen directly
       const newPartner = {
-        id: userId,
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        phone: cleanPhone,
-        profession,
-        city: city.trim(),
-        state: stateName.trim(),
-        pan: cleanPan,
-        aadhaar: cleanAadhaar,
-        role: teamLeaderCode ? ('team_member' as const) : accountRole,
-        status: 'kyc_submitted' as const,
-        teamCode: generatedTeamCode,
-        joinedAt: new Date().toISOString(),
-        profilePhoto: undefined,
+        id: created.id,
+        name: created.name,
+        email: created.email,
+        phone: created.phone || cleanPhone,
+        profession: created.profession || profession,
+        city: created.city || city.trim(),
+        state: created.state || stateName.trim(),
+        pan: created.pan || cleanPan,
+        aadhaar: created.aadhaar || cleanAadhaar,
+        role: created.role || (teamLeaderCode ? ('team_member' as const) : accountRole),
+        status: created.status || ('kyc_submitted' as const),
+        teamCode: created.team_code,
+        userReferralCode: created.user_referral_code || created.team_code,
+        joinedAt: created.joined_at || new Date().toISOString(),
+        kycSubmittedAt: created.kyc_submitted_at || new Date().toISOString(),
+        profilePhoto: created.avatar_url || profilePhoto || undefined,
       };
 
       const { usePartnerStore } = await import('@/lib/store');
@@ -491,9 +477,9 @@ export default function RegisterPage() {
       });
 
       router.push('/kyc');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
-      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+      setErrors({ submit: err.message || 'An unexpected network error occurred. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -573,31 +559,101 @@ export default function RegisterPage() {
             )}
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                  Full Name (as per PAN) *
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Arjun Mehta"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)]"
-                  />
-                  <User size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
-                </div>
-                {errors.name && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.name}</p>}
-              </div>
+            {/* Top Identity Block: Profile Photo Avatar + Name & Email */}
+            <div className="p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+                {/* Profile Photo Uploader */}
+                <div className="flex flex-col items-center shrink-0">
+                  <div className="relative group">
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-white border-2 border-dashed border-slate-300 group-hover:border-[#1B2A72] transition-colors shadow-2xs flex items-center justify-center">
+                      {profilePhoto ? (
+                        <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
+                          <Camera size={26} className="text-slate-400 group-hover:text-[#1B2A72] transition-colors" />
+                          <span className="text-[10px] font-semibold mt-1 text-slate-500 leading-tight">Add Photo</span>
+                        </div>
+                      )}
+                    </div>
 
+                    <label
+                      htmlFor="profile-photo-upload"
+                      className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-[#1B2A72] hover:bg-[#152059] text-white flex items-center justify-center cursor-pointer shadow-md transition-transform hover:scale-105"
+                      title="Upload profile photo"
+                    >
+                      <UploadSimple size={15} weight="bold" />
+                      <input
+                        id="profile-photo-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-medium mt-2.5 text-center">
+                    Partner Photo
+                  </span>
+                  {profilePhoto && (
+                    <button
+                      type="button"
+                      onClick={() => setProfilePhoto('')}
+                      className="text-[10px] text-red-600 hover:text-red-700 font-semibold mt-0.5 cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  {errors.photo && <p className="text-[10px] text-[#E63329] mt-1 font-semibold text-center">{errors.photo}</p>}
+                </div>
+
+                {/* Stacked Name and Email fields */}
+                <div className="flex-1 w-full space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
+                      Full Name (as per PAN) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Arjun Mehta"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] rounded-lg focus:border-[#1B2A72] text-[var(--ink)]"
+                      />
+                      <User size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                    </div>
+                    {errors.name && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.name}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
+                      Email Address *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        placeholder="partner@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] focus:border-[#1B2A72] rounded-lg text-[var(--ink)]"
+                      />
+                      <Envelope size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                    </div>
+                    {errors.email && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.email}</p>}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+              {/* Mobile Number with SMS OTP Verification */}
               <div className="space-y-2.5 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)]">
-                    Email Address (OTP Verification Required) *
+                    Mobile Number (SMS OTP Verification) *
                   </label>
-                  {isEmailVerified ? (
+                  {isPhoneVerified ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">
-                      <ShieldCheck size={14} weight="fill" /> Verified Email ✓
+                      <ShieldCheck size={14} weight="fill" /> Mobile Verified ✓
                     </span>
                   ) : (
                     <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -609,46 +665,55 @@ export default function RegisterPage() {
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
                     <input
-                      type="email"
-                      placeholder="Enter your email address"
-                      value={email}
-                      disabled={isEmailVerified || otpStep === 'sent'}
+                      type="tel"
+                      placeholder="98765 43210"
+                      maxLength={11}
+                      value={phone}
+                      disabled={isPhoneVerified || otpStep === 'sent'}
                       onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (isEmailVerified) setIsEmailVerified(false);
+                        setPhone(formatMobile(e.target.value));
+                        if (isPhoneVerified) setIsPhoneVerified(false);
                       }}
                       className={`w-full px-3.5 py-2.5 text-sm bg-white border ${
-                        isEmailVerified
+                        isPhoneVerified
                           ? 'border-emerald-300 bg-emerald-50/30 text-emerald-900 font-semibold cursor-not-allowed'
                           : 'border-[var(--border)] focus:border-[#1B2A72]'
-                      } rounded-lg text-[var(--ink)]`}
+                      } rounded-lg text-[var(--ink)] font-mono-num`}
                     />
-                    <Envelope size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                    <Phone size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
                   </div>
 
-                  {!isEmailVerified && (
+                  {!isPhoneVerified && (
                     <button
                       type="button"
-                      onClick={handleSendEmailOtp}
-                      disabled={otpStep === 'sending' || otpStep === 'sent' || !email.trim()}
+                      onClick={handleSendSmsOtp}
+                      disabled={otpStep === 'sending' || (otpStep === 'sent' && otpTimer > 0) || phone.replace(/\D/g, '').length !== 10}
                       className={`px-4 py-2.5 font-bold text-xs rounded-lg transition-all shadow-xs shrink-0 cursor-pointer ${
-                        otpStep === 'sent'
+                        otpStep === 'sent' && otpTimer > 0
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-not-allowed opacity-90'
+                          : otpStep === 'sent' && otpTimer === 0
+                          ? 'bg-[#1B2A72] hover:bg-[#152059] text-white cursor-pointer'
                           : 'bg-[#1B2A72] hover:bg-[#152059] text-white disabled:opacity-50'
                       }`}
                     >
-                      {otpStep === 'sent' ? 'OTP Sent ✓' : otpStep === 'sending' ? 'Sending...' : 'Send Verification OTP'}
+                      {otpStep === 'sent' && otpTimer > 0
+                        ? 'OTP Sent ✓'
+                        : otpStep === 'sent' && otpTimer === 0
+                        ? 'Resend OTP'
+                        : otpStep === 'sending'
+                        ? 'Sending...'
+                        : 'Send Mobile OTP'}
                     </button>
                   )}
                 </div>
-                {errors.email && <p className="text-[11px] text-[#E63329] font-semibold">{errors.email}</p>}
+                {errors.phone && <p className="text-[11px] text-[#E63329] font-semibold">{errors.phone}</p>}
 
                 {/* Clean 6-Box Segmented OTP Input */}
-                {otpStep === 'sent' && !isEmailVerified && (
+                {otpStep === 'sent' && !isPhoneVerified && (
                   <div className="mt-3 p-3.5 bg-white border border-slate-200 rounded-xl space-y-3 shadow-2xs">
                     <div className="flex items-center justify-between gap-2 text-xs">
                       <span className="font-semibold text-slate-800 break-all leading-snug">
-                        Enter OTP sent to <strong className="text-[#1B2A72]">{email}</strong>
+                        Enter OTP sent via SMS to <strong className="text-[#1B2A72]">+91 {phone}</strong>
                       </span>
                       {otpTimer > 0 ? (
                         <span className="text-[11px] font-mono text-slate-600 font-bold bg-slate-100 px-2.5 py-1 rounded-md shrink-0 flex items-center gap-1 border border-slate-200">
@@ -656,14 +721,14 @@ export default function RegisterPage() {
                           <span>Resend in {otpTimer}s</span>
                         </span>
                       ) : (
-                        <span className="text-[11px] font-mono text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200 shrink-0">
-                          Code Expired
+                        <span className="text-[11px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 shrink-0">
+                          Resend available
                         </span>
                       )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
-                      {/* 6 Individual Digit Input Boxes (Matching button height of 40px) */}
+                      {/* 6 Individual Digit Input Boxes */}
                       <div className="flex gap-1.5 sm:gap-2 justify-center w-full sm:w-auto">
                         {[0, 1, 2, 3, 4, 5].map((idx) => (
                           <input
@@ -684,18 +749,18 @@ export default function RegisterPage() {
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <button
                           type="button"
-                          onClick={handleVerifyEmailOtp}
+                          onClick={handleVerifySmsOtp}
                           disabled={lockoutTimer > 0 || enteredOtp.length < 6}
                           className="flex-1 sm:flex-none px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-all shadow-xs cursor-pointer disabled:opacity-50"
                         >
                           Verify Code
                         </button>
 
-                        {/* Retry Icon Button (Visible beside Verify Code button when clock hits 0) */}
+                        {/* Retry Icon Button */}
                         {otpTimer === 0 && (
                           <button
                             type="button"
-                            onClick={handleSendEmailOtp}
+                            onClick={handleSendSmsOtp}
                             title="Resend OTP Code"
                             className="w-10 h-10 rounded-lg bg-[#1B2A72] hover:bg-[#152059] text-white flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs"
                           >
@@ -706,28 +771,12 @@ export default function RegisterPage() {
                     </div>
 
                     {otpError && <p className="text-[11px] text-red-600 font-semibold">{otpError}</p>}
+                    {otpSuccessMsg && <p className="text-[11px] text-emerald-600 font-semibold">{otpSuccessMsg}</p>}
                   </div>
                 )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
-                    Mobile Number (WhatsApp Enabled) *
-                  </label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    placeholder="98765 43210"
-                    maxLength={11}
-                    value={phone}
-                    onChange={(e) => setPhone(formatMobile(e.target.value))}
-                    className="w-full px-3.5 py-2.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)] font-mono-num"
-                  />
-                  <Phone size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
-                </div>
-                {errors.phone && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.phone}</p>}
-              </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">

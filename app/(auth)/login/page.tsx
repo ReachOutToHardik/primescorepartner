@@ -75,42 +75,8 @@ export default function LoginPage() {
       let userId = authData?.user?.id;
 
       if (authError || !userId) {
-        // Fallback: Check if account exists in profiles table with matching email/phone & password
-        const { data: directProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .or(`email.eq.${resolvedEmail},phone.eq.${identifier}`)
-          .eq('password', password.trim())
-          .maybeSingle();
-
-        if (!directProfile) {
-          setError('Incorrect email/mobile or password. Please try again.');
-          setIsLoading(false);
-          return;
-        }
-
-        // Direct profile match found! Log user in seamlessly
-        usePartnerStore.getState().setPartner({
-          id: directProfile.id,
-          name: directProfile.name,
-          email: directProfile.email,
-          phone: directProfile.phone || '',
-          profession: directProfile.profession || '',
-          city: directProfile.city || '',
-          state: directProfile.state || '',
-          pan: directProfile.pan || '',
-          status: directProfile.status,
-          role: directProfile.role,
-          teamCode: directProfile.team_code || '',
-          joinedAt: directProfile.joined_at || directProfile.created_at,
-          kycSubmittedAt: directProfile.kyc_submitted_at || directProfile.joined_at || directProfile.created_at,
-          profilePhoto: directProfile.avatar_url || undefined,
-        });
-        usePartnerStore.getState().setTotalPoints(directProfile.prime_points || 0);
-
+        setError('Incorrect email/mobile or password. Please try again.');
         setIsLoading(false);
-        setIsNavigating(true);
-        router.push('/dashboard');
         return;
       }
 
@@ -201,9 +167,11 @@ export default function LoginPage() {
           city: profile.city || '',
           state: profile.state || '',
           pan: profile.pan || '',
+          aadhaar: profile.aadhaar || '',
           status: profile.status,
           role: profile.role,
           teamCode: profile.team_code || '',
+          userReferralCode: profile.user_referral_code || profile.team_code || '',
           joinedAt: profile.joined_at || profile.created_at,
           kycSubmittedAt: profile.kyc_submitted_at || profile.created_at,
           isEmailVerified: profile.is_email_verified !== false,
