@@ -166,8 +166,8 @@ const DEFAULT_REWARD_CONFIG: RewardEngineConfig = {
   },
   professionMultipliers: {
     dsa: 1.0,
-    ca: 1.15,
-    loan_consultant: 1.1,
+    ca: 1.0,
+    loan_consultant: 1.0,
     other: 1.0,
   },
 };

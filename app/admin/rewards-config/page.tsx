@@ -506,7 +506,13 @@ export default function RewardsConfigPage() {
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-700">DSA Agent</span>
-                    <span className="text-[10px] font-mono font-bold text-slate-400">1.0x</span>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                      formData.professionMultipliers.dsa > 1.0 ? 'text-emerald-700 bg-emerald-50' : 'text-slate-400'
+                    }`}>
+                      {formData.professionMultipliers.dsa > 1.0
+                        ? `+${Math.round((formData.professionMultipliers.dsa - 1) * 100)}%`
+                        : `${formData.professionMultipliers.dsa}x`}
+                    </span>
                   </div>
                   <div className="relative">
                     <input
@@ -525,7 +531,13 @@ export default function RewardsConfigPage() {
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-700">CA</span>
-                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">+15%</span>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                      formData.professionMultipliers.ca > 1.0 ? 'text-emerald-700 bg-emerald-50' : 'text-slate-400'
+                    }`}>
+                      {formData.professionMultipliers.ca > 1.0
+                        ? `+${Math.round((formData.professionMultipliers.ca - 1) * 100)}%`
+                        : `${formData.professionMultipliers.ca}x`}
+                    </span>
                   </div>
                   <div className="relative">
                     <input
@@ -534,7 +546,7 @@ export default function RewardsConfigPage() {
                       min={1.0}
                       max={2.5}
                       value={formData.professionMultipliers.ca}
-                      onChange={(e) => handleNestedChange('professionMultipliers', 'ca', parseFloat(e.target.value) || 1.15)}
+                      onChange={(e) => handleNestedChange('professionMultipliers', 'ca', parseFloat(e.target.value) || 1.0)}
                       className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg outline-none focus:border-[#1B2A72]"
                     />
                     <span className="absolute right-2.5 top-1.5 text-xs font-bold text-slate-400">x</span>
@@ -544,7 +556,13 @@ export default function RewardsConfigPage() {
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-700">Loan Consultant</span>
-                    <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">+10%</span>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                      formData.professionMultipliers.loan_consultant > 1.0 ? 'text-indigo-700 bg-indigo-50' : 'text-slate-400'
+                    }`}>
+                      {formData.professionMultipliers.loan_consultant > 1.0
+                        ? `+${Math.round((formData.professionMultipliers.loan_consultant - 1) * 100)}%`
+                        : `${formData.professionMultipliers.loan_consultant}x`}
+                    </span>
                   </div>
                   <div className="relative">
                     <input
@@ -553,7 +571,7 @@ export default function RewardsConfigPage() {
                       min={1.0}
                       max={2.5}
                       value={formData.professionMultipliers.loan_consultant}
-                      onChange={(e) => handleNestedChange('professionMultipliers', 'loan_consultant', parseFloat(e.target.value) || 1.1)}
+                      onChange={(e) => handleNestedChange('professionMultipliers', 'loan_consultant', parseFloat(e.target.value) || 1.0)}
                       className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg outline-none focus:border-[#1B2A72]"
                     />
                     <span className="absolute right-2.5 top-1.5 text-xs font-bold text-slate-400">x</span>
@@ -563,7 +581,13 @@ export default function RewardsConfigPage() {
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-700">General Partner</span>
-                    <span className="text-[10px] font-mono font-bold text-slate-400">1.0x</span>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                      formData.professionMultipliers.other > 1.0 ? 'text-emerald-700 bg-emerald-50' : 'text-slate-400'
+                    }`}>
+                      {formData.professionMultipliers.other > 1.0
+                        ? `+${Math.round((formData.professionMultipliers.other - 1) * 100)}%`
+                        : `${formData.professionMultipliers.other}x`}
+                    </span>
                   </div>
                   <div className="relative">
                     <input

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        from: 'PrimeScore Operations <onboarding@resend.dev>',
+        from: 'PrimeScore Operations <partner@update.primescore.in>',
         to: [customerEmail.trim()],
         subject: `Welcome to PrimeScore - Track Your Credit Bureau Report`,
         html: htmlContent,

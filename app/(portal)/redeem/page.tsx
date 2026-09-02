@@ -37,6 +37,7 @@ export default function RedeemPage() {
   const [otpValue, setOtpValue] = useState('');
   const [internalOtp, setInternalOtp] = useState('');
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [generatedVoucherCode, setGeneratedVoucherCode] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -88,12 +89,29 @@ export default function RedeemPage() {
     setErrorMsg('');
   };
 
-  const handleRequestOTP = () => {
+  const handleRequestOTP = async () => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     setInternalOtp(otp);
     setOtpExpiresAt(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+    setIsSendingOtp(true);
+
+    if (partner?.phone) {
+      try {
+        await fetch('/api/send-sms-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phoneNumber: partner.phone,
+            otpCode: otp,
+          }),
+        });
+      } catch (err) {
+        console.error('Redemption SMS dispatch error:', err);
+      }
+    }
+
+    setIsSendingOtp(false);
     setOtpStep('otp');
-    console.info(`[DEV] OTP for redemption: ${otp}`);
   };
 
   const handleVerifyAndRedeem = async () => {
@@ -471,10 +489,20 @@ export default function RedeemPage() {
 
                 <button
                   onClick={handleRequestOTP}
-                  className="w-full py-3 bg-[#1B2A72] hover:bg-[#0F1A4E] text-white font-display font-semibold text-xs rounded-xs transition-colors flex items-center justify-center gap-2"
+                  disabled={isSendingOtp}
+                  className="w-full py-3 bg-[#1B2A72] hover:bg-[#0F1A4E] disabled:opacity-60 text-white font-display font-semibold text-xs rounded-xs transition-colors flex items-center justify-center gap-2"
                 >
-                  <LockKey size={16} />
-                  <span>Send OTP & Confirm Claim</span>
+                  {isSendingOtp ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Dispatching SMS OTP...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LockKey size={16} />
+                      <span>Send OTP & Confirm Claim</span>
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -486,7 +514,7 @@ export default function RedeemPage() {
                   <ShieldCheck size={28} className="mx-auto text-[#1B2A72]" />
                   <p className="font-display font-bold text-sm text-[var(--ink)]">Enter 6-Digit Security OTP</p>
                   <p className="text-xs text-[var(--ink-muted)]">
-                    A one-time code has been generated for this redemption. Check the browser console (DevTools) for the OTP until SMS is integrated.
+                    A one-time verification code has been dispatched via SMS to your registered mobile number.
                   </p>
                 </div>
 
@@ -506,7 +534,7 @@ export default function RedeemPage() {
                     className="w-full py-3 text-center font-mono-num font-bold text-2xl tracking-widest bg-[var(--surface)] border border-[var(--border)] rounded-xs focus:border-[#1B2A72] focus:bg-white text-[var(--ink)]"
                   />
                   <p className="text-[11px] text-[var(--ink-subtle)] text-center">
-                    Enter the 6-digit code shown in your browser console (F12 → Console)
+                    Enter the 6-digit code received on your mobile phone via SMS.
                   </p>
                 </div>
 

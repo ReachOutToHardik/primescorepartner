@@ -102,7 +102,7 @@ export function useSupabaseSync() {
             minRedemptionPoints: dbConfig.min_redemption_points ?? 500,
             maxDailyRedemptionPoints: dbConfig.max_daily_redemption_points ?? 10000,
             tierMultipliers: dbConfig.tier_multipliers || { silver: 1.0, gold: 1.2, platinum: 1.5 },
-            professionMultipliers: dbConfig.profession_multipliers || { dsa: 1.0, ca: 1.15, loan_consultant: 1.1, other: 1.0 },
+            professionMultipliers: dbConfig.profession_multipliers || { dsa: 1.0, ca: 1.0, loan_consultant: 1.0, other: 1.0 },
           },
         });
       }

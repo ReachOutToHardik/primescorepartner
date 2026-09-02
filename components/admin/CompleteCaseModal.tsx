@@ -24,10 +24,25 @@ export const CompleteCaseModal: React.FC<CompleteCaseModalProps> = ({
   initialServiceAmount = 5000,
 }) => {
   const partners = useAdminStore((state) => state.partners);
+  const rewardConfig = useAdminStore((state) => state.rewardConfig);
 
   const targetPartner = partners.find((p) => p.id === partnerId);
   const partnerTier = calculateTier(targetPartner?.primePoints || 0);
   const commissionRatePct = getCaseCommissionRate(partnerTier);
+
+  // Map partner profession to multiplier key
+  const getProfKey = (prof?: string): 'dsa' | 'ca' | 'loan_consultant' | 'other' => {
+    if (!prof) return 'other';
+    const p = prof.toLowerCase();
+    if (p.includes('dsa') || p.includes('direct selling')) return 'dsa';
+    if (p.includes('ca') || p.includes('chartered')) return 'ca';
+    if (p.includes('loan')) return 'loan_consultant';
+    return 'other';
+  };
+
+  const profKey = getProfKey(targetPartner?.profession);
+  const profMultiplier = rewardConfig?.professionMultipliers?.[profKey] ?? 1.0;
+  const effectiveCommissionRatePct = Number((commissionRatePct * profMultiplier).toFixed(2));
 
   const [serviceAmount, setServiceAmount] = useState<number | ''>(initialServiceAmount || 5000);
   const [manualOverridePoints, setManualOverridePoints] = useState<number | ''>('');
@@ -37,10 +52,11 @@ export const CompleteCaseModal: React.FC<CompleteCaseModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Computed calculated points: 1 INR commission = 4 PrimePoints (e.g. ₹10,000 service @ 10% = ₹1,000 = 4,000 Pts)
+  // Computed calculated points: 1 INR commission = 4 PrimePoints (scaled by profession booster)
   const numAmount = typeof serviceAmount === 'number' ? serviceAmount : 0;
-  const commissionInr = Math.round(numAmount * (commissionRatePct / 100));
-  const autoCalculatedPoints = commissionInr * 4;
+  const commissionInr = Math.round(numAmount * (effectiveCommissionRatePct / 100));
+  const pointsPerInr = rewardConfig?.pointsPerInr ?? 4;
+  const autoCalculatedPoints = commissionInr * pointsPerInr;
   const finalPointsToCredit = typeof manualOverridePoints === 'number' ? manualOverridePoints : autoCalculatedPoints;
 
   useEffect(() => {
@@ -253,15 +269,33 @@ export const CompleteCaseModal: React.FC<CompleteCaseModalProps> = ({
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
             <div className="flex items-center justify-between font-bold text-slate-900">
               <span className="flex items-center gap-1.5 text-slate-700">
-                <Calculator size={16} className="text-emerald-600" /> Partner Tier Commission:
+                <Calculator size={16} className="text-emerald-600" /> Base Tier Commission:
               </span>
               <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-mono text-[11px]">
                 {partnerTier} ({commissionRatePct}%)
               </span>
             </div>
 
+            <div className="flex items-center justify-between font-bold text-slate-900">
+              <span className="text-slate-700">
+                Profession Booster ({targetPartner?.profession || 'General Partner'}):
+              </span>
+              <span className={`px-2 py-0.5 rounded-md font-mono text-[11px] ${
+                profMultiplier > 1.0 ? 'bg-amber-100 text-amber-900 font-bold' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {profMultiplier}x {profMultiplier > 1.0 ? `(+${Math.round((profMultiplier - 1) * 100)}%)` : ''}
+              </span>
+            </div>
+
             <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 text-slate-700">
-              <span>PrimePoints Credited:</span>
+              <span>Effective Commission:</span>
+              <span className="font-mono font-bold text-slate-900">
+                {effectiveCommissionRatePct}% = ₹{commissionInr.toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 text-slate-700">
+              <span>PrimePoints Credited (₹1 = {pointsPerInr} Pts):</span>
               <span className="font-mono font-bold text-emerald-700 text-sm">
                 +{autoCalculatedPoints.toLocaleString('en-IN')} Pts
               </span>
