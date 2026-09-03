@@ -476,7 +476,7 @@ export default function RegisterPage() {
         isAuthenticated: true,
       });
 
-      router.push('/kyc');
+      router.push('/onboarding');
     } catch (err: any) {
       console.error('Registration error:', err);
       setErrors({ submit: err.message || 'An unexpected network error occurred. Please try again.' });
