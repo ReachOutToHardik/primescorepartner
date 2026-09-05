@@ -139,6 +139,16 @@ export default function PrivacyPolicyPage() {
                 <p><strong>Portal:</strong> https://partner.primescore.in</p>
               </div>
             </section>
+
+            <section className="space-y-2">
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
+                8. User Data Deletion & Account Closure
+              </h2>
+              <p>
+                Partners and users have the right to request the deletion of their personal data and account records. To request complete account deletion and removal of associated profile data, you may email <strong className="text-[var(--navy)]">partner@primescore.in</strong> with the subject line <em>&ldquo;Account Deletion Request&rdquo;</em> from your registered email address. All eligible account and identity data will be permanently purged within 30 business days.
+              </p>
+            </section>
           </div>
 
           {/* Footer Action Bar */}
