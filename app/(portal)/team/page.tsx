@@ -74,15 +74,36 @@ export default function TeamPage() {
       return;
     }
 
+    const newMemberEmail = memberEmail.trim();
+    const newMemberName = memberName.trim();
+
     onboardTeamMember({
-      name: memberName.trim(),
-      email: memberEmail.trim(),
+      name: newMemberName,
+      email: newMemberEmail,
       phone: cleanPhone,
       profession: memberProfession,
       state: memberState,
       city: memberCity.trim(),
       status: 'kyc_approved',
     });
+
+    // Dispatch official onboarding welcome email to the new team member
+    try {
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'team_member_onboarded',
+          toEmail: newMemberEmail,
+          memberName: newMemberName,
+          leaderName: partner?.name || 'Your Team Leader',
+          teamCode: teamCode,
+          portalUrl: typeof window !== 'undefined' ? window.location.origin : 'https://partner.primescore.in',
+        }),
+      }).catch((err) => console.warn('Team member email notice:', err));
+    } catch (emailErr) {
+      console.warn('Team member welcome email dispatch error:', emailErr);
+    }
 
     // Reset Form & Close
     setMemberName('');

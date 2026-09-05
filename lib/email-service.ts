@@ -425,3 +425,74 @@ export async function sendGiftVoucherDeliveryEmail(params: {
     html
   );
 }
+
+/**
+ * 6. Team Member Onboarded by Team Leader Email
+ */
+export async function sendTeamMemberOnboardedEmail(params: {
+  toEmail: string;
+  memberName: string;
+  leaderName: string;
+  teamCode: string;
+  portalUrl?: string;
+}): Promise<EmailDeliveryResponse> {
+  const pUrl = params.portalUrl || 'https://partner.primescore.in';
+  const memberName = params.memberName || 'Partner';
+  const leaderName = params.leaderName || 'Your Team Leader';
+  const teamCode = params.teamCode || 'IND-HAR-509';
+  const registrationLink = `${pUrl}/register?ref=${teamCode}`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:40px 16px;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#111827;">
+  <table width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:32px;">
+    <tr>
+      <td>
+        <img src="https://www.primescore.in/lightmode_Logo.png" alt="PrimeScore" height="26" style="display:block;margin-bottom:24px;" />
+        
+        <p style="font-size:15px;line-height:22px;margin:0 0 14px 0;">Hi <strong>${memberName}</strong>,</p>
+        
+        <p style="font-size:15px;line-height:22px;color:#374151;margin:0 0 16px 0;">
+          <strong>${leaderName}</strong> has invited you to join their partner network on the PrimeScore Partner Portal.
+        </p>
+
+        <!-- Details Card -->
+        <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:14px 16px;margin-bottom:20px;">
+          <tr>
+            <td style="font-size:13px;line-height:20px;color:#334155;">
+              <div style="margin-bottom:6px;"><strong>Invited By:</strong> ${leaderName}</div>
+              <div><strong>Team Invite Link:</strong><br><a href="${registrationLink}" target="_blank" style="color:#1f2a74;text-decoration:underline;word-break:break-all;">${registrationLink}</a></div>
+            </td>
+          </tr>
+        </table>
+        
+        <p style="font-size:14px;line-height:20px;color:#6b7280;margin:0 0 24px 0;">
+          Use the button below to complete your partner registration and start submitting client credit cases:
+        </p>
+
+        <a href="${registrationLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#1f2a74;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:6px;margin-bottom:28px;">
+          Complete Registration &rarr;
+        </a>
+
+        <div style="border-top:1px solid #f3f4f6;padding-top:16px;margin-top:4px;">
+          <p style="font-size:12px;line-height:18px;color:#64748b;font-weight:600;margin:0 0 4px 0;">
+            PRIMESCORE FINTECH PRIVATE LIMITED
+          </p>
+          <p style="font-size:12px;line-height:18px;color:#9ca3af;margin:0;">
+            &copy; 2026 Primescore. All rights reserved. &bull; <a href="https://partner.primescore.in" style="color:#6b7280;text-decoration:none;">partner.primescore.in</a>
+          </p>
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return sendEmailViaResend(
+    params.toEmail,
+    `Join ${leaderName}'s team on PrimeScore Partner Portal`,
+    html
+  );
+}
+

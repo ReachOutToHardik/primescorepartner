@@ -5,6 +5,7 @@ import {
   sendCaseCompletedEmail,
   sendTierMilestoneEmail,
   sendGiftVoucherDeliveryEmail,
+  sendTeamMemberOnboardedEmail,
 } from '@/lib/email-service';
 
 export async function POST(req: NextRequest) {
@@ -73,6 +74,16 @@ export async function POST(req: NextRequest) {
           denomination: body.denomination,
           voucherCode: body.voucherCode,
           voucherPin: body.voucherPin,
+          portalUrl: body.portalUrl,
+        });
+        break;
+
+      case 'team_member_onboarded':
+        result = await sendTeamMemberOnboardedEmail({
+          toEmail: body.toEmail,
+          memberName: body.memberName,
+          leaderName: body.leaderName,
+          teamCode: body.teamCode,
           portalUrl: body.portalUrl,
         });
         break;
