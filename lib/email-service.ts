@@ -14,12 +14,29 @@ export interface EmailDeliveryResponse {
 }
 
 /**
- * Universal Resend API dispatcher
+ * Helper to generate clean plain text from HTML
+ */
+function stripHtmlToText(html: string): string {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&rarr;/g, '->')
+    .replace(/&bull;/g, '•')
+    .replace(/&copy;/g, '©')
+    .replace(/\s{2,}/g, '\n')
+    .trim();
+}
+
+/**
+ * Universal Resend API dispatcher with Primary Inbox optimizations
  */
 export async function sendEmailViaResend(
   toEmail: string,
   subject: string,
-  htmlContent: string
+  htmlContent: string,
+  plainText?: string
 ): Promise<EmailDeliveryResponse> {
   const apiKey = process.env.RESEND_API_KEY || '';
 
@@ -32,6 +49,8 @@ export async function sendEmailViaResend(
     return { success: true, simulated: true };
   }
 
+  const textBody = plainText || stripHtmlToText(htmlContent);
+
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -41,9 +60,14 @@ export async function sendEmailViaResend(
       },
       body: JSON.stringify({
         from: 'Primescore Operations <partner@update.primescore.in>',
+        reply_to: 'partner@primescore.in',
         to: [toEmail.trim()],
         subject,
         html: htmlContent,
+        text: textBody,
+        headers: {
+          'X-Entity-Ref-ID': `PS-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        },
       }),
     });
 
