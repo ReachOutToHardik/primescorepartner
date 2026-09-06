@@ -265,6 +265,9 @@ export const usePartnerStore = create<PartnerStore>()(
         // Note: For proper Supabase Auth account creation, use /api/admin/partners/create instead.
         try {
           const { supabase } = await import('./supabase');
+          const cleanNamePrefix = memberData.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'TM';
+          const memberCode = `TM-${cleanNamePrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+
           await supabase.from('profiles').upsert(
             [
               {
@@ -277,8 +280,9 @@ export const usePartnerStore = create<PartnerStore>()(
                 state: (memberData.state || 'Rajasthan').trim(),
                 role: 'team_member',
                 status: memberData.status || 'kyc_approved',
-                team_code: partner?.teamCode || 'TL-MEMBER',
-                referred_by_leader_id: partner?.id || null,
+                team_code: memberCode,
+                user_referral_code: memberCode,
+                referred_by_leader_id: partner?.id || partner?.teamCode || null,
                 is_email_verified: true,
                 prime_points: 100,
                 lifetime_points_earned: 100,

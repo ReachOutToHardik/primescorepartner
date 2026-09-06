@@ -416,7 +416,7 @@ export const useAdminStore = create<AdminStore>()(
         const codeSuffix = partnerId.substring(0, 4).toUpperCase();
         const autoCode = `PS-${namePart}-${codeSuffix}`;
         const finalTeamCode = (customTeamCode && customTeamCode.trim()) ? customTeamCode.trim().toUpperCase() : (target?.teamCode || autoCode);
-        const finalUserRefCode = (userReferralCode && userReferralCode.trim()) ? userReferralCode.trim().toUpperCase() : (target?.userReferralCode || 'PSMKMVLN');
+        const finalUserRefCode = (userReferralCode && userReferralCode.trim()) ? userReferralCode.trim().toUpperCase() : (target?.userReferralCode || finalTeamCode);
 
         try {
           const { supabase } = await import('./supabase');
