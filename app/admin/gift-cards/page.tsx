@@ -176,7 +176,7 @@ export default function AdminGiftCardsPage() {
             {
               partner_id: target.partner_id,
               title: `🎉 Gift Voucher Dispatched!`,
-              message: `Your ₹${target.denomination_inr} ${target.brand_name} e-voucher code (${customCode}) is ready to redeem!`,
+              message: `Your ₹${target.denomination_inr} ${target.brand_name} gift voucher code (${customCode}) is ready to redeem!`,
               type: 'reward',
               points_badge: `₹${target.denomination_inr} Voucher`,
               is_read: false,
@@ -349,7 +349,7 @@ export default function AdminGiftCardsPage() {
             Gift Voucher Redemptions & Fulfillment Desk
           </h1>
           <p className="text-sm text-[var(--ink-muted)]">
-            Review partner voucher redemption requests, input custom e-voucher codes, and dispatch instant payouts.
+            Review partner voucher redemption requests, input custom gift voucher codes, and dispatch instant payouts.
           </p>
         </div>
 

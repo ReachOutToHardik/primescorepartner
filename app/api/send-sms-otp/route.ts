@@ -35,25 +35,44 @@ export async function POST(req: NextRequest) {
       corelationid: '',
     };
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey,
-      },
-      body: JSON.stringify(payload),
-    });
+    let response: Response;
+    try {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (networkErr: any) {
+      console.warn('Ishani SMS gateway network error:', networkErr?.message || networkErr);
+      return NextResponse.json(
+        { success: false, error: 'SMS Gateway unreachable', details: networkErr?.message },
+        { status: 502 }
+      );
+    }
 
-    const data = await response.json();
+    const rawResponseText = await response.text();
+    let data: any = null;
+
+    try {
+      data = JSON.parse(rawResponseText);
+    } catch {
+      data = { raw: rawResponseText };
+    }
 
     if (response.ok) {
       return NextResponse.json({ success: true, data });
     } else {
-      console.error('Ishani SMS API error:', data);
-      return NextResponse.json({ error: 'Failed to dispatch SMS', details: data }, { status: 500 });
+      console.error('Ishani SMS API returned non-200:', response.status, data || rawResponseText);
+      return NextResponse.json(
+        { success: false, error: 'Failed to dispatch SMS', details: data || rawResponseText },
+        { status: response.status >= 400 && response.status < 600 ? response.status : 500 }
+      );
     }
   } catch (err: any) {
     console.error('Send SMS OTP route error:', err);
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error', details: err?.message || 'Unknown error' }, { status: 500 });
   }
 }

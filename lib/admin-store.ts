@@ -17,7 +17,8 @@ export interface AdminPartner extends Partner {
 export interface GiftCardItem {
   id: string;
   brand: string;
-  logo: string;
+  logo?: string;
+  image?: string;
   color: string;
   denominations: number[];
   isActive: boolean;

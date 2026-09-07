@@ -67,7 +67,7 @@ export default function AdminGiftCardDetailPage({ params }: { params: { id: stri
                 </Badge>
               </div>
               <p className="text-xs text-gray-300 font-mono mt-0.5">
-                Conversion Rate: 10 PrimePoints = ₹1 INR Cash Value
+                Conversion Rate: 4 PrimePoints = ₹1 INR Cash Value
               </p>
             </div>
           </div>
