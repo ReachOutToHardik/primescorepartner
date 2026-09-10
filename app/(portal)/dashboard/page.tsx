@@ -529,11 +529,11 @@ export default function PartnerDashboard() {
           </p>
         </div>
 
-        <div className="relative z-10 shrink-0">
+        <div className="relative z-10 flex flex-row md:flex-col items-center md:items-stretch gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto">
           {partner?.status === 'kyc_approved' ? (
             <Link
               href="/refer"
-              className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"
+              className="flex-1 md:flex-none justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs sm:text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg whitespace-nowrap"
             >
               <UserPlus size={18} weight="bold" />
               <span>Submit Referral</span>
@@ -541,12 +541,23 @@ export default function PartnerDashboard() {
           ) : (
             <button
               onClick={() => setKycModalOpen(true)}
-              className="px-5 py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+              className="flex-1 md:flex-none justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs sm:text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer whitespace-nowrap"
             >
               <UserPlus size={18} weight="bold" />
               <span>Submit Referral</span>
             </button>
           )}
+
+          <a
+            href={`https://dashboard.primescore.in/ref/${(partner as any)?.userReferralCode || 'PSMKMVLN'}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 md:flex-none justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-display font-bold text-xs sm:text-sm rounded-xl transition-all inline-flex items-center gap-1.5 shadow-sm hover:shadow-md backdrop-blur-xs whitespace-nowrap group"
+            title="Open direct client sign up link in PrimeScore"
+          >
+            <span>Dashboard</span>
+            <ArrowUpRight size={16} weight="bold" className="text-slate-300 group-hover:text-white transition-colors" />
+          </a>
         </div>
       </div>
 
