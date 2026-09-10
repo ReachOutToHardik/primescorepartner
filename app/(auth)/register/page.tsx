@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PROFESSION_OPTIONS, INDIAN_STATES } from '@/lib/constants';
+import { Volume2, VolumeX } from 'lucide-react';
 import {
   CheckCircle,
   ArrowRight,
@@ -33,6 +34,181 @@ export default function RegisterPage() {
 
   // Multi-step form step control
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Audio state: low ambient background sound + step voice prompts + floating bottom-right mute button
+  const [isMuted, setIsMuted] = useState(false);
+  const [showMuteHint, setShowMuteHint] = useState(true);
+  const [highlightName, setHighlightName] = useState(false);
+  const [highlightPhone, setHighlightPhone] = useState(false);
+  const bgAudioRef = useRef<HTMLAudioElement | null>(null);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const isMutedRef = useRef(false);
+  const fadeIntervalRef = useRef<any>(null);
+  const voiceTimeoutRef = useRef<any>(null);
+  const hasInitializedRef = useRef(false);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
+  // Fast smooth fade-in helper for background ambient music (low volume ~0.045, quick 400ms fade)
+  const fadeInBgAudio = (audio: HTMLAudioElement, targetVol = 0.045, durationMs = 400) => {
+    if (isMutedRef.current) return;
+    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+    audio.volume = 0;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          const stepMs = 40;
+          const totalSteps = Math.max(1, durationMs / stepMs);
+          const volStep = targetVol / totalSteps;
+          let stepCount = 0;
+          fadeIntervalRef.current = setInterval(() => {
+            stepCount++;
+            if (isMutedRef.current) {
+              audio.volume = 0;
+              clearInterval(fadeIntervalRef.current);
+              return;
+            }
+            const nextVol = Math.min(targetVol, stepCount * volStep);
+            audio.volume = nextVol;
+            if (stepCount >= totalSteps) {
+              clearInterval(fadeIntervalRef.current);
+            }
+          }, stepMs);
+        })
+        .catch(() => {});
+    }
+  };
+
+  // Schedule and play step voice narration
+  const scheduleVoiceAudio = (step: number, delayMs: number) => {
+    if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+
+    if (!voiceAudioRef.current) {
+      voiceAudioRef.current = new Audio();
+    }
+    const voiceAudio = voiceAudioRef.current;
+    voiceAudio.pause();
+    voiceAudio.currentTime = 0;
+    voiceAudio.src = `/sounds/register${step}.mp3`;
+    voiceAudio.volume = 0.85;
+
+    // Track playback time: 5s to 7s highlight Name, 7s to 10s highlight Mobile Number
+    voiceAudio.ontimeupdate = () => {
+      if (step === 1) {
+        const t = voiceAudio.currentTime;
+        setHighlightName(t >= 4.9 && t < 7.0);
+        setHighlightPhone(t >= 7.0 && t <= 10.2);
+      } else {
+        setHighlightName(false);
+        setHighlightPhone(false);
+      }
+    };
+
+    voiceAudio.onended = () => {
+      setHighlightName(false);
+      setHighlightPhone(false);
+    };
+
+    voiceTimeoutRef.current = setTimeout(() => {
+      if (!isMutedRef.current && voiceAudioRef.current) {
+        voiceAudioRef.current.play().catch(() => {});
+      }
+    }, delayMs);
+  };
+
+  // Unified audio initialization and step transition handler
+  useEffect(() => {
+    // Initialize background audio once
+    if (!bgAudioRef.current) {
+      const bgAudio = new Audio('/sounds/background.mp3');
+      bgAudio.loop = true;
+      bgAudio.volume = 0;
+      bgAudioRef.current = bgAudio;
+      fadeInBgAudio(bgAudio, 0.045, 400);
+
+      const handleFirstInteraction = () => {
+        if (!isMutedRef.current && bgAudioRef.current?.paused) {
+          fadeInBgAudio(bgAudioRef.current, 0.045, 400);
+        }
+        window.removeEventListener('click', handleFirstInteraction);
+        window.removeEventListener('keydown', handleFirstInteraction);
+        window.removeEventListener('touchstart', handleFirstInteraction);
+      };
+      window.addEventListener('click', handleFirstInteraction, { once: true });
+      window.addEventListener('keydown', handleFirstInteraction, { once: true });
+      window.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    }
+
+    setHighlightName(false);
+    setHighlightPhone(false);
+
+    // Initial page entrance gets a 3.5s delay (2-4 seconds), subsequent steps get 500ms delay
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      scheduleVoiceAudio(currentStep, 3500);
+    } else {
+      scheduleVoiceAudio(currentStep, 500);
+    }
+  }, [currentStep]);
+
+  // Clean up timers & audio instances on unmount
+  useEffect(() => {
+    const hintTimer = setTimeout(() => {
+      setShowMuteHint(false);
+    }, 8500);
+
+    return () => {
+      if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+      clearTimeout(hintTimer);
+      if (bgAudioRef.current) {
+        bgAudioRef.current.pause();
+        bgAudioRef.current.src = '';
+        bgAudioRef.current = null;
+      }
+      if (voiceAudioRef.current) {
+        voiceAudioRef.current.pause();
+        voiceAudioRef.current.src = '';
+        voiceAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Toggle Mute handler
+  const toggleMute = () => {
+    setShowMuteHint(false);
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    isMutedRef.current = nextMuted;
+
+    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+    if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+
+    if (bgAudioRef.current) {
+      if (nextMuted) {
+        bgAudioRef.current.pause();
+        bgAudioRef.current.volume = 0;
+      } else {
+        fadeInBgAudio(bgAudioRef.current, 0.045, 300);
+      }
+    }
+
+    if (voiceAudioRef.current) {
+      if (nextMuted) {
+        voiceAudioRef.current.pause();
+        setHighlightName(false);
+        setHighlightPhone(false);
+      } else {
+        voiceAudioRef.current.volume = 0.85;
+        if (voiceAudioRef.current.src) {
+          voiceAudioRef.current.play().catch(() => {});
+        }
+      }
+    }
+  };
 
   // Form State Step 1
   const [accountRole, setAccountRole] = useState<'individual' | 'team_leader'>('individual');
@@ -609,7 +785,9 @@ export default function RegisterPage() {
                 {/* Stacked Name and Email fields */}
                 <div className="flex-1 w-full space-y-3">
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)] mb-1">
+                    <label className={`block text-xs font-semibold uppercase tracking-wider mb-1 transition-colors duration-500 ${
+                      highlightName ? 'text-[#1B2A72] font-bold' : 'text-[var(--ink-2)]'
+                    }`}>
                       Full Name (as per PAN) *
                     </label>
                     <div className="relative">
@@ -618,9 +796,15 @@ export default function RegisterPage() {
                         placeholder="Arjun Mehta"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-sm bg-white border border-[var(--border)] rounded-lg focus:border-[#1B2A72] text-[var(--ink)]"
+                        className={`w-full px-3.5 py-2.5 text-sm rounded-lg text-[var(--ink)] transition-all duration-700 ${
+                          highlightName
+                            ? 'border-[#1B2A72] ring-3 ring-[#1B2A72]/25 bg-blue-50/70 shadow-md shadow-blue-900/10 scale-[1.01]'
+                            : 'bg-white border border-[var(--border)] focus:border-[#1B2A72]'
+                        }`}
                       />
-                      <User size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                      <User size={18} className={`absolute right-3 top-3 transition-colors duration-500 ${
+                        highlightName ? 'text-[#1B2A72]' : 'text-[var(--ink-subtle)]'
+                      }`} />
                     </div>
                     {errors.name && <p className="text-[11px] text-[#E63329] mt-1 font-semibold">{errors.name}</p>}
                   </div>
@@ -646,9 +830,15 @@ export default function RegisterPage() {
             </div>
 
               {/* Mobile Number with SMS OTP Verification */}
-              <div className="space-y-2.5 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+              <div className={`space-y-2.5 p-4 rounded-xl border transition-all duration-700 ${
+                highlightPhone
+                  ? 'bg-blue-50/50 border-[#1B2A72]/50 shadow-md shadow-blue-900/10'
+                  : 'bg-slate-50/70 border-slate-200/80'
+              }`}>
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)]">
+                  <label className={`block text-xs font-semibold uppercase tracking-wider transition-colors duration-500 ${
+                    highlightPhone ? 'text-[#1B2A72] font-bold' : 'text-[var(--ink-2)]'
+                  }`}>
                     Mobile Number (SMS OTP Verification) *
                   </label>
                   {isPhoneVerified ? (
@@ -674,13 +864,17 @@ export default function RegisterPage() {
                         setPhone(formatMobile(e.target.value));
                         if (isPhoneVerified) setIsPhoneVerified(false);
                       }}
-                      className={`w-full px-3.5 py-2.5 text-sm bg-white border ${
+                      className={`w-full px-3.5 py-2.5 text-sm rounded-lg text-[var(--ink)] font-mono-num transition-all duration-700 ${
                         isPhoneVerified
                           ? 'border-emerald-300 bg-emerald-50/30 text-emerald-900 font-semibold cursor-not-allowed'
-                          : 'border-[var(--border)] focus:border-[#1B2A72]'
-                      } rounded-lg text-[var(--ink)] font-mono-num`}
+                          : highlightPhone
+                          ? 'border-[#1B2A72] ring-3 ring-[#1B2A72]/25 bg-blue-50/70 shadow-md shadow-blue-900/10 scale-[1.01]'
+                          : 'bg-white border border-[var(--border)] focus:border-[#1B2A72]'
+                      }`}
                     />
-                    <Phone size={18} className="absolute right-3 top-3 text-[var(--ink-subtle)]" />
+                    <Phone size={18} className={`absolute right-3 top-3 transition-colors duration-500 ${
+                      highlightPhone ? 'text-[#1B2A72]' : 'text-[var(--ink-subtle)]'
+                    }`} />
                   </div>
 
                   {!isPhoneVerified && (
@@ -1082,6 +1276,58 @@ export default function RegisterPage() {
           <Link href="/refund" className="hover:text-[#1B2A72] transition">Payout Policy</Link>
         </div>
         <p>&copy; {new Date().getFullYear()} Primescore. All rights reserved.</p>
+      </div>
+
+      {/* Floating Bottom-Right Audio / Mute Button with Animated Moving Hint */}
+      <div className="fixed bottom-5 right-5 sm:bottom-7 sm:right-7 z-50 flex flex-col items-end gap-2.5 pointer-events-auto">
+        {/* Animated Moving Hint Tooltip */}
+        {showMuteHint && (
+          <div className="animate-bounce flex items-center gap-2 bg-[#0F1A4E] text-white text-[11px] sm:text-xs font-semibold px-3.5 py-2 rounded-2xl shadow-2xl border border-white/20 relative select-none">
+            <span className="flex h-2 w-2 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="whitespace-nowrap">Click here to mute / unmute voice</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMuteHint(false);
+              }}
+              className="text-slate-400 hover:text-white text-xs ml-1 p-0.5 cursor-pointer"
+              title="Dismiss hint"
+            >
+              ✕
+            </button>
+            {/* Tooltip downward pointer arrow */}
+            <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-[#0F1A4E] rotate-45 border-r border-b border-white/20"></div>
+          </div>
+        )}
+
+        {/* Floating Audio Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleMute}
+          className={`group flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full shadow-2xl transition-all duration-300 transform active:scale-95 cursor-pointer border ${
+            isMuted
+              ? 'bg-slate-900/90 hover:bg-slate-900 text-slate-300 border-slate-700/80 backdrop-blur-md'
+              : 'bg-[#1B2A72] hover:bg-[#0F1A4E] text-white border-white/20 shadow-indigo-950/40 hover:shadow-indigo-950/60'
+          }`}
+          title={isMuted ? 'Unmute sounds' : 'Mute all sounds'}
+          aria-label={isMuted ? 'Unmute sounds' : 'Mute all sounds'}
+        >
+          {isMuted ? (
+            <>
+              <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400 shrink-0" />
+              <span className="text-xs font-bold text-slate-200 pr-1">Muted</span>
+            </>
+          ) : (
+            <>
+              <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 animate-pulse shrink-0" />
+              <span className="text-xs font-bold text-white pr-1">Audio On</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
