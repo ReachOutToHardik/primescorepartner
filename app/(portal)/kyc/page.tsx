@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import jsPDF from 'jspdf';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { usePartnerStore } from '@/lib/store';
 import {
   ShieldCheck,
@@ -27,16 +28,68 @@ import {
   Article,
   QrCode,
   CaretDown,
+  Trash,
+  Warning,
+  SpinnerGap,
 } from '@phosphor-icons/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Card } from '@/components/ui/Card';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal';
 import { formatMobile, formatAadhaar, formatPan } from '@/lib/utils';
 
 export default function KYCPage() {
-  const { partner } = usePartnerStore();
+  const router = useRouter();
+  const { partner, logout } = usePartnerStore();
   const qrCardRef = useRef<HTMLDivElement>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Delete Account State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [deleteReason, setDeleteReason] = useState('Found another alternative');
+  const [deleteCustomReason, setDeleteCustomReason] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteAccount = async () => {
+    if (!partner?.id) return;
+    if (deleteConfirmationText.trim().toUpperCase() !== 'DELETE') {
+      setDeleteError('Please type DELETE into the confirmation field to proceed.');
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Only send reason — identity is verified server-side via session cookie
+        body: JSON.stringify({
+          reason: deleteReason === 'Other' ? deleteCustomReason : deleteReason,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete account.');
+      }
+
+      // Logout and redirect to login
+      await logout();
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
+      router.replace('/login?account_deleted=1');
+    } catch (err: any) {
+      console.error('Delete account error:', err);
+      setDeleteError(err?.message || 'An unexpected error occurred while deleting your account.');
+      setIsDeleting(false);
+    }
+  };
 
   const userRefCode = partner?.userReferralCode || partner?.teamCode || 'PSMKMVLN';
   const clientReferralUrl = typeof window !== 'undefined'
@@ -373,6 +426,144 @@ export default function KYCPage() {
             </a>
           </div>
         </div>
+
+        {/* Account Management & Danger Zone */}
+        <div className="bg-white border border-red-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-100">
+                <Trash size={20} weight="bold" />
+              </div>
+              <div>
+                <h4 className="font-display font-bold text-sm text-slate-900">Delete Partner Account</h4>
+                <p className="text-xs text-slate-500">
+                  Permanently delete your profile, KYC records, and clear all earned PrimePoints and history.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteConfirmationText('');
+                setDeleteError(null);
+                setDeleteModalOpen(true);
+              }}
+              className="px-4 py-2 bg-white hover:bg-red-50 border border-red-200 hover:border-red-300 text-red-600 font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 shadow-2xs hover:shadow-xs active:scale-95"
+            >
+              Delete Account
+            </button>
+          </div>
+        </div>
+
+        {/* Delete Account Confirmation Modal */}
+        <Modal
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            if (!isDeleting) setDeleteModalOpen(false);
+          }}
+          title="Delete Partner Account"
+          maxWidth="md"
+        >
+          <ModalHeader>
+            <div className="flex items-center gap-2.5 text-red-600">
+              <Warning size={22} weight="fill" />
+              <h3 className="font-display font-bold text-base text-slate-900">
+                Delete Account &amp; Erase All Data
+              </h3>
+            </div>
+          </ModalHeader>
+
+          <ModalBody className="space-y-4">
+            <div className="p-3.5 bg-red-50 border border-red-100 rounded-xl text-xs text-red-900 space-y-1.5">
+              <p className="font-bold">⚠️ Warning: This action is permanent and cannot be undone.</p>
+              <ul className="list-disc list-inside space-y-0.5 text-red-800 text-[11px]">
+                <li>Your partner account ({partner?.email}) will be immediately closed.</li>
+                <li>All unredeemed PrimePoints balance will be forfeited.</li>
+                <li>Your client referral tracking and case commission history will be erased.</li>
+                <li>Submitted KYC documents and personal details will be permanently removed.</li>
+              </ul>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700">Reason for leaving (Optional)</label>
+              <select
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                disabled={isDeleting}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none focus:border-[#1B2A72]"
+              >
+                <option value="Found another alternative">Found another alternative</option>
+                <option value="No longer referring clients">No longer referring clients</option>
+                <option value="Privacy concerns">Privacy concerns</option>
+                <option value="Technical difficulties">Technical difficulties</option>
+                <option value="Other">Other reason</option>
+              </select>
+            </div>
+
+            {deleteReason === 'Other' && (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">Please specify reason</label>
+                <input
+                  type="text"
+                  value={deleteCustomReason}
+                  onChange={(e) => setDeleteCustomReason(e.target.value)}
+                  disabled={isDeleting}
+                  placeholder="Why are you deleting your account?"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none focus:border-[#1B2A72]"
+                />
+              </div>
+            )}
+
+            <div className="space-y-1.5 pt-2 border-t border-slate-100">
+              <label className="block text-xs font-bold text-slate-900">
+                To confirm, type <span className="font-mono text-red-600 font-extrabold select-all">DELETE</span> below:
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                disabled={isDeleting}
+                placeholder="Type DELETE to confirm"
+                className="w-full px-3.5 py-2.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-xl text-slate-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              />
+            </div>
+          </ModalBody>
+
+          <ModalFooter>
+            <button
+              type="button"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={isDeleting}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting || deleteConfirmationText.trim().toUpperCase() !== 'DELETE'}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed shadow-xs active:scale-95"
+            >
+              {isDeleting ? (
+                <>
+                  <SpinnerGap size={14} className="animate-spin" />
+                  <span>Deleting Account...</span>
+                </>
+              ) : (
+                <>
+                  <Trash size={14} weight="bold" />
+                  <span>Permanently Delete Account</span>
+                </>
+              )}
+            </button>
+          </ModalFooter>
+        </Modal>
       </div>
     );
   }
@@ -703,8 +894,145 @@ export default function KYCPage() {
               </Link>
             </div>
           </div>
+
+          {/* Account Management & Danger Zone */}
+          <div className="bg-white border border-red-200/80 rounded-xs p-5 shadow-xs space-y-3">
+            <div className="flex items-center gap-2.5 text-red-600 border-b border-red-100 pb-2.5">
+              <Trash size={18} weight="bold" />
+              <h4 className="font-display font-bold text-sm text-slate-900">Account Management &amp; Data Deletion</h4>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-slate-800">Delete Partner Account</p>
+                <p className="text-[11px] text-slate-500">
+                  Permanently delete your partner account, KYC records, and clear all earned points.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteConfirmationText('');
+                  setDeleteError(null);
+                  setDeleteModalOpen(true);
+                }}
+                className="px-3.5 py-1.5 bg-white hover:bg-red-50 border border-red-200 hover:border-red-300 text-red-600 font-bold text-xs rounded-lg transition-all cursor-pointer shrink-0 shadow-2xs hover:shadow-xs active:scale-95"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) setDeleteModalOpen(false);
+        }}
+        title="Delete Partner Account"
+        maxWidth="md"
+      >
+        <ModalHeader>
+          <div className="flex items-center gap-2.5 text-red-600">
+            <Warning size={22} weight="fill" />
+            <h3 className="font-display font-bold text-base text-slate-900">
+              Delete Account &amp; Erase All Data
+            </h3>
+          </div>
+        </ModalHeader>
+
+        <ModalBody className="space-y-4">
+          <div className="p-3.5 bg-red-50 border border-red-100 rounded-xl text-xs text-red-900 space-y-1.5">
+            <p className="font-bold">⚠️ Warning: This action is permanent and cannot be undone.</p>
+            <ul className="list-disc list-inside space-y-0.5 text-red-800 text-[11px]">
+              <li>Your partner account ({partner?.email}) will be immediately closed.</li>
+              <li>All unredeemed PrimePoints balance will be forfeited.</li>
+              <li>Your client referral tracking and case commission history will be erased.</li>
+              <li>Submitted KYC documents and personal details will be permanently removed.</li>
+            </ul>
+          </div>
+
+          {deleteError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700">
+              {deleteError}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-700">Reason for leaving (Optional)</label>
+            <select
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              disabled={isDeleting}
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none focus:border-[#1B2A72]"
+            >
+              <option value="Found another alternative">Found another alternative</option>
+              <option value="No longer referring clients">No longer referring clients</option>
+              <option value="Privacy concerns">Privacy concerns</option>
+              <option value="Technical difficulties">Technical difficulties</option>
+              <option value="Other">Other reason</option>
+            </select>
+          </div>
+
+          {deleteReason === 'Other' && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700">Please specify reason</label>
+              <input
+                type="text"
+                value={deleteCustomReason}
+                onChange={(e) => setDeleteCustomReason(e.target.value)}
+                disabled={isDeleting}
+                placeholder="Why are you deleting your account?"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none focus:border-[#1B2A72]"
+              />
+            </div>
+          )}
+
+          <div className="space-y-1.5 pt-2 border-t border-slate-100">
+            <label className="block text-xs font-bold text-slate-900">
+              To confirm, type <span className="font-mono text-red-600 font-extrabold select-all">DELETE</span> below:
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              disabled={isDeleting}
+              placeholder="Type DELETE to confirm"
+              className="w-full px-3.5 py-2.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-xl text-slate-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+            />
+          </div>
+        </ModalBody>
+
+        <ModalFooter>
+          <button
+            type="button"
+            onClick={() => setDeleteModalOpen(false)}
+            disabled={isDeleting}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={isDeleting || deleteConfirmationText.trim().toUpperCase() !== 'DELETE'}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed shadow-xs active:scale-95"
+          >
+            {isDeleting ? (
+              <>
+                <SpinnerGap size={14} className="animate-spin" />
+                <span>Deleting Account...</span>
+              </>
+            ) : (
+              <>
+                <Trash size={14} weight="bold" />
+                <span>Permanently Delete Account</span>
+              </>
+            )}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

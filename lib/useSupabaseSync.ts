@@ -179,6 +179,37 @@ export function useSupabaseSync() {
       });
 
       useAdminStore.setState({ staff: mergedStaff });
+
+      // Fetch deleted accounts log from Supabase
+      const { data: dbDeletedAccounts } = await supabase
+        .from('deleted_accounts')
+        .select('*')
+        .order('deleted_at', { ascending: false });
+
+      if (dbDeletedAccounts) {
+        useAdminStore.setState({
+          deletedAccounts: dbDeletedAccounts.map((d) => ({
+            id: d.id,
+            originalId: d.original_id,
+            name: d.name || null,
+            email: d.email,
+            phone: d.phone || null,
+            city: d.city || null,
+            state: d.state || null,
+            pan: d.pan || null,
+            role: d.role || null,
+            statusAtDeletion: d.status_at_deletion || null,
+            joinedAt: d.joined_at || null,
+            lifetimePointsEarned: d.lifetime_points_earned || 0,
+            referralCount: d.referral_count || 0,
+            deletionReason: d.deletion_reason || null,
+            deletedAt: d.deleted_at,
+            deletedBy: d.deleted_by || 'self',
+            ipAddress: d.ip_address || null,
+            userAgent: d.user_agent || null,
+          })),
+        });
+      }
     } catch (err) {
       console.error('Admin Supabase sync error:', err);
     } finally {

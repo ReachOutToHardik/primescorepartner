@@ -49,10 +49,31 @@ export interface SystemAuditLog {
   id: string;
   actorName: string;
   actorRole: string;
-  actionType: 'kyc_approval' | 'kyc_rejection' | 'partner_deleted' | 'lead_status_update' | 'payout_settlement' | 'broadcast_publish';
+  actionType: 'kyc_approval' | 'kyc_rejection' | 'partner_deleted' | 'account_deletion' | 'lead_status_update' | 'payout_settlement' | 'broadcast_publish';
   targetEntity: string;
   details: string;
   timestamp: string;
+}
+
+export interface DeletedAccountRecord {
+  id: string;
+  originalId: string;           // former auth UID
+  name: string | null;
+  email: string;
+  phone: string | null;
+  city: string | null;
+  state: string | null;
+  pan: string | null;
+  role: string | null;
+  statusAtDeletion: string | null;
+  joinedAt: string | null;
+  lifetimePointsEarned: number;
+  referralCount: number;
+  deletionReason: string | null;
+  deletedAt: string;
+  deletedBy: string;            // 'self' or admin email
+  ipAddress: string | null;
+  userAgent: string | null;
 }
 
 export interface BroadcastAnnouncement {
@@ -84,6 +105,7 @@ export const ALL_ADMIN_PAGES = [
   'broadcasts',
   'staff',
   'audit-logs',
+  'deleted-accounts',
   'settings',
 ];
 
@@ -181,6 +203,7 @@ interface AdminStore {
   staff: AdminStaffUser[];
   auditLogs: SystemAuditLog[];
   broadcasts: BroadcastAnnouncement[];
+  deletedAccounts: DeletedAccountRecord[];
   rewardConfig: RewardEngineConfig;
   isAuthenticated: boolean;
   adminEmail: string | null;
@@ -289,6 +312,7 @@ export const useAdminStore = create<AdminStore>()(
       staff: INITIAL_STAFF,
       auditLogs: INITIAL_AUDIT_LOGS,
       broadcasts: INITIAL_BROADCASTS,
+      deletedAccounts: [],
       rewardConfig: DEFAULT_REWARD_CONFIG,
       isAuthenticated: false,
       adminEmail: null,

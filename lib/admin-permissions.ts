@@ -77,6 +77,8 @@ export function isPathAuthorized(
     pageKey = 'staff';
   } else if (pathname.startsWith('/admin/audit-logs')) {
     pageKey = 'audit-logs';
+  } else if (pathname.startsWith('/admin/deleted-accounts')) {
+    pageKey = 'deleted-accounts';
   } else if (pathname.startsWith('/admin/settings')) {
     pageKey = 'settings';
   }

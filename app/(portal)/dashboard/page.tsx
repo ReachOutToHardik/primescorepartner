@@ -28,8 +28,13 @@ import {
   ShareNetwork,
   Copy,
   CaretRight,
+  CaretLeft,
   QrCode,
-  LockKey
+  LockKey,
+  PaperPlaneTilt,
+  Crown,
+  Gift,
+  Info
 } from '@phosphor-icons/react';
 
 // Chart.js Setup
@@ -59,9 +64,64 @@ ChartJS.register(
 
 import { KycUnderReviewModal } from '@/components/ui/KycUnderReviewModal';
 
+// Tier Level & Partner Offers Carousel Data (3 Cards: Welcome Bonus, Gold Tier & Platinum Tier)
+const TIER_OFFERS = [
+  {
+    id: 1,
+    badge: '100 Pts Signup Bonus · Refer Your Circle',
+    title: 'New Partner Welcome & Referral Bonus',
+    description: 'Get 100 PrimePoints on KYC approval. Share your referral link with your network and earn on every client enrollment.',
+    icon: Gift,
+    iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    link: '/refer',
+    ctaText: 'Refer Circle',
+    code: 'TKT-BONUS',
+  },
+  {
+    id: 2,
+    badge: '20,000 – 49,999 PrimePoints · Gold Tier',
+    title: 'Gold Partner Tier',
+    description: '125 Pts on Referred User Enrollment · 12% Case Completion Commission · Dedicated Relationship Manager',
+    icon: Coins,
+    iconBg: 'bg-amber-50 text-amber-700 border-amber-200',
+    link: '/rewards',
+    ctaText: 'View Tier',
+    code: 'TKT-GOLD',
+  },
+  {
+    id: 3,
+    badge: '50,000+ PrimePoints · Platinum VIP',
+    title: 'Platinum VIP Tier',
+    description: '150 Pts on Referred User Enrollment · 15% Case Completion Commission · Dedicated RM & Priority Payouts',
+    icon: Crown,
+    iconBg: 'bg-indigo-50 text-[#1B2A72] border-indigo-200',
+    link: '/rewards',
+    ctaText: 'View Tier',
+    code: 'TKT-PLAT',
+  },
+];
+
 export default function PartnerDashboard() {
   const { partner, referrals, redemptions, totalPoints, tier } = usePartnerStore();
   const currentTier = tier || 'Gold';
+
+  // Offers Carousel Auto Switcher (every 4.5 seconds)
+  const [offerSlideIndex, setOfferSlideIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setOfferSlideIndex((prev) => (prev + 1) % TIER_OFFERS.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handlePrevOffer = () => {
+    setOfferSlideIndex((prev) => (prev === 0 ? TIER_OFFERS.length - 1 : prev - 1));
+  };
+
+  const handleNextOffer = () => {
+    setOfferSlideIndex((prev) => (prev + 1) % TIER_OFFERS.length);
+  };
 
   // Metrics calculation
   const totalCount = referrals.length;
@@ -514,55 +574,241 @@ export default function PartnerDashboard() {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      {/* Welcome Banner Header */}
-      <div className="bg-[#0F1A4E] text-white p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="relative z-10 space-y-2">
-          <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
-            <Sparkle size={14} className="text-[#F5C518]" weight="fill" />
-            <span>Welcome back, {partner?.name || 'Arjun Mehta'}</span>
+      {/* Top Hero Section: Offers Carousel + Quick Actions Deck */}
+      {/* Top Hero Section: Offers Carousel + Quick Actions Deck */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
+        {/* Left Column: Offers & Tier Rewards Carousel */}
+        <div className="lg:col-span-7 flex flex-col justify-between space-y-2.5">
+          {/* Section Header */}
+          <div className="flex items-center justify-between px-0.5">
+            <h2 className="font-display font-bold text-base sm:text-lg text-[#0F1A4E] tracking-tight">
+              Offers &amp; Tier Benefits
+            </h2>
+
+            {/* Navigation Arrows (< and >) */}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handlePrevOffer}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-slate-200/80 shadow-2xs"
+                title="Previous offer"
+              >
+                <CaretLeft size={15} weight="bold" />
+              </button>
+              <button
+                type="button"
+                onClick={handleNextOffer}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-slate-200/80 shadow-2xs"
+                title="Next offer"
+              >
+                <CaretRight size={15} weight="bold" />
+              </button>
+            </div>
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Partner Referral Dashboard
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Monitor client referral status, track case updates, and view your earned PrimePoints balance.
-          </p>
+
+          {/* Dynamic Offer Card (Smooth Horizontal Scrolling Carousel with Abstract Ticket Design) */}
+          <div className="flex-1 flex flex-col justify-between space-y-2.5">
+            <div className="relative overflow-hidden rounded-2xl">
+              <div
+                className="flex transition-transform duration-500 ease-out will-change-transform"
+                style={{ transform: `translateX(-${offerSlideIndex * 100}%)` }}
+              >
+                {TIER_OFFERS.map((offer, idx) => {
+                  return (
+                    <div key={offer.id} className="w-full shrink-0">
+                      <Link
+                        href={offer.link}
+                        className="block group cursor-pointer"
+                        title={`${offer.title} - ${offer.ctaText}`}
+                      >
+                        <div className="relative overflow-hidden bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-[#1B2A72]/30 transition-all duration-300 flex items-stretch">
+                          {/* Ticket Perforation Notches (Top and Bottom Cutouts) */}
+                          <div className="absolute -top-2.5 right-[84px] sm:right-[114px] w-5 h-5 rounded-full bg-[#F4F6FA] border-b border-slate-200/90 z-10 pointer-events-none" />
+                          <div className="absolute -bottom-2.5 right-[84px] sm:right-[114px] w-5 h-5 rounded-full bg-[#F4F6FA] border-t border-slate-200/90 z-10 pointer-events-none" />
+
+                          {/* Main Ticket Body (Left Section) */}
+                          <div className="flex-1 p-3.5 sm:p-4.5 flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+                            {/* Abstract Geometric Vector Stamp (No AI Icons) */}
+                            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 group-hover:scale-105 group-hover:border-[#1B2A72]/30 transition-all">
+                              {idx === 0 && (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-emerald-700">
+                                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+                                  <circle cx="12" cy="12" r="5" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+                                  <text x="12" y="15" textAnchor="middle" fontSize="7" fontWeight="bold" fill="currentColor">+100</text>
+                                </svg>
+                              )}
+                              {idx === 1 && (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-amber-600">
+                                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+                                  <circle cx="12" cy="12" r="5" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+                                  <text x="12" y="15" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="currentColor">GLD</text>
+                                </svg>
+                              )}
+                              {idx === 2 && (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#1B2A72]">
+                                  <rect x="5" y="5" width="14" height="14" rx="3" transform="rotate(45 12 12)" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.1" />
+                                  <text x="12" y="15" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="currentColor">VIP</text>
+                                </svg>
+                              )}
+                            </div>
+
+                            {/* Middle Ticket Info */}
+                            <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="inline-block text-[9px] sm:text-[10px] font-bold text-slate-600 tracking-wider uppercase bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80 truncate">
+                                  {offer.badge}
+                                </span>
+                              </div>
+                              <h3 className="font-display text-xs sm:text-sm md:text-base font-bold text-[#0F1A4E] group-hover:text-[#1B2A72] leading-snug truncate transition-colors">
+                                {offer.title}
+                              </h3>
+                              <p className="text-[10px] sm:text-xs text-slate-500 leading-relaxed line-clamp-2">
+                                {offer.description}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Dashed Perforation Tear Line */}
+                          <div className="w-0 border-r-2 border-dashed border-slate-200/90 my-2.5 shrink-0" />
+
+                          {/* Right Ticket Stub (Action Rip with Minimal Abstract Ticket Code) */}
+                          <div className="w-[84px] sm:w-[114px] bg-slate-50/70 group-hover:bg-blue-50/50 flex flex-col items-center justify-center p-2 sm:p-3 text-center transition-colors shrink-0">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#0F1A4E] group-hover:bg-[#1B2A72] text-white flex items-center justify-center shadow-2xs group-hover:scale-105 active:scale-95 transition-all mb-1">
+                              <ArrowRight size={14} weight="bold" />
+                            </div>
+                            <span className="text-[9px] sm:text-[10px] font-bold text-[#0F1A4E] group-hover:text-[#1B2A72] uppercase tracking-wider truncate block w-full px-1">
+                              {offer.ctaText}
+                            </span>
+                            <span className="text-[8px] font-mono text-slate-400 mt-0.5 tracking-tighter">
+                              {`TKT-0${idx + 1}`}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Pagination Dots Indicator */}
+            <div className="flex items-center justify-center gap-1.5 pt-0.5">
+              {TIER_OFFERS.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setOfferSlideIndex(idx)}
+                  className={`transition-all duration-300 rounded-full cursor-pointer ${
+                    offerSlideIndex === idx
+                      ? 'w-5 h-1.5 bg-[#1B2A72]'
+                      : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
+                  }`}
+                  title={`Slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="relative z-10 flex flex-row md:flex-col items-center md:items-stretch gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto">
-          {partner?.status === 'kyc_approved' ? (
-            <Link
-              href="/refer"
-              className="flex-1 md:flex-none justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs sm:text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg whitespace-nowrap"
-            >
-              <UserPlus size={18} weight="bold" />
-              <span>Submit Referral</span>
-            </Link>
-          ) : (
-            <button
-              onClick={() => setKycModalOpen(true)}
-              className="flex-1 md:flex-none justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-[#E63329] hover:bg-[#c9241b] text-white font-display font-bold text-xs sm:text-sm rounded-xl transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer whitespace-nowrap"
-            >
-              <UserPlus size={18} weight="bold" />
-              <span>Submit Referral</span>
-            </button>
-          )}
+        {/* Right Column: 3 Dedicated Quick Action Tiles */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-2.5">
+          <div className="flex items-center justify-between px-0.5">
+            <h2 className="font-display font-bold text-base sm:text-lg text-[#0F1A4E] tracking-tight">
+              Quick Actions
+            </h2>
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+              Share &amp; Refer
+            </span>
+          </div>
 
-          <a
-            href={`https://dashboard.primescore.in/ref/${(partner as any)?.userReferralCode || 'PSMKMVLN'}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 md:flex-none justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-display font-bold text-xs sm:text-sm rounded-xl transition-all inline-flex items-center gap-1.5 shadow-sm hover:shadow-md backdrop-blur-xs whitespace-nowrap group"
-            title="Open direct client sign up link in PrimeScore"
-          >
-            <span>Dashboard</span>
-            <ArrowUpRight size={16} weight="bold" className="text-slate-300 group-hover:text-white transition-colors" />
-          </a>
+          <div className="flex-1 grid grid-cols-3 gap-2 sm:gap-3 items-stretch">
+            {/* 1. PrimeScore Referral (Direct Client Signup Web Link) */}
+            <a
+              href={`https://dashboard.primescore.in/ref/${(partner as any)?.userReferralCode || 'PSMKMVLN'}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+              title="Open direct client sign-up web link in PrimeScore"
+            >
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-[#1B2A72] group-hover:bg-[#1B2A72] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
+                <PaperPlaneTilt size={20} weight="bold" />
+              </div>
+              <span className="font-display font-bold text-xs sm:text-sm text-slate-900 group-hover:text-[#1B2A72] transition-colors leading-tight flex items-center gap-0.5">
+                Dashboard <ArrowUpRight size={10} className="text-slate-400 group-hover:text-[#1B2A72] transition-colors" />
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                Dashboard Refer
+              </span>
+            </a>
+
+            {/* 2. Client Referral (Referral Form - Core Primary Action) */}
+            {partner?.status === 'kyc_approved' ? (
+              <Link
+                href="/refer"
+                className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-red-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+              >
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-red-50 text-[#E63329] group-hover:bg-[#E63329] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
+                  <UserPlus size={20} weight="bold" />
+                </div>
+                <span className="font-display font-bold text-xs sm:text-sm text-slate-900 group-hover:text-[#E63329] transition-colors leading-tight">
+                  Refer Client
+                </span>
+                <span className="text-[10px] text-red-600 font-semibold mt-0.5">
+                  + Add Lead
+                </span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setKycModalOpen(true)}
+                className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-red-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+              >
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-red-50 text-[#E63329] group-hover:bg-[#E63329] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
+                  <UserPlus size={20} weight="bold" />
+                </div>
+                <span className="font-display font-bold text-xs sm:text-sm text-slate-900 group-hover:text-[#E63329] transition-colors leading-tight">
+                  Refer Client
+                </span>
+                <span className="text-[10px] text-red-600 font-semibold mt-0.5">
+                  + Add Lead
+                </span>
+              </button>
+            )}
+
+            {/* 3. Show QR Code Modal */}
+            <button
+              type="button"
+              onClick={() => setQrModalOpen(true)}
+              className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+              title="View your partner client QR code"
+            >
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-100 text-slate-700 group-hover:bg-[#0F1A4E] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
+                <QrCode size={20} weight="bold" />
+              </div>
+              <span className="font-display font-bold text-xs sm:text-sm text-slate-900 group-hover:text-[#0F1A4E] transition-colors leading-tight">
+                Show QR
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                Scan Code
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Metric Stats Rail (2x2 Grid on Mobile, 4 Blocks on Desktop) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      {/* Performance Overview Section */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between px-0.5">
+          <h2 className="font-display font-bold text-base sm:text-lg text-[#0F1A4E] tracking-tight">
+            Performance Overview
+          </h2>
+          <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+            Real-time Partner Metrics
+          </span>
+        </div>
+
+        {/* Metric Stats Rail (2x2 Grid on Mobile, 4 Blocks on Desktop) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         {/* Total Referrals */}
         <Link href="/referrals" className="block">
           <Card variant="elevated" className="p-3.5 sm:p-5 space-y-2 sm:space-y-3 hover:shadow-md hover:border-[#1B2A72]/30 transition-all cursor-pointer group h-full flex flex-col justify-between">
@@ -652,6 +898,7 @@ export default function PartnerDashboard() {
             <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">Instant Gift Vouchers</p>
           </Card>
         </Link>
+        </div>
       </div>
 
       {/* Middle Section: Chart + PrimePoints Tier Card */}

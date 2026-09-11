@@ -27,7 +27,8 @@ import {
   LockKey,
   UserGear,
   ListChecks,
-  PaperPlaneRight
+  PaperPlaneRight,
+  UserMinus,
 } from '@phosphor-icons/react';
 
 interface AdminNavItem {
@@ -35,7 +36,7 @@ interface AdminNavItem {
   name: string;
   href: string;
   icon: any;
-  badgeKey?: 'staff' | 'logs' | 'broadcasts';
+  badgeKey?: 'staff' | 'logs' | 'broadcasts' | 'deleted';
 }
 
 interface AdminNavSection {
@@ -69,6 +70,7 @@ const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { id: 'broadcasts', name: 'Broadcast Announcements', href: '/admin/broadcasts', icon: Megaphone, badgeKey: 'broadcasts' },
       { id: 'staff', name: 'Admin Staff Roles', href: '/admin/staff', icon: UserGear, badgeKey: 'staff' },
       { id: 'audit-logs', name: 'System Audit Logs', href: '/admin/audit-logs', icon: ListChecks, badgeKey: 'logs' },
+      { id: 'deleted-accounts', name: 'Deleted Accounts', href: '/admin/deleted-accounts', icon: UserMinus, badgeKey: 'deleted' },
       { id: 'settings', name: 'Platform Settings', href: '/admin/settings', icon: Gear },
     ],
   },
@@ -87,10 +89,11 @@ export default function AdminSidebar() {
     (s) => s.email.toLowerCase() === (adminEmail || 'sawai@primescore.in').toLowerCase()
   );
 
-  const getBadgeValue = (key?: 'staff' | 'logs' | 'broadcasts') => {
+  const getBadgeValue = (key?: 'staff' | 'logs' | 'broadcasts' | 'deleted') => {
     if (key === 'staff') return staff.length || 4;
     if (key === 'logs') return auditLogs.length || 12;
     if (key === 'broadcasts') return broadcasts.length || 1;
+    if (key === 'deleted') return useAdminStore.getState().deletedAccounts.length || null;
     return null;
   };
 
