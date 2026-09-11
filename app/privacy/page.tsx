@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
               Privacy Policy & Data Security
             </h1>
             <p className="text-xs text-[var(--ink-muted)]">
-              Effective Date: January 1, 2026 | Last Updated: August 29, 2026
+              Effective Date: January 1, 2026 | Last Updated: September 11, 2026
             </p>
           </div>
 
@@ -140,14 +140,102 @@ export default function PrivacyPolicyPage() {
               </div>
             </section>
 
-            <section className="space-y-2">
+            <section className="space-y-3">
               <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
-                <span className="w-2 h-2 rounded-full bg-[var(--navy)]"></span>
-                8. User Data Deletion & Account Closure
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]" />
+                8. Account Deletion &amp; Data Removal
               </h2>
               <p>
-                Partners and users have the right to request the deletion of their personal data and account records. To request complete account deletion and removal of associated profile data, you may email <strong className="text-[var(--navy)]">partner@primescore.in</strong> with the subject line <em>&ldquo;Account Deletion Request&rdquo;</em> from your registered email address. All eligible account and identity data will be permanently purged within 30 business days.
+                You have the right to permanently delete your Primescore Partner account and all associated personal data at any time. We provide two ways to exercise this right:
               </p>
+
+              <div className="space-y-3 pl-1">
+                <div className="p-4 bg-[var(--surface)] rounded-xs border border-[var(--border)] space-y-1.5">
+                  <p className="font-semibold text-[var(--ink)] text-xs uppercase tracking-wide">Option A — In-App Self-Service (Instant)</p>
+                  <p className="text-[var(--ink-muted)] text-xs">
+                    Sign in to the Partner Portal → go to <strong>Profile &amp; KYC</strong> → scroll to <em>Account Management</em> → tap <strong>Delete Account</strong>. You will be asked to select a reason and type <code className="font-mono bg-slate-100 px-1 rounded">DELETE</code> to confirm. Deletion is processed immediately upon confirmation.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-[var(--surface)] rounded-xs border border-[var(--border)] space-y-1.5">
+                  <p className="font-semibold text-[var(--ink)] text-xs uppercase tracking-wide">Option B — Email Request</p>
+                  <p className="text-[var(--ink-muted)] text-xs">
+                    Email <strong className="text-[var(--navy)]">partner@primescore.in</strong> with subject <em>&ldquo;Account Deletion Request&rdquo;</em> from your registered email address. We will process the request within <strong>7 business days</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <p className="font-semibold text-[var(--ink)] pt-1">What gets permanently deleted:</p>
+              <ul className="list-disc list-inside space-y-1.5 text-[var(--ink-muted)] pl-2">
+                <li><strong className="text-[var(--ink)]">Partner Profile:</strong> Name, email, phone, city, state, profession, PAN, Aadhaar, avatar, and all KYC documents.</li>
+                <li><strong className="text-[var(--ink)]">Points &amp; Transactions:</strong> Entire PrimePoints balance, lifetime earnings history, and all point transaction records. Any unredeemed points are forfeited and cannot be recovered.</li>
+                <li><strong className="text-[var(--ink)]">Referral Submissions:</strong> All leads and referred client records submitted under your account.</li>
+                <li><strong className="text-[var(--ink)]">Redemption History:</strong> All past gift card redemption and voucher records.</li>
+                <li><strong className="text-[var(--ink)]">Notifications:</strong> All in-app notification and message records.</li>
+                <li><strong className="text-[var(--ink)]">Authentication:</strong> Your login credentials are permanently removed from our authentication system. The email address is freed for re-registration.</li>
+              </ul>
+
+              <p>
+                A minimal anonymised record (containing only deletion timestamp, reason, and a non-reversible hash of the account) is retained in our internal compliance log for fraud prevention and legal obligation purposes for up to <strong>2 years</strong>, after which it is also purged. This record cannot be used to re-identify you.
+              </p>
+            </section>
+
+            <section className="space-y-2">
+              <h2 className="text-base font-bold text-[var(--navy)] font-display flex items-center gap-2 border-b border-[var(--surface-3)] pb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[var(--navy)]" />
+                9. Data Retention Periods
+              </h2>
+              <p>
+                We retain personal data only for as long as necessary to fulfil the purposes described in this policy or as required by applicable law. The following retention periods apply:
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border border-[var(--border)] rounded-xs overflow-hidden">
+                  <thead className="bg-[var(--surface-2)] text-[var(--navy)] font-bold">
+                    <tr>
+                      <th className="text-left px-3 py-2 border-b border-[var(--border)]">Data Type</th>
+                      <th className="text-left px-3 py-2 border-b border-[var(--border)]">Retention Period</th>
+                      <th className="text-left px-3 py-2 border-b border-[var(--border)]">Basis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)] text-[var(--ink-muted)]">
+                    <tr>
+                      <td className="px-3 py-2">Partner profile &amp; KYC documents</td>
+                      <td className="px-3 py-2 font-semibold text-[var(--ink)]">Duration of active account</td>
+                      <td className="px-3 py-2">Contract performance</td>
+                    </tr>
+                    <tr className="bg-slate-50/50">
+                      <td className="px-3 py-2">Points &amp; transaction records</td>
+                      <td className="px-3 py-2 font-semibold text-[var(--ink)]">Duration of active account</td>
+                      <td className="px-3 py-2">Contract performance</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2">Referral &amp; lead submissions</td>
+                      <td className="px-3 py-2 font-semibold text-[var(--ink)]">Duration of active account</td>
+                      <td className="px-3 py-2">Legitimate interest</td>
+                    </tr>
+                    <tr className="bg-slate-50/50">
+                      <td className="px-3 py-2">All of the above (on account deletion)</td>
+                      <td className="px-3 py-2 font-semibold text-red-600">Deleted immediately</td>
+                      <td className="px-3 py-2">User request / right to erasure</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2">Anonymised deletion compliance record</td>
+                      <td className="px-3 py-2 font-semibold text-[var(--ink)]">Up to 2 years post-deletion</td>
+                      <td className="px-3 py-2">Legal obligation / fraud prevention</td>
+                    </tr>
+                    <tr className="bg-slate-50/50">
+                      <td className="px-3 py-2">Security &amp; system audit logs</td>
+                      <td className="px-3 py-2 font-semibold text-[var(--ink)]">Up to 1 year</td>
+                      <td className="px-3 py-2">Legal obligation / security</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2">Support &amp; email correspondence</td>
+                      <td className="px-3 py-2 font-semibold text-[var(--ink)]">Up to 3 years</td>
+                      <td className="px-3 py-2">Dispute resolution</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
           </div>
 
