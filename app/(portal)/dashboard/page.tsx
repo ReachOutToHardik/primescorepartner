@@ -717,13 +717,28 @@ export default function PartnerDashboard() {
         {/* Left Column: Offers & Tier Rewards Carousel */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-2.5">
           {/* Section Header */}
-          <div className="flex items-center justify-between px-0.5">
+          <div className="flex items-center justify-between px-0.5 h-8">
             <h2 className="font-display font-bold text-base sm:text-lg text-[#0F1A4E] tracking-tight">
               Offers &amp; Tier Benefits
             </h2>
 
-            {/* Navigation Arrows (< and >) */}
-            <div className="flex items-center gap-1.5">
+            {/* Navigation Arrows + Integrated Pagination Dots */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 mr-1">
+                {TIER_OFFERS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setOfferSlideIndex(idx)}
+                    className={`transition-all duration-300 rounded-full cursor-pointer ${
+                      offerSlideIndex === idx
+                        ? 'w-4 h-1.5 bg-[#1B2A72]'
+                        : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
+                    }`}
+                    title={`Slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
               <button
                 type="button"
                 onClick={handlePrevOffer}
@@ -744,21 +759,21 @@ export default function PartnerDashboard() {
           </div>
 
           {/* Dynamic Offer Card (Smooth Horizontal Scrolling Carousel with Raw Colored Ticket Design) */}
-          <div className="flex-1 flex flex-col justify-between space-y-2.5">
-            <div className="relative overflow-hidden rounded-2xl">
+          <div className="flex-1 flex flex-col justify-stretch">
+            <div className="relative overflow-hidden rounded-2xl flex-1 flex flex-col h-full">
               <div
-                className="flex transition-transform duration-500 ease-out will-change-transform"
+                className="flex h-full transition-transform duration-500 ease-out will-change-transform"
                 style={{ transform: `translateX(-${offerSlideIndex * 100}%)` }}
               >
                 {TIER_OFFERS.map((offer, idx) => {
                   return (
-                    <div key={offer.id} className="w-full shrink-0">
+                    <div key={offer.id} className="w-full shrink-0 h-full">
                       <Link
                         href={offer.link}
-                        className="block group cursor-pointer"
+                        className="block group cursor-pointer h-full"
                         title={`${offer.title} - ${offer.ctaText}`}
                       >
-                        <div className={`relative overflow-hidden ${offer.cardBg} rounded-2xl border ${offer.cardBorder} shadow-sm hover:shadow-md transition-all duration-300 flex items-stretch text-white`}>
+                        <div className={`relative overflow-hidden ${offer.cardBg} rounded-2xl border ${offer.cardBorder} shadow-sm hover:shadow-md transition-all duration-300 flex items-stretch text-white h-full min-h-[124px] sm:min-h-[132px]`}>
                           {/* Ambient background glow */}
                           <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 pointer-events-none blur-xl" />
                           <div className="absolute -left-8 -bottom-8 w-24 h-24 rounded-full bg-black/15 pointer-events-none blur-lg" />
@@ -768,7 +783,7 @@ export default function PartnerDashboard() {
                           <div className="absolute -bottom-2.5 right-[84px] sm:right-[114px] w-5 h-5 rounded-full bg-[#F4F6FA] z-10 pointer-events-none shadow-inner" />
 
                           {/* Main Ticket Body (Left Section) */}
-                          <div className="flex-1 p-3.5 sm:p-4.5 flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 z-0">
+                          <div className="flex-1 p-3.5 sm:p-4 flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 z-0">
                             {/* Abstract Geometric Vector Stamp */}
                             <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${offer.stampBg} border flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 group-hover:scale-105 transition-all shadow-2xs`}>
                               {idx === 0 && (
@@ -831,29 +846,12 @@ export default function PartnerDashboard() {
                 })}
               </div>
             </div>
-
-            {/* Pagination Dots Indicator */}
-            <div className="flex items-center justify-center gap-1.5 pt-0.5">
-              {TIER_OFFERS.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setOfferSlideIndex(idx)}
-                  className={`transition-all duration-300 rounded-full cursor-pointer ${
-                    offerSlideIndex === idx
-                      ? 'w-5 h-1.5 bg-[#1B2A72]'
-                      : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
-                  }`}
-                  title={`Slide ${idx + 1}`}
-                />
-              ))}
-            </div>
           </div>
         </div>
 
         {/* Right Column: 3 Dedicated Quick Action Tiles */}
         <div className="lg:col-span-5 flex flex-col justify-between space-y-2.5">
-          <div className="flex items-center justify-between px-0.5">
+          <div className="flex items-center justify-between px-0.5 h-8">
             <h2 className="font-display font-bold text-base sm:text-lg text-[#0F1A4E] tracking-tight">
               Quick Actions
             </h2>
@@ -868,7 +866,7 @@ export default function PartnerDashboard() {
               href={`https://dashboard.primescore.in/ref/${(partner as any)?.userReferralCode || 'PSMKMVLN'}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+              className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center h-full min-h-[124px] sm:min-h-[132px]"
               title="Open direct client sign-up web link in PrimeScore"
             >
               <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-[#1B2A72] group-hover:bg-[#1B2A72] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
@@ -886,7 +884,7 @@ export default function PartnerDashboard() {
             {partner?.status === 'kyc_approved' ? (
               <Link
                 href="/refer"
-                className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-red-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+                className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-red-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center h-full min-h-[124px] sm:min-h-[132px]"
               >
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-red-50 text-[#E63329] group-hover:bg-[#E63329] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
                   <UserPlus size={20} weight="bold" />
@@ -902,7 +900,7 @@ export default function PartnerDashboard() {
               <button
                 type="button"
                 onClick={() => setKycModalOpen(true)}
-                className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-red-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+                className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-red-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center h-full min-h-[124px] sm:min-h-[132px]"
               >
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-red-50 text-[#E63329] group-hover:bg-[#E63329] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
                   <UserPlus size={20} weight="bold" />
@@ -920,7 +918,7 @@ export default function PartnerDashboard() {
             <button
               type="button"
               onClick={() => setQrModalOpen(true)}
-              className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center"
+              className="group flex flex-col items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center h-full min-h-[124px] sm:min-h-[132px]"
               title="View your partner client QR code"
             >
               <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-100 text-slate-700 group-hover:bg-[#0F1A4E] group-hover:text-white transition-all duration-200 flex items-center justify-center shadow-2xs group-hover:scale-105 mb-2">
