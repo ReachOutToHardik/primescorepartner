@@ -72,10 +72,20 @@ const TIER_OFFERS = [
     title: 'New Partner Welcome & Referral Bonus',
     description: 'Get 100 PrimePoints on KYC approval. Share your referral link with your network and earn on every client enrollment.',
     icon: Gift,
-    iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     link: '/refer',
     ctaText: 'Refer Circle',
     code: 'TKT-BONUS',
+    cardBg: 'bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800',
+    cardBorder: 'border-emerald-500/50',
+    badgeStyle: 'bg-emerald-950/40 text-emerald-200 border-emerald-400/30',
+    titleColor: 'text-white',
+    descColor: 'text-emerald-100/85',
+    stampBg: 'bg-emerald-500/25 border-emerald-400/40 text-emerald-200',
+    stubBg: 'bg-emerald-900/60 group-hover:bg-emerald-950/70',
+    btnBg: 'bg-emerald-400 group-hover:bg-white text-emerald-950',
+    btnText: 'text-emerald-100 group-hover:text-white',
+    codeText: 'text-emerald-300/70',
+    dashBorder: 'border-emerald-400/40',
   },
   {
     id: 2,
@@ -83,10 +93,20 @@ const TIER_OFFERS = [
     title: 'Gold Partner Tier',
     description: '125 Pts on Referred User Enrollment · 12% Case Completion Commission · Dedicated Relationship Manager',
     icon: Coins,
-    iconBg: 'bg-amber-50 text-amber-700 border-amber-200',
     link: '/rewards',
     ctaText: 'View Tier',
     code: 'TKT-GOLD',
+    cardBg: 'bg-gradient-to-br from-amber-600 via-amber-700 to-orange-800',
+    cardBorder: 'border-amber-500/50',
+    badgeStyle: 'bg-amber-950/40 text-amber-200 border-amber-400/30',
+    titleColor: 'text-white',
+    descColor: 'text-amber-100/85',
+    stampBg: 'bg-amber-500/25 border-amber-400/40 text-amber-200',
+    stubBg: 'bg-amber-950/60 group-hover:bg-amber-950/80',
+    btnBg: 'bg-amber-300 group-hover:bg-white text-amber-950',
+    btnText: 'text-amber-100 group-hover:text-white',
+    codeText: 'text-amber-300/70',
+    dashBorder: 'border-amber-400/40',
   },
   {
     id: 3,
@@ -94,10 +114,20 @@ const TIER_OFFERS = [
     title: 'Platinum VIP Tier',
     description: '150 Pts on Referred User Enrollment · 15% Case Completion Commission · Dedicated RM & Priority Payouts',
     icon: Crown,
-    iconBg: 'bg-indigo-50 text-[#1B2A72] border-indigo-200',
     link: '/rewards',
     ctaText: 'View Tier',
     code: 'TKT-PLAT',
+    cardBg: 'bg-gradient-to-br from-[#0F1A4E] via-[#1B2A72] to-[#2E3C96]',
+    cardBorder: 'border-indigo-500/50',
+    badgeStyle: 'bg-indigo-950/50 text-indigo-200 border-indigo-400/30',
+    titleColor: 'text-white',
+    descColor: 'text-indigo-100/85',
+    stampBg: 'bg-indigo-500/25 border-indigo-400/40 text-indigo-200',
+    stubBg: 'bg-[#080E2B]/70 group-hover:bg-[#060A20]/90',
+    btnBg: 'bg-indigo-300 group-hover:bg-white text-[#0F1A4E]',
+    btnText: 'text-indigo-200 group-hover:text-white',
+    codeText: 'text-indigo-300/70',
+    dashBorder: 'border-indigo-400/40',
   },
 ];
 
@@ -606,14 +636,12 @@ export default function PartnerDashboard() {
         </div>
 
         {/* Right: Credit Score Report Illustration (matching the icon style) */}
-        <div className="shrink-0 hidden sm:flex items-center justify-center z-10">
+        <div className="shrink-0 flex items-center justify-center z-10">
           <svg
-            width="108"
-            height="108"
             viewBox="0 0 100 120"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="drop-shadow-sm"
+            className="w-16 h-20 sm:w-24 sm:h-28 drop-shadow-sm"
           >
             {/* Document body */}
             <rect x="8" y="4" width="72" height="96" rx="8" fill="#E8EAFF" />
@@ -685,7 +713,6 @@ export default function PartnerDashboard() {
       </div>
 
       {/* Top Hero Section: Offers Carousel + Quick Actions Deck */}
-      {/* Top Hero Section: Offers Carousel + Quick Actions Deck */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
         {/* Left Column: Offers & Tier Rewards Carousel */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-2.5">
@@ -716,7 +743,7 @@ export default function PartnerDashboard() {
             </div>
           </div>
 
-          {/* Dynamic Offer Card (Smooth Horizontal Scrolling Carousel with Abstract Ticket Design) */}
+          {/* Dynamic Offer Card (Smooth Horizontal Scrolling Carousel with Raw Colored Ticket Design) */}
           <div className="flex-1 flex flex-col justify-between space-y-2.5">
             <div className="relative overflow-hidden rounded-2xl">
               <div
@@ -731,32 +758,36 @@ export default function PartnerDashboard() {
                         className="block group cursor-pointer"
                         title={`${offer.title} - ${offer.ctaText}`}
                       >
-                        <div className="relative overflow-hidden bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-[#1B2A72]/30 transition-all duration-300 flex items-stretch">
+                        <div className={`relative overflow-hidden ${offer.cardBg} rounded-2xl border ${offer.cardBorder} shadow-sm hover:shadow-md transition-all duration-300 flex items-stretch text-white`}>
+                          {/* Ambient background glow */}
+                          <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 pointer-events-none blur-xl" />
+                          <div className="absolute -left-8 -bottom-8 w-24 h-24 rounded-full bg-black/15 pointer-events-none blur-lg" />
+
                           {/* Ticket Perforation Notches (Top and Bottom Cutouts) */}
-                          <div className="absolute -top-2.5 right-[84px] sm:right-[114px] w-5 h-5 rounded-full bg-[#F4F6FA] border-b border-slate-200/90 z-10 pointer-events-none" />
-                          <div className="absolute -bottom-2.5 right-[84px] sm:right-[114px] w-5 h-5 rounded-full bg-[#F4F6FA] border-t border-slate-200/90 z-10 pointer-events-none" />
+                          <div className="absolute -top-2.5 right-[84px] sm:right-[114px] w-5 h-5 rounded-full bg-[#F4F6FA] z-10 pointer-events-none shadow-inner" />
+                          <div className="absolute -bottom-2.5 right-[84px] sm:right-[114px] w-5 h-5 rounded-full bg-[#F4F6FA] z-10 pointer-events-none shadow-inner" />
 
                           {/* Main Ticket Body (Left Section) */}
-                          <div className="flex-1 p-3.5 sm:p-4.5 flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
-                            {/* Abstract Geometric Vector Stamp (No AI Icons) */}
-                            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 group-hover:scale-105 group-hover:border-[#1B2A72]/30 transition-all">
+                          <div className="flex-1 p-3.5 sm:p-4.5 flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 z-0">
+                            {/* Abstract Geometric Vector Stamp */}
+                            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${offer.stampBg} border flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 group-hover:scale-105 transition-all shadow-2xs`}>
                               {idx === 0 && (
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-emerald-700">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-emerald-200">
                                   <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
-                                  <circle cx="12" cy="12" r="5" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+                                  <circle cx="12" cy="12" r="5" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.5" />
                                   <text x="12" y="15" textAnchor="middle" fontSize="7" fontWeight="bold" fill="currentColor">+100</text>
                                 </svg>
                               )}
                               {idx === 1 && (
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-amber-600">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-amber-200">
                                   <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
-                                  <circle cx="12" cy="12" r="5" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+                                  <circle cx="12" cy="12" r="5" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.5" />
                                   <text x="12" y="15" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="currentColor">GLD</text>
                                 </svg>
                               )}
                               {idx === 2 && (
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#1B2A72]">
-                                  <rect x="5" y="5" width="14" height="14" rx="3" transform="rotate(45 12 12)" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.1" />
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-indigo-200">
+                                  <rect x="5" y="5" width="14" height="14" rx="3" transform="rotate(45 12 12)" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.25" />
                                   <text x="12" y="15" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="currentColor">VIP</text>
                                 </svg>
                               )}
@@ -765,32 +796,32 @@ export default function PartnerDashboard() {
                             {/* Middle Ticket Info */}
                             <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <span className="inline-block text-[9px] sm:text-[10px] font-bold text-slate-600 tracking-wider uppercase bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80 truncate">
+                                <span className={`inline-block text-[9px] sm:text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded border truncate ${offer.badgeStyle}`}>
                                   {offer.badge}
                                 </span>
                               </div>
-                              <h3 className="font-display text-xs sm:text-sm md:text-base font-bold text-[#0F1A4E] group-hover:text-[#1B2A72] leading-snug truncate transition-colors">
+                              <h3 className={`font-display text-xs sm:text-sm md:text-base font-bold ${offer.titleColor} leading-snug truncate drop-shadow-xs`}>
                                 {offer.title}
                               </h3>
-                              <p className="text-[10px] sm:text-xs text-slate-500 leading-relaxed line-clamp-2">
+                              <p className={`text-[10px] sm:text-xs ${offer.descColor} leading-relaxed line-clamp-2`}>
                                 {offer.description}
                               </p>
                             </div>
                           </div>
 
                           {/* Dashed Perforation Tear Line */}
-                          <div className="w-0 border-r-2 border-dashed border-slate-200/90 my-2.5 shrink-0" />
+                          <div className={`w-0 border-r-2 border-dashed ${offer.dashBorder} my-2.5 shrink-0 z-0`} />
 
-                          {/* Right Ticket Stub (Action Rip with Minimal Abstract Ticket Code) */}
-                          <div className="w-[84px] sm:w-[114px] bg-slate-50/70 group-hover:bg-blue-50/50 flex flex-col items-center justify-center p-2 sm:p-3 text-center transition-colors shrink-0">
-                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#0F1A4E] group-hover:bg-[#1B2A72] text-white flex items-center justify-center shadow-2xs group-hover:scale-105 active:scale-95 transition-all mb-1">
+                          {/* Right Ticket Stub (Action Rip with Raw Colored Styling) */}
+                          <div className={`w-[84px] sm:w-[114px] ${offer.stubBg} flex flex-col items-center justify-center p-2 sm:p-3 text-center transition-colors shrink-0 z-0`}>
+                            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${offer.btnBg} flex items-center justify-center shadow-xs group-hover:scale-105 active:scale-95 transition-all mb-1`}>
                               <ArrowRight size={14} weight="bold" />
                             </div>
-                            <span className="text-[9px] sm:text-[10px] font-bold text-[#0F1A4E] group-hover:text-[#1B2A72] uppercase tracking-wider truncate block w-full px-1">
+                            <span className={`text-[9px] sm:text-[10px] font-bold ${offer.btnText} uppercase tracking-wider truncate block w-full px-1`}>
                               {offer.ctaText}
                             </span>
-                            <span className="text-[8px] font-mono text-slate-400 mt-0.5 tracking-tighter">
-                              {`TKT-0${idx + 1}`}
+                            <span className={`text-[8px] font-mono ${offer.codeText} mt-0.5 tracking-tighter`}>
+                              {offer.code}
                             </span>
                           </div>
                         </div>
