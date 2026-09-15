@@ -574,6 +574,116 @@ export default function PartnerDashboard() {
 
   return (
     <div className="space-y-8 animate-fade-up">
+
+      {/* ── Welcome Greeting Card ─────────────────────────────────────────── */}
+      <div className="relative overflow-hidden bg-white rounded-2xl border border-slate-200/90 shadow-2xs px-5 py-5 sm:px-7 sm:py-6 flex items-center justify-between gap-4">
+        {/* Subtle background blobs */}
+        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-[#1B2A72]/5 pointer-events-none" />
+        <div className="absolute -bottom-6 right-24 w-24 h-24 rounded-full bg-amber-400/5 pointer-events-none" />
+
+        {/* Left: Text */}
+        <div className="flex-1 min-w-0 space-y-1.5 z-10">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2A72]/60 font-mono">Partner Dashboard</p>
+          <h2 className="font-display font-extrabold text-xl sm:text-2xl text-[#0F1A4E] leading-tight">
+            Hey {partner?.name?.split(' ')[0] || 'Partner'}!
+          </h2>
+          <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
+            {pendingCount > 0
+              ? `You have ${pendingCount} active lead${pendingCount > 1 ? 's' : ''} in progress. Keep referring to grow your PrimePoints.`
+              : totalCount > 0
+              ? `All ${completedCount} of your referrals are completed. Great work — keep growing your network!`
+              : 'No referrals submitted yet. Share your link and start earning PrimePoints today.'}
+          </p>
+          <div className="pt-1">
+            <Link
+              href="/referrals"
+              className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#1B2A72]/30 text-[#0F1A4E] font-bold text-sm px-4 py-2 rounded-xl transition-all duration-200 shadow-2xs hover:shadow-xs group"
+            >
+              Go to my Referrals
+              <ArrowRight size={15} weight="bold" className="group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Right: Credit Score Report Illustration (matching the icon style) */}
+        <div className="shrink-0 hidden sm:flex items-center justify-center z-10">
+          <svg
+            width="108"
+            height="108"
+            viewBox="0 0 100 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-sm"
+          >
+            {/* Document body */}
+            <rect x="8" y="4" width="72" height="96" rx="8" fill="#E8EAFF" />
+            <rect x="8" y="4" width="72" height="96" rx="8" stroke="#1B2A72" strokeWidth="4" />
+
+            {/* Document fold corner (bottom-right) */}
+            <path d="M64 100 L80 84 L80 100 Z" fill="#00C8C8" />
+            <path d="M64 100 L80 84" stroke="#1B2A72" strokeWidth="3" strokeLinecap="round" />
+
+            {/* Left highlight panel */}
+            <rect x="8" y="4" width="30" height="96" rx="8" fill="#CCCFEF" opacity="0.5" />
+
+            {/* ── Gauge / Speedometer ── */}
+            {/* Grey track arc (background) */}
+            <path
+              d="M20 52 A22 22 0 0 1 64 52"
+              stroke="#e2e8f0"
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+            />
+            {/* Pink segment (left) */}
+            <path
+              d="M20 52 A22 22 0 0 1 27.5 36"
+              stroke="#F472B6"
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+            />
+            {/* Orange/Yellow segment */}
+            <path
+              d="M27.5 36 A22 22 0 0 1 42 29"
+              stroke="#FBBF24"
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+            />
+            {/* Teal segment (right) */}
+            <path
+              d="M42 29 A22 22 0 0 1 64 52"
+              stroke="#2DD4BF"
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+            />
+            {/* Gauge needle centre circle */}
+            <circle cx="42" cy="52" r="5.5" fill="white" stroke="#1B2A72" strokeWidth="3" />
+            {/* Needle */}
+            <line x1="42" y1="52" x2="28" y2="38" stroke="#1B2A72" strokeWidth="2.5" strokeLinecap="round" />
+
+            {/* ── Person avatar (bottom-left) ── */}
+            {/* Head */}
+            <circle cx="24" cy="74" r="6" fill="#FDBA74" stroke="#1B2A72" strokeWidth="2.5" />
+            {/* Shoulders */}
+            <path
+              d="M12 90 Q12 82 24 82 Q36 82 36 90"
+              fill="#65A30D"
+              stroke="#1B2A72"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+            />
+
+            {/* ── Document lines (right side) ── */}
+            <rect x="44" y="68" width="26" height="4" rx="2" fill="#818CF8" />
+            <rect x="44" y="77" width="20" height="4" rx="2" fill="#818CF8" />
+            <rect x="44" y="86" width="16" height="4" rx="2" fill="#A5B4FC" />
+          </svg>
+        </div>
+      </div>
+
       {/* Top Hero Section: Offers Carousel + Quick Actions Deck */}
       {/* Top Hero Section: Offers Carousel + Quick Actions Deck */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">

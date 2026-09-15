@@ -214,7 +214,17 @@ export default function LoginPage() {
       let userId = authData?.user?.id;
 
       if (authError || !userId) {
-        setError('Incorrect email/mobile or password. Please try again.');
+        // Give a specific, actionable error based on Supabase's response
+        const msg = authError?.message?.toLowerCase() || '';
+        if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+          setError('Your email address has not been confirmed yet. Please check your inbox for a confirmation email, or contact partner@primescore.in.');
+        } else if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password')) {
+          setError('Incorrect password. Please double-check your password or use Forgot Password below.');
+        } else if (msg.includes('user not found') || msg.includes('no user')) {
+          setError('No account found with this email. Please check your details or register a new account.');
+        } else {
+          setError('Login failed — please check your email/mobile and password and try again.');
+        }
         setIsLoading(false);
         return;
       }

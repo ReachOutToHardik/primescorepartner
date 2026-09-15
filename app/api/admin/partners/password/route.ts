@@ -68,25 +68,41 @@ export async function POST(req: Request) {
       }
       userUpdated = true;
     } else if (targetEmail) {
-      // User exists in profiles/input but not in Supabase Auth -> Create user in Auth with confirmed email & new password
-      const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+      // Partner exists in profiles but NOT in Supabase Auth.
+      // Use generateLink (works even if Auth is invite-only, and auto-confirms email)
+      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'signup',
         email: targetEmail,
         password: newPassword,
-        email_confirm: true,
+        options: { data: { email_confirm: true } },
       });
 
-      if (createErr) {
-        console.error('Supabase Auth createUser error:', createErr.message);
-        return NextResponse.json({ error: `Auth user creation failed: ${createErr.message}` }, { status: 400 });
-      }
-      userUpdated = true;
+      if (linkErr) {
+        console.error('Supabase generateLink error:', linkErr.message);
 
-      // Link newly created Auth ID into profiles table
-      if (newUser?.user?.id && targetAuthId && targetAuthId !== newUser.user.id) {
-        await supabaseAdmin
-          .from('profiles')
-          .update({ id: newUser.user.id })
-          .eq('id', targetAuthId);
+        // Final fallback: try inviteUserByEmail if generateLink also fails
+        const { data: invData, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(targetEmail);
+        if (invErr || !invData?.user?.id) {
+          return NextResponse.json(
+            { error: `Could not create auth account: ${linkErr.message}. Ensure SUPABASE_SERVICE_ROLE_KEY is set correctly and the Supabase project allows user creation.` },
+            { status: 400 }
+          );
+        }
+        // Invited — now set the password
+        await supabaseAdmin.auth.admin.updateUserById(invData.user.id, { password: newPassword });
+        // Link auth ID to profile
+        if (targetAuthId && targetAuthId !== invData.user.id) {
+          await supabaseAdmin.from('profiles').update({ id: invData.user.id }).eq('id', targetAuthId);
+        }
+        userUpdated = true;
+      } else {
+        const newAuthId = linkData?.user?.id;
+        userUpdated = true;
+
+        // Link newly generated Auth ID back to the profiles row
+        if (newAuthId && targetAuthId && targetAuthId !== newAuthId) {
+          await supabaseAdmin.from('profiles').update({ id: newAuthId }).eq('id', targetAuthId);
+        }
       }
     } else {
       return NextResponse.json({ error: `Could not resolve partner email or ID "${partnerId}".` }, { status: 404 });

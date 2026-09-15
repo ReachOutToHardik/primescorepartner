@@ -44,24 +44,46 @@ export async function POST(req: Request) {
     const userPassword = password || 'Partner@2026';
 
     // 1. Create Supabase Auth User
+    //    Try createUser first; fall back to generateLink if Auth is invite-only.
+    //    NEVER silently continue with a fake UUID — that creates broken profiles.
     let userId = '';
-    try {
-      const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+    let authCreationError = '';
+
+    const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+      email: cleanEmail,
+      password: userPassword,
+      email_confirm: true,
+      user_metadata: { name: name.trim(), phone: cleanPhone },
+    });
+
+    if (authUser?.user?.id) {
+      userId = authUser.user.id;
+    } else {
+      authCreationError = authErr?.message || 'createUser failed';
+      console.warn('createUser note, trying generateLink:', authCreationError);
+
+      // generateLink bypasses invite-only restriction and auto-confirms the email
+      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'signup',
         email: cleanEmail,
         password: userPassword,
-        email_confirm: true,
-        user_metadata: { name: name.trim(), phone: cleanPhone },
+        options: { data: { name: name.trim(), phone: cleanPhone } },
       });
 
-      if (authUser?.user?.id) {
-        userId = authUser.user.id;
+      if (linkData?.user?.id) {
+        userId = linkData.user.id;
+        authCreationError = '';
+      } else {
+        authCreationError = linkErr?.message || 'generateLink also failed';
       }
-    } catch (e: any) {
-      console.warn('Auth user creation note:', e.message);
     }
 
+    // Hard stop — do NOT create a profile with a fake ID
     if (!userId) {
-      userId = crypto.randomUUID();
+      return NextResponse.json(
+        { error: `Cannot create partner: auth account creation failed (${authCreationError}). Go to Supabase Dashboard → Authentication → Providers → Email and enable Allow Signups, or verify SUPABASE_SERVICE_ROLE_KEY in .env.local.` },
+        { status: 400 }
+      );
     }
 
     const namePart = (name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 5).toUpperCase();
