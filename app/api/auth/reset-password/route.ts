@@ -10,6 +10,12 @@ const serviceRoleKey =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1ZWhkcmRmZmd1d3ZpcGdxeXdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjcxODEyNiwiZXhwIjoyMTAyMjk0MTI2fQ.O5CoBQopYIXMA8ixlETAg_DyH-H0BfaCyvMHAdPwRoc';
 
 const HMAC_SECRET = serviceRoleKey || 'primescore-reset-secret-2026';
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const MAX_ATTEMPTS = 3;
+const ALERT_EMAIL = 'info@primescore.in';
+
+const rateLimitStore = new Map<string, { count: number; windowStart: number; alerted: boolean }>();
 
 // Database client using anon key (has full PostgreSQL table permissions on public.profiles)
 const supabaseDb = createClient(supabaseUrl, anonKey);
