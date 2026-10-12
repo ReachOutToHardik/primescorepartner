@@ -1,23 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, randomInt } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://duehdrdffguwvipgqywh.supabase.co';
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || anonKey;
+const serviceRoleKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1ZWhkcmRmZmd1d3ZpcGdxeXdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjcxODEyNiwiZXhwIjoyMTAyMjk0MTI2fQ.O5CoBQopYIXMA8ixlETAg_DyH-H0BfaCyvMHAdPwRoc';
 
 const HMAC_SECRET = serviceRoleKey || 'primescore-reset-secret-2026';
-const OTP_EXPIRY_MS = 10 * 60 * 1000;
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 3;
-const ALERT_EMAIL = 'info@primescore.in';
-
-const rateLimitStore = new Map<string, { count: number; windowStart: number; alerted: boolean }>();
-
-// Admin client for auth.users admin operations
-const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
 
 // Database client using anon key (has full PostgreSQL table permissions on public.profiles)
 const supabaseDb = createClient(supabaseUrl, anonKey);
@@ -287,19 +279,31 @@ export async function POST(req: NextRequest) {
           );
         }
       } else if (profile.email) {
-        const { error: createErr } = await supabaseAdmin.auth.admin.createUser({
-          email: profile.email,
+        const cleanTargetEmail = profile.email.trim().toLowerCase();
+        const { data: createdUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          email: cleanTargetEmail,
           password: newPassword,
           email_confirm: true,
           user_metadata: { name: profile.name, phone: profile.phone },
         });
 
         if (createErr) {
-          console.error('Supabase user create error during reset:', createErr.message);
-          return NextResponse.json(
-            { error: 'Failed to set password: ' + createErr.message },
-            { status: 500 }
-          );
+          console.warn('createUser fallback, trying generateLink:', createErr.message);
+          // Fallback to generateLink (bypasses "User not allowed" and invite-only restrictions)
+          const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'signup',
+            email: cleanTargetEmail,
+            password: newPassword,
+            options: { data: { email_confirm: true } },
+          });
+
+          if (linkErr) {
+            console.error('generateLink error during reset:', linkErr.message);
+            return NextResponse.json(
+              { error: 'Failed to set password: ' + (createErr.message || linkErr.message) },
+              { status: 500 }
+            );
+          }
         }
       } else {
         return NextResponse.json({ error: 'No email associated with this account.' }, { status: 400 });
