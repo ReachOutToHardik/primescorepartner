@@ -206,11 +206,37 @@ export default function LoginPage() {
       }
 
       // ─── Step 2: Authenticate with Supabase Auth or Profile table fallback ──
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      let authResponse = await supabase.auth.signInWithPassword({
         email: resolvedEmail,
         password: password.trim(),
       });
 
+      // If email is not confirmed, auto-confirm it in the background via admin API and retry once!
+      if (
+        authResponse.error &&
+        (authResponse.error.message.toLowerCase().includes('not confirmed') ||
+          authResponse.error.message.toLowerCase().includes('email not confirmed'))
+      ) {
+        try {
+          const confirmRes = await fetch('/api/auth/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: resolvedEmail }),
+          });
+
+          if (confirmRes.ok) {
+            // Retry sign in immediately now that email is confirmed
+            authResponse = await supabase.auth.signInWithPassword({
+              email: resolvedEmail,
+              password: password.trim(),
+            });
+          }
+        } catch (confirmErr) {
+          console.warn('Auto-confirm retry notice:', confirmErr);
+        }
+      }
+
+      const { data: authData, error: authError } = authResponse;
       let userId = authData?.user?.id;
 
       if (authError || !userId) {
