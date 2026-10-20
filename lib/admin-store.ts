@@ -446,10 +446,10 @@ export const useAdminStore = create<AdminStore>()(
         try {
           const { supabase } = await import('./supabase');
           
-          // 1. Fetch current points so we don't wipe an already-approved partner's balance
+          // 1. Fetch current points and contact info so we don't wipe an already-approved partner's balance
           const { data: existingProfile } = await supabase
             .from('profiles')
-            .select('prime_points, lifetime_points_earned')
+            .select('prime_points, lifetime_points_earned, email, name')
             .eq('id', partnerId)
             .maybeSingle();
 
@@ -503,6 +503,28 @@ export const useAdminStore = create<AdminStore>()(
             ]);
           } catch (notifErr) {
             console.warn('Approval notification insert warning:', notifErr);
+          }
+
+          // 4. Send official KYC Approval & Welcome Bonus email via Resend
+          const recipientEmail = existingProfile?.email || target?.email;
+          const partnerName = existingProfile?.name || target?.name || 'Partner';
+          if (recipientEmail && recipientEmail.includes('@')) {
+            try {
+              fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'partner_kyc_approved',
+                  toEmail: recipientEmail.trim(),
+                  partnerName: partnerName,
+                  referralCode: finalTeamCode,
+                  referralLink: `https://dashboard.primescore.in/ref/${finalUserRefCode}`,
+                  portalUrl: typeof window !== 'undefined' ? window.location.origin : 'https://partner.primescore.in',
+                }),
+              }).catch((emailErr) => console.warn('KYC approved email dispatch notice:', emailErr));
+            } catch (emailErr) {
+              console.warn('KYC approved email dispatch error:', emailErr);
+            }
           }
         } catch (err) {
           console.error('KYC approve error:', err);
@@ -1353,8 +1375,24 @@ export const useAdminStore = create<AdminStore>()(
     }),
     {
       name: 'primescore-admin-store-v7',
+      // ONLY persist session credentials to avoid browser sessionStorage QuotaExceededError
+      partialize: (state) => ({
+        isAuthenticated: state.isAuthenticated,
+        adminEmail: state.adminEmail,
+        _adminPass: state._adminPass,
+      }),
       storage: typeof window !== 'undefined'
-        ? createJSONStorage(() => window.sessionStorage)
+        ? createJSONStorage(() => ({
+            getItem: (key) => window.sessionStorage.getItem(key),
+            setItem: (key, value) => {
+              try {
+                window.sessionStorage.setItem(key, value);
+              } catch (e) {
+                console.warn('Admin store sessionStorage quota warning:', e);
+              }
+            },
+            removeItem: (key) => window.sessionStorage.removeItem(key),
+          }))
         : undefined,
     }
   )

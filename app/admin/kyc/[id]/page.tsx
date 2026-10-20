@@ -57,7 +57,11 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
   const { partners, referrals, approveKyc, rejectKyc, deletePartner, incrementProfileViews } = useAdminStore();
   const { teamMembers } = usePartnerStore();
 
-  const partner = partners.find((p) => p.id === id);
+  const [directPartner, setDirectPartner] = useState<any | null>(null);
+  const [isFetchingDirect, setIsFetchingDirect] = useState(true);
+
+  const storePartner = partners.find((p) => p.id === id);
+  const partner = storePartner || directPartner;
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -76,6 +80,98 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
   // Document Viewer Modal State
   const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
 
+  // Approval Modal State
+  const [approveModalOpen, setApproveModalOpen] = useState(false);
+  const [codeLinkInput, setCodeLinkInput] = useState('');
+  const [userRefCodeModalInput, setUserRefCodeModalInput] = useState('');
+
+  // Inline Code Editing States
+  const [isEditingUserCode, setIsEditingUserCode] = useState(false);
+  const [userCodeInput, setUserCodeInput] = useState('');
+  const [isEditingTeamCode, setIsEditingTeamCode] = useState(false);
+  const [teamCodeInput, setTeamCodeInput] = useState('');
+
+  // Synchronize inputs when partner data arrives or updates
+  useEffect(() => {
+    if (partner) {
+      setUserCodeInput((partner as any)?.userReferralCode || 'PSMKMVLN');
+      setTeamCodeInput(partner?.teamCode || '');
+    }
+  }, [partner?.id, (partner as any)?.userReferralCode, partner?.teamCode]);
+
+  // Fetch real partner profile and documents from Supabase directly
+  useEffect(() => {
+    if (!id) return;
+    incrementProfileViews(id);
+
+    let isMounted = true;
+    const fetchPartnerAndDocs = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+
+        // 1. Direct fetch from profiles table
+        const { data: p, error: pErr } = await supabase
+          .from('profiles')
+          .select('id, name, email, phone, profession, city, state, pan, status, role, team_code, created_at, joined_at, is_email_verified, avatar_url, referred_by_leader_id, prime_points, lifetime_points_earned, kyc_submitted_at, aadhaar, user_referral_code')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (p && !pErr && isMounted) {
+          const mapped = {
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            phone: p.phone || '',
+            profession: p.profession || '',
+            city: p.city || '',
+            state: p.state || '',
+            pan: p.pan || '',
+            aadhaar: (p as any).aadhaar || '',
+            status: p.status,
+            role: p.role,
+            teamCode: p.team_code || '',
+            userReferralCode: (p as any).user_referral_code || '',
+            joinedAt: p.joined_at || p.created_at,
+            isEmailVerified: p.is_email_verified !== false,
+            profilePhoto: p.avatar_url || undefined,
+            referredByLeaderId: p.referred_by_leader_id || undefined,
+            primePoints: p.prime_points || 0,
+            lifetimePoints: (p as any).lifetime_points_earned || 0,
+          };
+          setDirectPartner(mapped);
+
+          // Update admin store list so other views also have this partner
+          const currentPartners = useAdminStore.getState().partners;
+          if (!currentPartners.some((sp) => sp.id === id)) {
+            useAdminStore.setState({ partners: [mapped, ...currentPartners] });
+          }
+        }
+
+        // 2. Fetch KYC documents
+        const { data: docs, error: docsErr } = await supabase
+          .from('kyc_documents')
+          .select('*')
+          .eq('partner_id', id);
+
+        if (!docsErr && docs && isMounted) {
+          setDbDocuments(docs);
+        }
+      } catch (err) {
+        console.error('Failed to fetch KYC partner or documents:', err);
+      } finally {
+        if (isMounted) {
+          setIsFetchingDirect(false);
+          setIsLoadingDocs(false);
+        }
+      }
+    };
+
+    fetchPartnerAndDocs();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
   const handleAdjustPointsSubmit = async () => {
     if (!partner) return;
     const change = parseInt(pointsChange, 10);
@@ -84,7 +180,7 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
     setIsSubmittingPoints(true);
     try {
       const { supabase } = await import('@/lib/supabase');
-      
+
       // 1. Fetch current profile points
       const { data: prof } = await supabase
         .from('profiles')
@@ -108,7 +204,7 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
 
       if (updateErr) console.warn('Profile points update note:', updateErr.message);
 
-      // 3. Insert point_transactions ledger row (with error catch so 401 RLS doesn't crash)
+      // 3. Insert point_transactions ledger row
       try {
         await supabase.from('point_transactions').insert([
           {
@@ -161,33 +257,131 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
-  // Fetch real documents from Supabase `kyc_documents` table
-  useEffect(() => {
-    if (id) {
-      incrementProfileViews(id);
-      
-      const fetchDocs = async () => {
-        try {
-          const { supabase } = await import('@/lib/supabase');
-          const { data, error } = await supabase
-            .from('kyc_documents')
-            .select('*')
-            .eq('partner_id', id);
+  const handleOpenApproveModal = () => {
+    if (!partner) return;
+    const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+    const codeSuffix = partner.id.substring(0, 4).toUpperCase();
+    const autoCode = partner.teamCode || `IND-${namePart}-${codeSuffix}`;
+    setCodeLinkInput(autoCode);
+    setUserRefCodeModalInput((partner as any)?.userReferralCode || 'PSMKMVLN');
+    setApproveModalOpen(true);
+  };
 
-          if (!error && data) {
-            setDbDocuments(data);
-          }
-        } catch (err) {
-          console.error('Failed to fetch KYC documents:', err);
-        } finally {
-          setIsLoadingDocs(false);
-        }
-      };
+  const handleConfirmApprove = async () => {
+    if (!partner) return;
+    const finalTeamCode = codeLinkInput.trim().toUpperCase() || 'IND-HAR-509';
+    const finalUserRefCode = userRefCodeModalInput.trim().toUpperCase() || 'PSMKMVLN';
+    await approveKyc(partner.id, finalTeamCode, finalUserRefCode);
+    setApproveModalOpen(false);
+  };
 
-      fetchDocs();
+  const handleRejectConfirm = () => {
+    if (!partner) return;
+    if (rejectReason.trim()) {
+      rejectKyc(partner.id, rejectReason);
+      setRejectModalOpen(false);
+      setRejectReason('');
     }
-  }, [id]);
+  };
 
+  const handleMoveToPending = async () => {
+    if (!partner) return;
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.from('profiles').update({ status: 'kyc_submitted' }).eq('id', partner.id);
+      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, status: 'kyc_submitted' as any } : p);
+      useAdminStore.setState({ partners: updated });
+      alert(`Moved partner "${partner.name}" back to Pending Review!`);
+    } catch (err) {
+      console.error('Move to pending error:', err);
+    }
+  };
+
+  const handleSaveUserCode = async () => {
+    if (!partner) return;
+    const code = userCodeInput.trim().toUpperCase() || 'PSMKMVLN';
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.from('profiles').update({ user_referral_code: code }).eq('id', partner.id);
+      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, userReferralCode: code } : p);
+      useAdminStore.setState({ partners: updated });
+      setIsEditingUserCode(false);
+      alert(`Updated User Referral Code to ${code}!`);
+    } catch (err) {
+      console.error('User code save error:', err);
+    }
+  };
+
+  const handleSaveTeamCode = async () => {
+    if (!partner) return;
+    const code = teamCodeInput.trim().toUpperCase() || partner.teamCode;
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.from('profiles').update({ team_code: code }).eq('id', partner.id);
+      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, teamCode: code } : p);
+      useAdminStore.setState({ partners: updated });
+      setIsEditingTeamCode(false);
+      alert(`Updated Team Network Code to ${code}!`);
+    } catch (err) {
+      console.error('Team code save error:', err);
+    }
+  };
+
+  const handlePromoteToTeamLeader = async () => {
+    if (!partner) return;
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
+      const codeSuffix = partner.id.substring(0, 4).toUpperCase();
+      const newTeamCode = partner.teamCode || `TL-${namePart}-${codeSuffix}`;
+
+      await supabase
+        .from('profiles')
+        .update({ role: 'team_leader', team_code: newTeamCode })
+        .eq('id', partner.id);
+
+      const updated = useAdminStore.getState().partners.map((p) =>
+        p.id === partner.id ? { ...p, role: 'team_leader' as any, teamCode: newTeamCode } : p
+      );
+      useAdminStore.setState({ partners: updated });
+      alert(`Successfully promoted "${partner.name}" to Team Leader! Team Code: ${newTeamCode}`);
+    } catch (err) {
+      console.error('Promotion error:', err);
+      alert('Could not promote partner to Team Leader.');
+    }
+  };
+
+  const handleDemoteToIndividual = async () => {
+    if (!partner) return;
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase
+        .from('profiles')
+        .update({ role: 'individual' })
+        .eq('id', partner.id);
+
+      const updated = useAdminStore.getState().partners.map((p) =>
+        p.id === partner.id ? { ...p, role: 'individual' as any } : p
+      );
+      useAdminStore.setState({ partners: updated });
+      alert(`Demoted "${partner.name}" to Individual DSA.`);
+    } catch (err) {
+      console.error('Demotion error:', err);
+      alert('Could not demote partner.');
+    }
+  };
+
+  // ─── Loading state while fetching directly from Supabase ───
+  if (isFetchingDirect && !partner) {
+    return (
+      <div className="min-h-[400px] flex flex-col items-center justify-center p-12 text-center space-y-3">
+        <div className="w-8 h-8 border-3 border-slate-200 border-t-[#1B2A72] rounded-full animate-spin" />
+        <p className="text-xs font-semibold text-slate-500">Loading partner dossier...</p>
+      </div>
+    );
+  }
+
+  // ─── 404 state only after direct DB query confirms partner doesn't exist ───
   if (!partner) {
     return (
       <div className="p-12 text-center space-y-4">
@@ -213,123 +407,6 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
   const subAgents = isTeamLeader
     ? partners.filter((p) => p.id !== partner.id && (p.referredByLeaderId === partner.id || (partner.teamCode && p.referredByLeaderId === partner.teamCode)))
     : [];
-
-  const [approveModalOpen, setApproveModalOpen] = useState(false);
-  const [codeLinkInput, setCodeLinkInput] = useState('');
-  const [userRefCodeModalInput, setUserRefCodeModalInput] = useState('');
-
-  // Inline Code Editing States
-  const [isEditingUserCode, setIsEditingUserCode] = useState(false);
-  const [userCodeInput, setUserCodeInput] = useState((partner as any)?.userReferralCode || 'PSMKMVLN');
-
-  const [isEditingTeamCode, setIsEditingTeamCode] = useState(false);
-  const [teamCodeInput, setTeamCodeInput] = useState(partner?.teamCode || '');
-
-  const handleOpenApproveModal = () => {
-    const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
-    const codeSuffix = partner.id.substring(0, 4).toUpperCase();
-    const autoCode = partner.teamCode || `IND-${namePart}-${codeSuffix}`;
-    setCodeLinkInput(autoCode);
-    setUserRefCodeModalInput((partner as any)?.userReferralCode || 'PSMKMVLN');
-    setApproveModalOpen(true);
-  };
-
-  const handleConfirmApprove = async () => {
-    const finalTeamCode = codeLinkInput.trim().toUpperCase() || 'IND-HAR-509';
-    const finalUserRefCode = userRefCodeModalInput.trim().toUpperCase() || 'PSMKMVLN';
-    await approveKyc(partner.id, finalTeamCode, finalUserRefCode);
-    setApproveModalOpen(false);
-  };
-
-  const handleRejectConfirm = () => {
-    if (rejectReason.trim()) {
-      rejectKyc(partner.id, rejectReason);
-      setRejectModalOpen(false);
-      setRejectReason('');
-    }
-  };
-
-  const handleMoveToPending = async () => {
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      await supabase.from('profiles').update({ status: 'kyc_submitted' }).eq('id', partner.id);
-      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, status: 'kyc_submitted' as any } : p);
-      useAdminStore.setState({ partners: updated });
-      alert(`Moved partner "${partner.name}" back to Pending Review!`);
-    } catch (err) {
-      console.error('Move to pending error:', err);
-    }
-  };
-
-  const handleSaveUserCode = async () => {
-    const code = userCodeInput.trim().toUpperCase() || 'PSMKMVLN';
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      await supabase.from('profiles').update({ user_referral_code: code }).eq('id', partner.id);
-      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, userReferralCode: code } : p);
-      useAdminStore.setState({ partners: updated });
-      setIsEditingUserCode(false);
-      alert(`Updated User Referral Code to ${code}!`);
-    } catch (err) {
-      console.error('User code save error:', err);
-    }
-  };
-
-  const handleSaveTeamCode = async () => {
-    const code = teamCodeInput.trim().toUpperCase() || partner.teamCode;
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      await supabase.from('profiles').update({ team_code: code }).eq('id', partner.id);
-      const updated = useAdminStore.getState().partners.map(p => p.id === partner.id ? { ...p, teamCode: code } : p);
-      useAdminStore.setState({ partners: updated });
-      setIsEditingTeamCode(false);
-      alert(`Updated Team Network Code to ${code}!`);
-    } catch (err) {
-      console.error('Team code save error:', err);
-    }
-  };
-
-  const handlePromoteToTeamLeader = async () => {
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      const namePart = (partner.name || 'PARTNER').replace(/[^a-zA-Z]/g, '').substring(0, 6).toUpperCase();
-      const codeSuffix = partner.id.substring(0, 4).toUpperCase();
-      const newTeamCode = partner.teamCode || `TL-${namePart}-${codeSuffix}`;
-
-      await supabase
-        .from('profiles')
-        .update({ role: 'team_leader', team_code: newTeamCode })
-        .eq('id', partner.id);
-
-      const updated = useAdminStore.getState().partners.map((p) =>
-        p.id === partner.id ? { ...p, role: 'team_leader' as any, teamCode: newTeamCode } : p
-      );
-      useAdminStore.setState({ partners: updated });
-      alert(`Successfully promoted "${partner.name}" to Team Leader! Team Code: ${newTeamCode}`);
-    } catch (err) {
-      console.error('Promotion error:', err);
-      alert('Could not promote partner to Team Leader.');
-    }
-  };
-
-  const handleDemoteToIndividual = async () => {
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      await supabase
-        .from('profiles')
-        .update({ role: 'individual' })
-        .eq('id', partner.id);
-
-      const updated = useAdminStore.getState().partners.map((p) =>
-        p.id === partner.id ? { ...p, role: 'individual' as any } : p
-      );
-      useAdminStore.setState({ partners: updated });
-      alert(`Demoted "${partner.name}" to Individual DSA.`);
-    } catch (err) {
-      console.error('Demotion error:', err);
-      alert('Could not demote partner.');
-    }
-  };
 
   return (
     <div className="space-y-6 animate-fade-up">
