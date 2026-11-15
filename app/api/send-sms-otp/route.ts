@@ -18,10 +18,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Valid 10-digit mobile number is required' }, { status: 400 });
     }
 
-    const apiKey = process.env.ISHANI_SMS_API_KEY || 'cHM0MDgudHJhbnM6WUE5Zlc=';
-    const apiUrl = process.env.ISHANI_SMS_URL || 'https://api.ishani.ltd/platform/send-sms';
+    const apiKey = process.env.ISHANI_SMS_API_KEY || process.env.ISHANI_SMS_TOKEN || 'sk_8pOcawqCnYDl0637f3heCIonH2SQFSq7qck6nIz-0jU';
+    const apiUrl = process.env.ISHANI_SMS_URL || 'https://prod-api.ishani.ltd/api/v1/sms/message';
     const senderId = process.env.ISHANI_SMS_SENDER_ID || 'PRMESC';
     const templateId = process.env.ISHANI_SMS_TEMPLATE_ID || '1707177667685411915';
+    const authHeader = apiKey.startsWith('Bearer ') ? apiKey : `Bearer ${apiKey}`;
 
     const text = `${otpCode} is the OTP for Primescore account verification. This is valid for 10 minutes. Please DO NOT SHARE OTP WITH ANYONE. Primescore.`;
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
+          'Authorization': authHeader,
         },
         body: JSON.stringify(payload),
       });

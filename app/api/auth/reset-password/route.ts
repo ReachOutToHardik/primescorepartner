@@ -180,11 +180,15 @@ export async function POST(req: NextRequest) {
         otp +
         ' is the OTP for Primescore account verification. This is valid for 10 minutes. Please DO NOT SHARE OTP WITH ANYONE. Primescore.';
 
-      await fetch(process.env.ISHANI_SMS_URL || 'https://api.ishani.ltd/platform/send-sms', {
+      const apiKey = process.env.ISHANI_SMS_API_KEY || process.env.ISHANI_SMS_TOKEN || 'sk_8pOcawqCnYDl0637f3heCIonH2SQFSq7qck6nIz-0jU';
+      const apiUrl = process.env.ISHANI_SMS_URL || 'https://prod-api.ishani.ltd/api/v1/sms/message';
+      const authHeader = apiKey.startsWith('Bearer ') ? apiKey : `Bearer ${apiKey}`;
+
+      await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': process.env.ISHANI_SMS_API_KEY || 'cHM0MDgudHJhbnM6WUE5Zlc=',
+          'Authorization': authHeader,
         },
         body: JSON.stringify({
           senderid: process.env.ISHANI_SMS_SENDER_ID || 'PRMESC',
